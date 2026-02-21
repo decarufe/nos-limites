@@ -1,0 +1,680 @@
+<project_specification>
+  <project_name>Nos limites</project_name>
+
+  <overview>
+    Nos limites est une application web progressive (PWA) en français qui permet à deux personnes de définir mutuellement et de façon transparente les limites de leur relation. Chaque participant coche indépendamment les comportements qu'il/elle accepte de l'autre, et seules les limites cochées par les deux sont révélées — un système de "match" qui encourage l'ouverture tout en protégeant la vulnérabilité de chacun. L'application couvre un spectre allant du contact professionnel à l'intimité, avec des catégories illustrées par des images.
+  </overview>
+
+  <technology_stack>
+    <frontend>
+      <framework>React (Create React App ou Vite)</framework>
+      <styling>CSS Modules ou Tailwind CSS</styling>
+      <pwa>Service Worker + manifest.json pour installation PWA</pwa>
+      <language>TypeScript</language>
+      <notifications>Web Push API pour les notifications</notifications>
+      <qr_code>Bibliothèque de génération/lecture QR code (qrcode.react + html5-qrcode)</qr_code>
+    </frontend>
+    <backend>
+      <runtime>Node.js avec Express</runtime>
+      <database>SQLite via Turso (libSQL)</database>
+      <orm>Drizzle ORM</orm>
+      <authentication>Magic link (email) + OAuth social (Google, Facebook)</authentication>
+      <email>Service d'envoi d'emails pour magic links (Resend ou Nodemailer)</email>
+    </backend>
+    <communication>
+      <api>REST API</api>
+      <realtime>Server-Sent Events (SSE) pour les notifications en temps réel</realtime>
+    </communication>
+    <hosting>
+      <frontend_hosting>Vercel</frontend_hosting>
+      <backend_hosting>Vercel Serverless Functions</backend_hosting>
+      <database_hosting>Turso (plan gratuit jusqu'à 9GB)</database_hosting>
+    </hosting>
+  </technology_stack>
+
+  <prerequisites>
+    <environment_setup>
+      - Node.js 18+ installé
+      - npm ou yarn
+      - Compte Turso (gratuit) pour la base de données
+      - Compte Vercel (gratuit) pour l'hébergement
+      - Clés API Google OAuth et Facebook OAuth
+      - Service d'email configuré pour magic links
+    </environment_setup>
+  </prerequisites>
+
+  <feature_count>75</feature_count>
+
+  <security_and_access_control>
+    <user_roles>
+      <role name="utilisateur">
+        <permissions>
+          - Créer et gérer son profil
+          - Envoyer et recevoir des invitations de relation
+          - Accepter ou refuser des invitations
+          - Cocher/décocher ses limites pour chaque relation
+          - Ajouter des notes/commentaires sur ses limites
+          - Voir les limites communes avec ses relations
+          - Recevoir des notifications
+          - Bloquer un utilisateur
+          - Supprimer une relation
+          - Supprimer son compte et toutes ses données
+        </permissions>
+      </role>
+    </user_roles>
+    <authentication>
+      <method>Magic link par email + OAuth social (Google, Facebook)</method>
+      <session_timeout>30 jours avec refresh token</session_timeout>
+      <password_requirements>Aucun - authentification sans mot de passe</password_requirements>
+    </authentication>
+    <sensitive_operations>
+      - Suppression de compte nécessite confirmation explicite
+      - Blocage d'un utilisateur nécessite confirmation
+      - Les limites cochées par un utilisateur ne sont JAMAIS visibles par l'autre sauf si les deux ont coché la même limite
+    </sensitive_operations>
+    <data_privacy>
+      - Les données de limites sont chiffrées au repos
+      - Un utilisateur ne peut jamais voir les limites non-communes
+      - La suppression de compte efface toutes les données personnelles
+      - Conformité RGPD : droit à l'oubli, export des données
+    </data_privacy>
+  </security_and_access_control>
+
+  <core_features>
+    <infrastructure>
+      - Connexion à la base de données établie
+      - Schéma de base de données appliqué correctement
+      - Les données persistent après redémarrage du serveur
+      - Aucun pattern de données fictives dans le code
+      - L'API backend interroge la vraie base de données
+    </infrastructure>
+
+    <authentification>
+      - Inscription par magic link (email)
+      - Connexion par magic link (email)
+      - Connexion via Google OAuth
+      - Connexion via Facebook OAuth
+      - Déconnexion
+      - Gestion de session (refresh token, expiration)
+      - Redirection après connexion/déconnexion
+      - Gestion des erreurs d'authentification
+    </authentification>
+
+    <profil_utilisateur>
+      - Création du profil (prénom/pseudo)
+      - Upload de photo de profil (optionnelle)
+      - Modification du profil
+      - Affichage du profil
+      - Suppression du compte avec confirmation
+      - Suppression de toutes les données associées au compte
+    </profil_utilisateur>
+
+    <gestion_relations>
+      - Génération d'un QR code d'invitation unique
+      - Génération d'un lien d'invitation partageable
+      - Scan de QR code pour ajouter une relation
+      - Ouverture de lien d'invitation
+      - Demande de relation en attente (confirmation mutuelle requise)
+      - Acceptation d'une demande de relation
+      - Refus d'une demande de relation
+      - Liste des relations actives
+      - Suppression d'une relation (les limites communes disparaissent)
+      - Blocage d'un utilisateur (ne peut plus envoyer d'invitation)
+    </gestion_relations>
+
+    <systeme_limites>
+      - Affichage des catégories de limites avec images illustratives
+      - Affichage des sous-catégories de limites avec images
+      - Affichage des limites individuelles avec images
+      - Cocher/décocher une limite individuelle
+      - Cocher/décocher une catégorie entière (sélectionne toutes les limites)
+      - Cocher/décocher une sous-catégorie entière
+      - Ajout de note/commentaire sur une limite
+      - Modification d'une note existante
+      - Suppression d'une note
+      - Indicateur visuel du nombre de limites cochées par catégorie
+      - Message explicatif : "Plus vous cochez de limites, plus vous en découvrirez en commun"
+      - Sauvegarde automatique des changements
+      - Animation/feedback visuel lors du cochage
+      - Navigation fluide entre catégories
+    </systeme_limites>
+
+    <limites_communes>
+      - Calcul des limites communes (matchées par les deux participants)
+      - Affichage des limites communes uniquement
+      - Affichage des notes associées aux limites communes
+      - Mise à jour en temps réel quand une nouvelle limite commune apparaît
+      - Notification quand une nouvelle limite commune est découverte
+      - Notification quand une limite commune est retirée (transparence)
+      - Compteur de limites communes par relation
+      - Vue par catégorie des limites communes
+    </limites_communes>
+
+    <notifications>
+      - Notification de nouvelle demande de relation
+      - Notification d'acceptation de relation
+      - Notification de nouvelle limite commune découverte
+      - Notification de changement de limite commune (retirée)
+      - Notification de suppression de relation
+      - Badge de notifications non lues
+      - Liste des notifications avec historique
+    </notifications>
+
+    <ecran_accueil>
+      - Liste des relations actives avec avatar et nom
+      - Compteur de limites communes par relation
+      - Résumé des notifications récentes
+      - Accès rapide à chaque relation
+      - État vide (aucune relation) avec message d'aide
+      - Navigation vers le profil, les notifications et les paramètres
+    </ecran_accueil>
+
+    <pwa_et_ui>
+      - Design moderne, coloré et imagé
+      - Interface entièrement en français
+      - Responsive design (mobile-first)
+      - Installation PWA (ajout à l'écran d'accueil)
+      - Fonctionnement hors-ligne basique (consultation)
+      - Animations et transitions fluides
+    </pwa_et_ui>
+
+    <confidentialite_securite>
+      - Les limites non-communes sont invisibles
+      - Chiffrement des données sensibles
+      - Protection contre les accès non autorisés
+      - Export des données personnelles (RGPD)
+      - Suppression complète des données sur demande
+    </confidentialite_securite>
+  </core_features>
+
+  <limits_categories>
+    <category name="Contact professionnel" icon="🤝">
+      <description>Interactions dans un cadre professionnel respectueux</description>
+      <subcategories>
+        <subcategory name="Communication verbale">
+          - Recevoir des compliments sur le travail
+          - Recevoir des compliments sur l'apparence (vestimentaire)
+          - Conversations personnelles légères (weekend, vacances)
+          - Tutoiement
+        </subcategory>
+        <subcategory name="Contact physique professionnel">
+          - Poignée de main
+          - Tape amicale sur l'épaule
+          - Bise de salutation
+        </subcategory>
+      </subcategories>
+    </category>
+
+    <category name="Contact amical" icon="😊">
+      <description>Interactions amicales et chaleureuses</description>
+      <subcategories>
+        <subcategory name="Communication amicale">
+          - Compliments personnels (personnalité, qualités)
+          - Compliments sur l'apparence physique
+          - Messages personnels en dehors du contexte habituel
+          - Appels téléphoniques personnels
+          - Partage de confidences
+        </subcategory>
+        <subcategory name="Contact physique amical">
+          - Accolade / câlin amical
+          - Toucher le bras ou l'avant-bras
+          - Toucher le dos
+          - Toucher la main (tenir la main brièvement)
+          - Bras autour des épaules
+        </subcategory>
+        <subcategory name="Activités sociales">
+          - Sorties en duo (café, restaurant)
+          - Invitations à des événements sociaux
+          - Activités sportives ensemble
+        </subcategory>
+      </subcategories>
+    </category>
+
+    <category name="Flirt et séduction" icon="💬">
+      <description>Interactions à caractère séducteur</description>
+      <subcategories>
+        <subcategory name="Flirt verbal">
+          - Compliments suggestifs
+          - Taquineries à caractère séducteur
+          - Sous-entendus
+          - Messages flirteurs / emojis suggestifs
+        </subcategory>
+        <subcategory name="Langage corporel">
+          - Regards prolongés
+          - Proximité physique rapprochée
+          - Toucher le visage (joue, menton)
+          - Toucher les cheveux
+          - Toucher la taille
+        </subcategory>
+      </subcategories>
+    </category>
+
+    <category name="Contact rapproché" icon="🤗">
+      <description>Contacts physiques plus intimes</description>
+      <subcategories>
+        <subcategory name="Gestes tendres">
+          - Caresses sur le bras / la main
+          - Caresses dans le dos
+          - Caresses sur le visage
+          - Câlins prolongés
+          - Se tenir la main
+        </subcategory>
+        <subcategory name="Contact plus intime">
+          - Toucher les cuisses
+          - Toucher le cou / la nuque
+          - Massage des épaules
+          - Massage complet
+        </subcategory>
+      </subcategories>
+    </category>
+
+    <category name="Intimité" icon="💕">
+      <description>Propositions et contacts intimes</description>
+      <subcategories>
+        <subcategory name="Rapprochement intime">
+          - Bisou sur la joue
+          - Bisou sur le front
+          - Baiser sur les lèvres
+          - Baiser prolongé
+        </subcategory>
+        <subcategory name="Propositions intimes">
+          - Propositions de rendez-vous romantique
+          - Déclarations de sentiments
+          - Propositions de rapprochement physique intime
+          - Discussion ouverte sur les désirs et attentes
+        </subcategory>
+      </subcategories>
+    </category>
+  </limits_categories>
+
+  <database_schema>
+    <tables>
+      <users>
+        - id (TEXT, PRIMARY KEY, UUID)
+        - email (TEXT, UNIQUE, NOT NULL)
+        - display_name (TEXT, NOT NULL)
+        - avatar_url (TEXT, NULLABLE)
+        - auth_provider (TEXT) -- 'magic_link', 'google', 'facebook'
+        - auth_provider_id (TEXT, NULLABLE)
+        - created_at (DATETIME, DEFAULT NOW)
+        - updated_at (DATETIME, DEFAULT NOW)
+      </users>
+
+      <sessions>
+        - id (TEXT, PRIMARY KEY)
+        - user_id (TEXT, FOREIGN KEY -> users.id)
+        - token (TEXT, UNIQUE)
+        - expires_at (DATETIME)
+        - created_at (DATETIME, DEFAULT NOW)
+      </sessions>
+
+      <magic_links>
+        - id (TEXT, PRIMARY KEY)
+        - email (TEXT, NOT NULL)
+        - token (TEXT, UNIQUE, NOT NULL)
+        - expires_at (DATETIME, NOT NULL)
+        - used (BOOLEAN, DEFAULT FALSE)
+        - created_at (DATETIME, DEFAULT NOW)
+      </magic_links>
+
+      <relationships>
+        - id (TEXT, PRIMARY KEY, UUID)
+        - inviter_id (TEXT, FOREIGN KEY -> users.id)
+        - invitee_id (TEXT, FOREIGN KEY -> users.id, NULLABLE)
+        - invitation_token (TEXT, UNIQUE)
+        - status (TEXT) -- 'pending', 'accepted', 'declined', 'blocked'
+        - created_at (DATETIME, DEFAULT NOW)
+        - updated_at (DATETIME, DEFAULT NOW)
+      </relationships>
+
+      <limit_categories>
+        - id (TEXT, PRIMARY KEY)
+        - name (TEXT, NOT NULL)
+        - description (TEXT)
+        - icon (TEXT)
+        - image_url (TEXT)
+        - sort_order (INTEGER)
+      </limit_categories>
+
+      <limit_subcategories>
+        - id (TEXT, PRIMARY KEY)
+        - category_id (TEXT, FOREIGN KEY -> limit_categories.id)
+        - name (TEXT, NOT NULL)
+        - sort_order (INTEGER)
+      </limit_subcategories>
+
+      <limits>
+        - id (TEXT, PRIMARY KEY)
+        - subcategory_id (TEXT, FOREIGN KEY -> limit_subcategories.id)
+        - name (TEXT, NOT NULL)
+        - description (TEXT)
+        - image_url (TEXT)
+        - sort_order (INTEGER)
+      </limits>
+
+      <user_limits>
+        - id (TEXT, PRIMARY KEY)
+        - user_id (TEXT, FOREIGN KEY -> users.id)
+        - relationship_id (TEXT, FOREIGN KEY -> relationships.id)
+        - limit_id (TEXT, FOREIGN KEY -> limits.id)
+        - is_accepted (BOOLEAN, DEFAULT FALSE)
+        - note (TEXT, NULLABLE)
+        - created_at (DATETIME, DEFAULT NOW)
+        - updated_at (DATETIME, DEFAULT NOW)
+        - UNIQUE(user_id, relationship_id, limit_id)
+      </user_limits>
+
+      <notifications>
+        - id (TEXT, PRIMARY KEY)
+        - user_id (TEXT, FOREIGN KEY -> users.id)
+        - type (TEXT) -- 'relation_request', 'relation_accepted', 'new_common_limit', 'limit_removed', 'relation_deleted'
+        - title (TEXT, NOT NULL)
+        - message (TEXT, NOT NULL)
+        - related_user_id (TEXT, FOREIGN KEY -> users.id, NULLABLE)
+        - related_relationship_id (TEXT, FOREIGN KEY -> relationships.id, NULLABLE)
+        - is_read (BOOLEAN, DEFAULT FALSE)
+        - created_at (DATETIME, DEFAULT NOW)
+      </notifications>
+
+      <blocked_users>
+        - id (TEXT, PRIMARY KEY)
+        - blocker_id (TEXT, FOREIGN KEY -> users.id)
+        - blocked_id (TEXT, FOREIGN KEY -> users.id)
+        - created_at (DATETIME, DEFAULT NOW)
+        - UNIQUE(blocker_id, blocked_id)
+      </blocked_users>
+    </tables>
+  </database_schema>
+
+  <api_endpoints_summary>
+    <authentification>
+      - POST /api/auth/magic-link (envoyer un magic link)
+      - GET /api/auth/verify?token=xxx (vérifier un magic link)
+      - POST /api/auth/google (connexion Google OAuth)
+      - POST /api/auth/facebook (connexion Facebook OAuth)
+      - POST /api/auth/logout (déconnexion)
+      - GET /api/auth/session (vérifier la session courante)
+    </authentification>
+
+    <profil>
+      - GET /api/profile (obtenir son profil)
+      - PUT /api/profile (modifier son profil)
+      - POST /api/profile/avatar (upload photo de profil)
+      - DELETE /api/profile (supprimer son compte)
+      - GET /api/profile/export (exporter ses données - RGPD)
+    </profil>
+
+    <relations>
+      - POST /api/relationships/invite (créer une invitation)
+      - GET /api/relationships/invite/:token (consulter une invitation)
+      - POST /api/relationships/accept/:token (accepter une invitation)
+      - POST /api/relationships/decline/:token (refuser une invitation)
+      - GET /api/relationships (lister ses relations)
+      - DELETE /api/relationships/:id (supprimer une relation)
+      - POST /api/relationships/:id/block (bloquer un utilisateur)
+    </relations>
+
+    <limites>
+      - GET /api/limits/categories (lister les catégories avec sous-catégories et limites)
+      - GET /api/relationships/:id/limits (obtenir ses limites pour une relation)
+      - PUT /api/relationships/:id/limits (mettre à jour ses limites)
+      - PUT /api/relationships/:id/limits/:limitId/note (ajouter/modifier une note)
+      - DELETE /api/relationships/:id/limits/:limitId/note (supprimer une note)
+      - GET /api/relationships/:id/common-limits (obtenir les limites communes)
+    </limites>
+
+    <notifications>
+      - GET /api/notifications (lister ses notifications)
+      - PUT /api/notifications/:id/read (marquer comme lue)
+      - PUT /api/notifications/read-all (marquer toutes comme lues)
+      - GET /api/notifications/stream (SSE pour notifications temps réel)
+    </notifications>
+
+    <systeme>
+      - GET /api/health (vérification santé + statut DB)
+    </systeme>
+  </api_endpoints_summary>
+
+  <ui_layout>
+    <main_structure>
+      Application mobile-first avec navigation par onglets en bas de l'écran.
+
+      Onglets principaux :
+      1. Accueil (liste des relations + résumé)
+      2. Scanner (QR code / lien d'invitation)
+      3. Notifications
+      4. Profil
+    </main_structure>
+
+    <screens>
+      <ecran_connexion>
+        - Logo et nom de l'app "Nos limites"
+        - Champ email pour magic link
+        - Bouton "Connexion avec Google"
+        - Bouton "Connexion avec Facebook"
+        - Design chaleureux et accueillant avec illustration
+      </ecran_connexion>
+
+      <ecran_accueil>
+        - En-tête avec "Mes relations" et badge notifications
+        - Liste des relations (avatar, nom, nombre de limites communes)
+        - Bouton flottant "+" pour ajouter une relation
+        - État vide avec illustration et message d'aide
+      </ecran_accueil>
+
+      <ecran_relation>
+        - En-tête avec avatar et nom de la relation
+        - Onglet "Mes limites" : catégories avec cases à cocher
+        - Onglet "En commun" : limites matchées avec notes
+        - Bouton options (supprimer relation, bloquer)
+      </ecran_relation>
+
+      <ecran_limites>
+        - Navigation par catégories (onglets ou accordéon)
+        - Images illustratives pour chaque catégorie/limite
+        - Cases à cocher avec animations
+        - Bouton "Tout cocher" par catégorie/sous-catégorie
+        - Champ note optionnel par limite
+        - Message d'encouragement en haut
+      </ecran_limites>
+
+      <ecran_limites_communes>
+        - Liste des limites communes organisées par catégorie
+        - Images et icônes colorées
+        - Notes visibles des deux participants
+        - Compteur total de limites communes
+      </ecran_limites_communes>
+
+      <ecran_invitation>
+        - QR code généré dynamiquement
+        - Lien partageable avec bouton copier
+        - Bouton partager (API Web Share)
+        - Scanner de QR code intégré
+      </ecran_invitation>
+
+      <ecran_notifications>
+        - Liste chronologique des notifications
+        - Types distincts visuellement (icônes, couleurs)
+        - Swipe pour marquer comme lue
+        - Bouton "Tout marquer comme lu"
+      </ecran_notifications>
+
+      <ecran_profil>
+        - Photo de profil avec bouton modifier
+        - Prénom/pseudo modifiable
+        - Email (lecture seule)
+        - Bouton "Exporter mes données"
+        - Bouton "Supprimer mon compte" (rouge, avec confirmation)
+        - Déconnexion
+      </ecran_profil>
+    </screens>
+  </ui_layout>
+
+  <design_system>
+    <color_palette>
+      Palette moderne, chaleureuse et inclusive :
+      - Primaire : Violet doux (#7C3AED) - confiance et sérénité
+      - Secondaire : Rose chaleureux (#EC4899) - bienveillance
+      - Accent : Turquoise (#06B6D4) - ouverture et communication
+      - Fond : Blanc cassé (#FAFAF9)
+      - Texte : Gris foncé (#1C1917)
+      - Succès : Vert (#10B981)
+      - Attention : Orange (#F59E0B)
+      - Erreur : Rouge (#EF4444)
+    </color_palette>
+    <typography>
+      - Police principale : Inter ou Nunito (arrondie, chaleureuse)
+      - Titres : Semi-bold à Bold
+      - Corps : Regular, 16px base
+      - Petits textes : 14px
+    </typography>
+    <imagery>
+      - Illustrations douces et inclusives pour chaque catégorie de limites
+      - Icônes arrondies et colorées
+      - Avatars par défaut générés (initiales colorées)
+      - Animations subtiles (transitions, cochage de limites)
+    </imagery>
+  </design_system>
+
+  <implementation_steps>
+    <step number="1">
+      <title>Infrastructure et fondations</title>
+      <tasks>
+        - Configuration projet React + Vite + TypeScript
+        - Configuration Turso (SQLite)
+        - Configuration Drizzle ORM + migrations
+        - API health endpoint
+        - Structure du projet (dossiers, conventions)
+        - Configuration PWA (manifest, service worker)
+      </tasks>
+    </step>
+
+    <step number="2">
+      <title>Authentification</title>
+      <tasks>
+        - Magic link : envoi d'email + vérification
+        - Google OAuth
+        - Facebook OAuth
+        - Gestion des sessions (JWT + refresh token)
+        - Middleware d'authentification
+        - Pages connexion/inscription
+      </tasks>
+    </step>
+
+    <step number="3">
+      <title>Profil utilisateur</title>
+      <tasks>
+        - CRUD profil (nom, avatar)
+        - Upload d'image
+        - Page profil avec paramètres
+        - Suppression de compte
+      </tasks>
+    </step>
+
+    <step number="4">
+      <title>Gestion des relations</title>
+      <tasks>
+        - Génération QR code et lien d'invitation
+        - Scanner QR code
+        - Flux d'invitation (envoi, acceptation, refus)
+        - Liste des relations sur l'accueil
+        - Suppression et blocage
+      </tasks>
+    </step>
+
+    <step number="5">
+      <title>Système de limites</title>
+      <tasks>
+        - Seed des catégories, sous-catégories et limites
+        - Affichage hiérarchique avec images
+        - Cochage individuel et par catégorie
+        - Notes/commentaires
+        - Sauvegarde automatique
+      </tasks>
+    </step>
+
+    <step number="6">
+      <title>Limites communes (matching)</title>
+      <tasks>
+        - Algorithme de calcul des limites communes
+        - Affichage des limites communes uniquement
+        - Affichage des notes communes
+        - Compteur de limites communes
+      </tasks>
+    </step>
+
+    <step number="7">
+      <title>Notifications</title>
+      <tasks>
+        - Système de notifications backend
+        - SSE pour temps réel
+        - Page notifications
+        - Badges et indicateurs
+        - Notifications push (PWA)
+      </tasks>
+    </step>
+
+    <step number="8">
+      <title>UI/UX et polish</title>
+      <tasks>
+        - Design system complet (couleurs, typo, composants)
+        - Illustrations et images
+        - Animations et transitions
+        - Responsive design
+        - États vides et chargement
+        - Messages d'erreur en français
+      </tasks>
+    </step>
+
+    <step number="9">
+      <title>Sécurité et confidentialité</title>
+      <tasks>
+        - Chiffrement des données sensibles
+        - Protection des routes API
+        - Export des données (RGPD)
+        - Tests de sécurité
+        - Validation des entrées
+      </tasks>
+    </step>
+
+    <step number="10">
+      <title>Déploiement</title>
+      <tasks>
+        - Configuration Vercel
+        - Configuration Turso production
+        - Variables d'environnement
+        - Tests finaux
+        - Documentation
+      </tasks>
+    </step>
+  </implementation_steps>
+
+  <success_criteria>
+    <functionality>
+      - Un utilisateur peut créer un compte via magic link ou login social
+      - Deux utilisateurs peuvent se connecter via QR code ou lien
+      - Chaque utilisateur peut cocher ses limites par catégorie
+      - Seules les limites communes sont visibles
+      - Les notifications fonctionnent en temps réel
+      - L'app est installable comme PWA
+    </functionality>
+    <user_experience>
+      - L'interface est intuitive et ne nécessite pas d'explication
+      - Les images illustrent clairement chaque catégorie de limite
+      - Le parcours d'invitation est simple et rapide
+      - L'app est fluide et réactive sur mobile
+    </user_experience>
+    <technical_quality>
+      - Les données persistent correctement (pas de mock data)
+      - La sécurité des données sensibles est assurée
+      - L'API est stable et gère les erreurs gracieusement
+      - L'app fonctionne hors-ligne en mode consultation
+    </technical_quality>
+    <design_polish>
+      - Design moderne, coloré et chaleureux (MVP)
+      - Illustrations présentes pour les catégories principales
+      - Animations de base (cochage, transitions)
+      - Interface entièrement en français
+    </design_polish>
+  </success_criteria>
+</project_specification>
