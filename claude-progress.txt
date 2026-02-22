@@ -390,3 +390,54 @@
 - Notification badge in navigation bar
 - Additional Real Data Verification features
 
+
+### Session 11 - 2026-02-22
+
+**Features Completed:**
+- Feature #31: Notification appears when common limit is removed ✅ PASSING
+  - Added detection logic in PUT /api/relationships/:id/limits endpoint
+  - When user unchecks a previously accepted limit, checks if it was common with partner
+  - Creates 'limit_removed' notification for the other user
+  - Notification message: "{userName} a décoché '{limitName}'. Cette limite n'est plus commune."
+  - Includes relatedUserId and relatedRelationshipId for context
+  - Tested with database-level and API-level integration tests (test-feature-31.js, test-feature-31-simple.js)
+  - All 8 test assertions passed: notification type, title, message content, limit removal from common list
+  - No mock data patterns found in source code
+
+- Feature #43: Auto-save feedback when checking limits ✅ PASSING
+  - Added success toast banner in RelationshipPage after successful limit save
+  - Toast displays "Sauvegardé automatiquement" with checkmark icon
+  - Green success styling with smooth slide-in animation (0.3s from top)
+  - Auto-dismisses after 2 seconds with fade-out animation
+  - Added checkbox pop animation (@keyframes checkboxPop) - scales to 1.2x and back on check
+  - Success feedback shown for both individual limit toggles and category bulk actions
+  - Error banner still shown separately if save fails (with revert to previous state)
+  - CSS animations: slideInFromTop, fadeOut, checkboxPop
+  - TypeScript compiles successfully, client build passes (241.19 kB bundle)
+
+- Feature #54: Notification for new relationship request acceptance ✅ PASSING
+  - Verified existing implementation in POST /api/relationships/accept/:token endpoint (lines 284-294)
+  - When User B accepts invitation, creates 'relation_accepted' notification for User A (inviter)
+  - Notification title: "Invitation acceptée"
+  - Notification message: "{acceptingUserName} a accepté votre invitation."
+  - Includes relatedUserId (accepter) and relatedRelationshipId
+  - Tested end-to-end with API integration test (test-feature-54.js)
+  - Notifications retrievable via GET /api/notifications
+  - All 7 test assertions passed: notification creation, type, title, message, related IDs
+
+**Current Status:** 42/76 features passing (55.3%)
+
+**Architecture Notes:**
+- Notification system fully integrated: CREATE (relation_accepted, limit_removed, new_common_limit), READ (GET /notifications)
+- Frontend auto-save feedback provides immediate user confirmation without blocking
+- Toast system uses CSS animations (no external toast library needed)
+- All changes persist in SQLite database, no mock data
+- Test suite expanded: test-feature-31.js (DB), test-feature-31-simple.js (API), test-feature-54.js (API)
+
+**What Should Be Worked On Next:**
+- Notifications UI (NotificationsPage currently a placeholder)
+- Real-time notification updates (SSE or polling)
+- Profile photo upload
+- OAuth backend endpoints (Google, Facebook)
+- Common limits count display on HomePage relationship cards
+
