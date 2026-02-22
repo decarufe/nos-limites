@@ -108,6 +108,7 @@ export default function RelationshipPage() {
   );
   const [limitsLoading, setLimitsLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
 
   // Note editing
   const [editingNoteForLimit, setEditingNoteForLimit] = useState<string | null>(
@@ -244,14 +245,21 @@ export default function RelationshipPage() {
 
     // Save to backend
     setSaving(true);
+    setSaveError("");
     try {
       await api.put(`/relationships/${id}/limits`, {
         limits: [{ limitId, isAccepted }],
       });
-    } catch {
+    } catch (err) {
+      console.error("Error toggling limit:", err);
       // Revert on failure
       const reverted = new Set(checkedLimits);
       setCheckedLimits(reverted);
+      setSaveError(
+        err instanceof Error
+          ? err.message
+          : "Erreur lors de la mise à jour de la limite."
+      );
     } finally {
       setSaving(false);
     }
@@ -282,6 +290,7 @@ export default function RelationshipPage() {
 
     // Save to backend
     setSaving(true);
+    setSaveError("");
     try {
       const limitUpdates = limitIds.map((limitId) => ({
         limitId,
@@ -290,10 +299,16 @@ export default function RelationshipPage() {
       await api.put(`/relationships/${id}/limits`, {
         limits: limitUpdates,
       });
-    } catch {
+    } catch (err) {
+      console.error("Error toggling category:", err);
       // Revert on failure
       const reverted = new Set(checkedLimits);
       setCheckedLimits(reverted);
+      setSaveError(
+        err instanceof Error
+          ? err.message
+          : "Erreur lors de la mise à jour des limites."
+      );
     } finally {
       setSaving(false);
     }
@@ -333,7 +348,7 @@ export default function RelationshipPage() {
     } catch (err: any) {
       setError(
         err.response?.data?.message ||
-          "Erreur lors de l'enregistrement de la note."
+        "Erreur lors de l'enregistrement de la note."
       );
     } finally {
       setSavingNote(false);
@@ -362,7 +377,7 @@ export default function RelationshipPage() {
     } catch (err: any) {
       setError(
         err.response?.data?.message ||
-          "Erreur lors de la suppression de la note."
+        "Erreur lors de la suppression de la note."
       );
     } finally {
       setSavingNote(false);
@@ -610,6 +625,12 @@ export default function RelationshipPage() {
       {/* Mes limites tab */}
       {activeTab === "mes-limites" && (
         <div className={styles.limitsContainer}>
+          {saveError && (
+            <div className={styles.saveErrorBanner} role="alert">
+              <p>{saveError}</p>
+              <button onClick={() => setSaveError("")} className={styles.dismissButton}>✕</button>
+            </div>
+          )}
           {limitsLoading ? (
             <div className={styles.loadingSmall}>
               <div className={styles.spinner} />
