@@ -64,18 +64,50 @@
   - TypeScript compiles with zero errors
   - Vite dev server starts cleanly
 
-**Current Status:** 12/75 features passing (16.0%)
+### Session 6 - 2026-02-22
+
+**Features Completed:**
+- Feature #9: User can register via magic link ✅ PASSING
+  - Full end-to-end registration flow verified
+  - POST /api/auth/magic-link creates token and logs link to console (dev mode)
+  - GET /api/auth/verify creates new user, returns JWT with isNewUser:true
+  - Frontend LoginPage → AuthVerifyPage → ProfileSetupPage → Home flow works
+  - PUT /api/profile updates display name
+  - User persists in SQLite database
+  - No mock data patterns found
+
+- Feature #10: User can log in via magic link ✅ PASSING
+  - Existing user login flow verified end-to-end
+  - POST /api/auth/magic-link works for existing emails
+  - GET /api/auth/verify returns isNewUser:false for existing users
+  - Frontend redirects to /home (not /profile/setup) for returning users
+  - Session created and validated via /api/auth/session
+
+- Feature #18: User can generate invitation QR code and link ✅ PASSING
+  - Rebuilt ScanPage with invitation generation UI
+  - Installed qrcode.react for QR code rendering
+  - POST /api/relationships/invite creates invitation in DB
+  - QR code displayed using QRCodeSVG component
+  - Shareable link with unique UUID token shown
+  - Copy link button with clipboard API + fallback
+  - Invitation saved in relationships table with status 'pending'
+  - Auth required - unauthenticated access returns 401
+  - "Nouvelle invitation" button to generate fresh invitations
+
+**Current Status:** 14/75 features passing (18.7%)
 
 **Architecture Notes:**
 - Backend: Express + better-sqlite3 + Drizzle ORM on port 3001
-- Frontend: React + Vite + TypeScript on port 5173
+- Frontend: React + Vite + TypeScript on port 5173/5174
 - Database: SQLite file at server/data/noslimites.db (WAL mode)
 - Auth: JWT-based with magic link flow fully implemented
 - OAuth buttons present on UI but backend OAuth endpoints not yet implemented
-- API routes implemented: /api/health, /api/limits/categories, /api/auth/magic-link, /api/auth/verify, /api/auth/session, /api/auth/logout
+- API routes implemented: /api/health, /api/limits/categories, /api/auth/magic-link, /api/auth/verify, /api/auth/session, /api/auth/logout, /api/profile (GET/PUT), /api/relationships (GET), /api/relationships/invite (POST)
+- QR code: qrcode.react library installed for frontend QR generation
 
 **What Should Be Worked On Next:**
 - OAuth backend endpoints (Google, Facebook)
-- Profile CRUD
-- Relationships management
-- Frontend pages beyond placeholders
+- Invitation acceptance flow (scan QR / open invite link)
+- Relationships detail page
+- Limits selection UI for relationships
+- Notifications system

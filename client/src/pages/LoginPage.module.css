@@ -97,6 +97,11 @@
   transition: border-color 0.2s ease, outline-color 0.2s ease;
 }
 
+.input::placeholder {
+  color: #757575; /* WCAG AA compliant placeholder - 4.59:1 on white */
+  opacity: 1; /* Override browser default opacity for consistent contrast */
+}
+
 .input:focus {
   border-color: var(--color-primary);
   outline: 2px solid var(--color-primary);
@@ -287,12 +292,12 @@
 }
 
 .facebookButton {
-  background: #1877F2;
+  background: #1565C0;
   color: white;
 }
 
 .facebookButton:hover {
-  background: #166FE5;
+  background: #0D47A1;
   box-shadow: var(--shadow-sm);
 }
 
