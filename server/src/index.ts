@@ -4,12 +4,15 @@ dotenv.config();
 import express from "express";
 import cors from "cors";
 import { db, testConnection } from "./db/connection";
+import { ensureDatabaseInitialized } from "./db/init";
 import healthRouter from "./routes/health";
 import limitsRouter from "./routes/limits";
 import authRouter from "./routes/auth";
 import profileRouter from "./routes/profile";
 import relationshipsRouter from "./routes/relationships";
 import notificationsRouter from "./routes/notifications";
+
+ensureDatabaseInitialized();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -19,7 +22,7 @@ app.use(
   cors({
     origin: process.env.FRONTEND_URL || "http://localhost:5173",
     credentials: true,
-  })
+  }),
 );
 app.use(express.json());
 
@@ -37,13 +40,16 @@ app.use("/api", profileRouter);
 app.use("/api", relationshipsRouter);
 app.use("/api", notificationsRouter);
 
-// Start server
-app.listen(PORT, () => {
-  const connected = testConnection();
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Database status: ${connected ? "connected" : "disconnected"}`);
-  console.log(`Health check: http://localhost:${PORT}/api/health`);
-  console.log(`Limits categories: http://localhost:${PORT}/api/limits/categories`);
-});
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    const connected = testConnection();
+    console.log(`Server running on port ${PORT}`);
+    console.log(`Database status: ${connected ? "connected" : "disconnected"}`);
+    console.log(`Health check: http://localhost:${PORT}/api/health`);
+    console.log(
+      `Limits categories: http://localhost:${PORT}/api/limits/categories`,
+    );
+  });
+}
 
 export default app;

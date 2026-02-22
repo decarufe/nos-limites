@@ -5,7 +5,7 @@ import * as schema from "./schema";
  * Apply database migrations - creates all tables from the schema.
  * Uses IF NOT EXISTS to be idempotent.
  */
-function migrate() {
+export function migrate() {
   console.log("Running database migrations...");
 
   sqlite.exec(`
@@ -126,4 +126,6 @@ function migrate() {
   console.log("Database migrations completed successfully.");
 }
 
-migrate();
+if (require.main === module) {
+  migrate();
+}

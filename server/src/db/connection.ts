@@ -10,7 +10,19 @@ if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
 
-const dbPath = path.join(dataDir, "noslimites.db");
+function resolveDatabasePath(): string {
+  if (process.env.DATABASE_URL?.trim()) {
+    return process.env.DATABASE_URL.trim();
+  }
+
+  if (process.env.VERCEL) {
+    return path.join("/tmp", "noslimites.db");
+  }
+
+  return path.join(dataDir, "noslimites.db");
+}
+
+const dbPath = resolveDatabasePath();
 
 console.log(`Connecting to database at: ${dbPath}`);
 
