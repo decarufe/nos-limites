@@ -1,5 +1,7 @@
 .container {
   padding: var(--spacing-md);
+  width: 100%;
+  overflow-x: hidden;
 }
 
 .header {
@@ -10,6 +12,8 @@
   font-size: var(--font-size-xl);
   font-weight: 700;
   color: var(--color-text);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .empty {

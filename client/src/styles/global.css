@@ -42,6 +42,10 @@
   /* Safe areas for mobile */
   --safe-area-top: env(safe-area-inset-top, 0px);
   --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+
+  /* Layout constraints */
+  --content-max-width: 600px;
+  --layout-max-width: 1200px;
 }
 
 /* Reset */
@@ -141,4 +145,39 @@ select {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border-width: 0;
+}
+
+/* Prevent horizontal overflow on all screen sizes */
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+}
+
+/* Responsive breakpoints */
+/* Mobile-first: base styles are for mobile (375px+) */
+/* Tablet: 768px+ */
+/* Desktop: 1024px+ */
+
+/* Touch target minimum size for interactive elements */
+button,
+a,
+input[type="checkbox"],
+input[type="radio"],
+select {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Reset min sizes for inline links that shouldn't be oversized */
+p a,
+span a {
+  min-height: unset;
+  min-width: unset;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+textarea {
+  min-height: 44px;
 }
