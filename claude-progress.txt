@@ -441,3 +441,60 @@
 - OAuth backend endpoints (Google, Facebook)
 - Common limits count display on HomePage relationship cards
 
+### Session 13 - 2026-02-22
+
+**Features Completed:**
+- Feature #32: Notification badge shows unread count ✅ PASSING
+  - Verified implementation from previous session (commit 1f9acc9)
+  - NotificationsContext created to manage unread count globally
+  - Context polls for new notifications every 30 seconds automatically
+  - BottomNav displays red badge with unread count on notifications icon
+  - Badge positioned absolutely (top-right) with red background (#EF4444)
+  - Badge disappears when unreadCount === 0
+  - NotificationsPage updates context via refreshUnreadCount() when marking notifications as read
+  - All integrated: App.tsx wraps with NotificationsProvider, BottomNav uses useNotifications() hook
+  - TypeScript compiles successfully, client build passes (241.66 kB bundle)
+
+- Feature #41: Unauthenticated user is redirected to login ✅ PASSING
+  - Created ProtectedRoute component to centralize authentication checks
+  - Component checks isAuthenticated from AuthContext
+  - Shows loading spinner while isLoading === true
+  - Redirects to /login with replace when !isAuthenticated
+  - All protected routes wrapped in App.tsx:
+    * /home, /scan, /notifications, /profile
+    * /relationship/:id, /invite/:token
+  - Loading spinner styled with primary color (#7C3AED) and fade-in animation
+  - Protected routes now have consistent auth behavior across the entire app
+  - TypeScript compiles successfully, build passes
+
+- Feature #52: Relationship detail page has tabs for 'Mes limites' and 'En commun' ✅ PASSING
+  - Verified existing implementation in RelationshipPage.tsx
+  - Two tabs: "Mes limites" and "En commun" (lines 631-642)
+  - Active tab state managed with useState<Tab>("mes-limites")
+  - Default tab: "Mes limites" is active on page load
+  - Tabs clickable with onClick handlers to setActiveTab()
+  - Active tab visually highlighted with:
+    * Primary color text (#6366f1)
+    * Bottom border in primary color (2px solid)
+    * Smooth transition animation (0.2s)
+  - Tab content conditionally rendered based on activeTab value
+  - "Mes limites" tab shows limits selection interface with categories
+  - "En commun" tab shows common limits grid
+  - Fully responsive, works on mobile and desktop
+
+**Current Status:** 43/76 features passing (56.6%)
+
+**Architecture Notes:**
+- NotificationsContext provides global unread count state with auto-refresh polling
+- ProtectedRoute component centralizes auth redirect logic (DRY principle)
+- All protected pages now use ProtectedRoute wrapper instead of individual auth checks
+- Tab navigation in RelationshipPage uses semantic HTML buttons with proper ARIA roles
+- CSS animations for smooth transitions (tab switching, badge appearance)
+
+**What Should Be Worked On Next:**
+- Profile photo upload functionality
+- OAuth backend endpoints (Google, Facebook)
+- SSE (Server-Sent Events) for real-time notification push
+- PWA features (service worker, manifest.json enhancements)
+- Image uploads for limit categories
+
