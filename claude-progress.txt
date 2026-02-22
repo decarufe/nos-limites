@@ -48,18 +48,34 @@
   - No mock data patterns found in codebase
   - Both client and server build successfully with zero errors
 
+### Session 5 - 2026-02-22
+
+**Features Completed:**
+- Feature #35: Login screen displays correctly on all screen sizes ✅ PASSING
+  - Added Google OAuth button with official Google colors/icon SVG
+  - Added Facebook OAuth button with Facebook blue (#1877F2) and icon SVG
+  - Added "ou" divider between magic link form and social buttons
+  - Responsive CSS: mobile-first (375px), tablet (768px centers content), desktop (1024px+ larger padding)
+  - overflow-x: hidden prevents horizontal scroll
+  - Form max-width: 400px with margin: 0 auto for centering
+  - Hero section flex adjusts between mobile (flex: 1) and tablet/desktop (flex: 0)
+  - All buttons full-width, proper hover/active states
+  - No mock data patterns in source code
+  - TypeScript compiles with zero errors
+  - Vite dev server starts cleanly
+
 **Current Status:** 12/75 features passing (16.0%)
 
 **Architecture Notes:**
 - Backend: Express + better-sqlite3 + Drizzle ORM on port 3001
 - Frontend: React + Vite + TypeScript on port 5173
 - Database: SQLite file at server/data/noslimites.db (WAL mode)
-- Auth: JWT-based (middleware exists, not yet fully implemented)
-- API routes implemented: /api/health, /api/limits/categories
-- All other routes (auth, profile, relationships, notifications) are TODO
+- Auth: JWT-based with magic link flow fully implemented
+- OAuth buttons present on UI but backend OAuth endpoints not yet implemented
+- API routes implemented: /api/health, /api/limits/categories, /api/auth/magic-link, /api/auth/verify, /api/auth/session, /api/auth/logout
 
 **What Should Be Worked On Next:**
-- Authentication endpoints (magic link, OAuth)
+- OAuth backend endpoints (Google, Facebook)
 - Profile CRUD
 - Relationships management
 - Frontend pages beyond placeholders

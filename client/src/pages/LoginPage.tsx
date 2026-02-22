@@ -107,7 +107,7 @@ export default function LoginPage() {
 
       <div className={styles.form}>
         {status === "sent" ? (
-          <div className={styles.successBox}>
+          <div className={styles.successBox} role="status" aria-live="polite">
             <div className={styles.successIcon}>
               <svg
                 width="48"
@@ -118,6 +118,7 @@ export default function LoginPage() {
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
+                aria-hidden="true"
               >
                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
                 <polyline points="22 4 12 14.01 9 11.01" />
@@ -150,7 +151,7 @@ export default function LoginPage() {
           </div>
         ) : (
           <>
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} aria-labelledby="login-heading">
               <label className={styles.label} htmlFor="email">
                 Adresse email
               </label>
@@ -174,7 +175,7 @@ export default function LoginPage() {
                 autoFocus
               />
               {status === "error" && (
-                <p className={styles.error}>{errorMessage}</p>
+                <p className={styles.error} role="alert" aria-live="assertive">{errorMessage}</p>
               )}
               <button
                 type="submit"
