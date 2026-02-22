@@ -6,6 +6,7 @@ import {
   limits,
   users,
   notifications,
+  blockedUsers,
 } from "../db/schema";
 import { eq, or, and, inArray } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
@@ -32,29 +33,40 @@ router.get(
         ),
       });
 
-      // Enrich with partner display names
-      const enriched = await Promise.all(
-        userRelationships.map(async (rel) => {
-          const partnerId =
-            rel.inviterId === userId ? rel.inviteeId : rel.inviterId;
-          let partnerName = null;
-          let partnerAvatarUrl = null;
-          if (partnerId) {
-            const partner = await db.query.users.findFirst({
-              where: eq(users.id, partnerId),
-            });
-            if (partner) {
-              partnerName = partner.displayName;
-              partnerAvatarUrl = partner.avatarUrl;
-            }
-          }
-          return {
-            ...rel,
-            partnerName,
-            partnerAvatarUrl,
-          };
-        }),
+      // Collect all unique partner IDs
+      const partnerIds = new Set<string>();
+      userRelationships.forEach((rel) => {
+        const partnerId =
+          rel.inviterId === userId ? rel.inviteeId : rel.inviterId;
+        if (partnerId) {
+          partnerIds.add(partnerId);
+        }
+      });
+
+      // Batch fetch all partners in a single query (performance optimization)
+      const partners =
+        partnerIds.size > 0
+          ? await db.query.users.findMany({
+              where: inArray(users.id, Array.from(partnerIds)),
+            })
+          : [];
+
+      // Create a lookup map for O(1) access
+      const partnerMap = new Map(
+        partners.map((p) => [p.id, { name: p.displayName, avatarUrl: p.avatarUrl }]),
       );
+
+      // Enrich relationships with partner data
+      const enriched = userRelationships.map((rel) => {
+        const partnerId =
+          rel.inviterId === userId ? rel.inviteeId : rel.inviterId;
+        const partnerData = partnerId ? partnerMap.get(partnerId) : null;
+        return {
+          ...rel,
+          partnerName: partnerData?.name || null,
+          partnerAvatarUrl: partnerData?.avatarUrl || null,
+        };
+      });
 
       return res.json({
         success: true,
@@ -205,6 +217,26 @@ router.post(
       if (relationship.status === "accepted") {
         return res.status(400).json({
           message: "Cette invitation a déjà été acceptée.",
+        });
+      }
+
+      // Check if either user has blocked the other
+      const isBlocked = await db.query.blockedUsers.findFirst({
+        where: or(
+          and(
+            eq(blockedUsers.blockerId, userId),
+            eq(blockedUsers.blockedId, relationship.inviterId),
+          ),
+          and(
+            eq(blockedUsers.blockerId, relationship.inviterId),
+            eq(blockedUsers.blockedId, userId),
+          ),
+        ),
+      });
+
+      if (isBlocked) {
+        return res.status(403).json({
+          message: "Impossible d'accepter cette invitation.",
         });
       }
 
@@ -368,6 +400,15 @@ router.put(
         });
       }
 
+      // Determine the other user in the relationship
+      const otherUserId =
+        relationship.inviterId === userId
+          ? relationship.inviteeId
+          : relationship.inviterId;
+
+      // Track newly discovered common limits for notifications
+      const newlyCommonLimits: string[] = [];
+
       // Process each limit update
       for (const limitUpdate of limitUpdates) {
         const { limitId, isAccepted, note } = limitUpdate;
@@ -394,6 +435,23 @@ router.put(
           ),
         });
 
+        // Check if this creates a new common limit
+        if (isAccepted && otherUserId) {
+          const otherUserLimit = await db.query.userLimits.findFirst({
+            where: and(
+              eq(userLimits.userId, otherUserId),
+              eq(userLimits.relationshipId, relationshipId),
+              eq(userLimits.limitId, limitId),
+              eq(userLimits.isAccepted, true),
+            ),
+          });
+
+          // If other user already accepted this limit, and this is a new acceptance
+          if (otherUserLimit && (!existing || !existing.isAccepted)) {
+            newlyCommonLimits.push(limitId);
+          }
+        }
+
         if (existing) {
           // Update existing
           await db
@@ -413,6 +471,43 @@ router.put(
             limitId,
             isAccepted,
             note: note || null,
+          });
+        }
+      }
+
+      // Create notifications for newly discovered common limits
+      if (newlyCommonLimits.length > 0 && otherUserId) {
+        const currentUser = await db.query.users.findFirst({
+          where: eq(users.id, userId),
+        });
+
+        for (const limitId of newlyCommonLimits) {
+          const limit = await db.query.limits.findFirst({
+            where: eq(limits.id, limitId),
+          });
+
+          // Notify the other user
+          await db.insert(notifications).values({
+            id: uuidv4(),
+            userId: otherUserId,
+            type: "new_common_limit",
+            title: "Nouvelle limite commune découverte",
+            message: `${currentUser?.displayName || "Un utilisateur"} a également coché "${limit?.name || "une limite"}". C'est maintenant une limite commune !`,
+            relatedUserId: userId,
+            relatedRelationshipId: relationshipId,
+            isRead: false,
+          });
+
+          // Also notify the current user
+          await db.insert(notifications).values({
+            id: uuidv4(),
+            userId: userId,
+            type: "new_common_limit",
+            title: "Nouvelle limite commune découverte",
+            message: `Vous et votre partenaire avez tous deux coché "${limit?.name || "une limite"}". C'est maintenant une limite commune !`,
+            relatedUserId: otherUserId,
+            relatedRelationshipId: relationshipId,
+            isRead: false,
           });
         }
       }
@@ -610,6 +705,105 @@ router.delete(
       console.error("Error deleting relationship:", error);
       return res.status(500).json({
         message: "Erreur lors de la suppression de la relation.",
+      });
+    }
+  },
+);
+
+/**
+ * POST /api/relationships/:id/block
+ * Block a user. This removes the existing relationship and prevents future invitations.
+ * Only a participant in the relationship can block.
+ */
+router.post(
+  "/relationships/:id/block",
+  requireAuth,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const userId = req.userId!;
+      const relationshipId = req.params.id;
+
+      // Verify the user is part of this relationship
+      const relationship = await db.query.relationships.findFirst({
+        where: and(
+          eq(relationships.id, relationshipId),
+          or(
+            eq(relationships.inviterId, userId),
+            eq(relationships.inviteeId, userId),
+          ),
+        ),
+      });
+
+      if (!relationship) {
+        return res.status(404).json({
+          message: "Relation non trouvée.",
+        });
+      }
+
+      // Determine the other user (the one being blocked)
+      const blockedUserId =
+        relationship.inviterId === userId
+          ? relationship.inviteeId
+          : relationship.inviterId;
+
+      if (!blockedUserId) {
+        return res.status(400).json({
+          message: "Impossible de bloquer un utilisateur inexistant.",
+        });
+      }
+
+      // Check if already blocked
+      const existingBlock = await db.query.blockedUsers.findFirst({
+        where: and(
+          eq(blockedUsers.blockerId, userId),
+          eq(blockedUsers.blockedId, blockedUserId),
+        ),
+      });
+
+      if (existingBlock) {
+        return res.status(400).json({
+          message: "Cet utilisateur est déjà bloqué.",
+        });
+      }
+
+      // Delete associated user_limits
+      await db
+        .delete(userLimits)
+        .where(eq(userLimits.relationshipId, relationshipId));
+
+      // Delete the relationship
+      await db
+        .delete(relationships)
+        .where(eq(relationships.id, relationshipId));
+
+      // Add to blocked_users table
+      await db.insert(blockedUsers).values({
+        id: uuidv4(),
+        blockerId: userId,
+        blockedId: blockedUserId,
+      });
+
+      // Notify the blocked user (optional, but good for transparency)
+      const blockingUser = await db.query.users.findFirst({
+        where: eq(users.id, userId),
+      });
+      await db.insert(notifications).values({
+        id: uuidv4(),
+        userId: blockedUserId,
+        type: "relation_deleted",
+        title: "Relation supprimée",
+        message: `${blockingUser?.displayName || "Un utilisateur"} a supprimé la relation.`,
+        relatedUserId: userId,
+      });
+
+      return res.json({
+        success: true,
+        message: "Utilisateur bloqué avec succès.",
+      });
+    } catch (error) {
+      console.error("Error blocking user:", error);
+      return res.status(500).json({
+        message: "Erreur lors du blocage de l'utilisateur.",
       });
     }
   },
