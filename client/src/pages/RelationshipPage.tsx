@@ -216,7 +216,7 @@ export default function RelationshipPage() {
     fetchCommonLimits,
   ]);
 
-  const toggleCategory = (categoryId: string) => {
+  const toggleCategoryExpanded = (categoryId: string) => {
     setExpandedCategories((prev) => {
       const next = new Set(prev);
       if (next.has(categoryId)) {
@@ -625,7 +625,7 @@ export default function RelationshipPage() {
                 <div key={category.id} className={styles.categoryCard}>
                   <button
                     className={styles.categoryHeader}
-                    onClick={() => toggleCategory(category.id)}
+                    onClick={() => toggleCategoryExpanded(category.id)}
                   >
                     <span className={styles.categoryIcon}>
                       {category.icon || "📋"}
@@ -652,6 +652,22 @@ export default function RelationshipPage() {
 
                   {expandedCategories.has(category.id) && (
                     <div className={styles.categoryBody}>
+                      <div className={styles.categoryActions}>
+                        <button
+                          className={styles.categoryActionButton}
+                          onClick={() => toggleCategory(category.id, true)}
+                          disabled={saving}
+                        >
+                          Tout cocher
+                        </button>
+                        <button
+                          className={styles.categoryActionButton}
+                          onClick={() => toggleCategory(category.id, false)}
+                          disabled={saving}
+                        >
+                          Tout décocher
+                        </button>
+                      </div>
                       {category.subcategories.map((subcategory) => (
                         <div
                           key={subcategory.id}
