@@ -4,12 +4,6 @@ import * as schema from "./schema";
 import path from "path";
 import fs from "fs";
 
-// Ensure data directory exists
-const dataDir = path.join(__dirname, "../../data");
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true });
-}
-
 function resolveDatabasePath(): string {
   if (process.env.DATABASE_URL?.trim()) {
     return process.env.DATABASE_URL.trim();
@@ -17,6 +11,11 @@ function resolveDatabasePath(): string {
 
   if (process.env.VERCEL) {
     return path.join("/tmp", "noslimites.db");
+  }
+
+  const dataDir = path.join(__dirname, "../../data");
+  if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
   }
 
   return path.join(dataDir, "noslimites.db");
