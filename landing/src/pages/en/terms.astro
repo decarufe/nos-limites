@@ -1,0 +1,42 @@
+---
+import PageLayout from '../../layouts/PageLayout.astro';
+import { useTranslations } from '../../i18n/utils';
+
+const t = useTranslations('en');
+---
+
+<PageLayout
+  title="Terms of Use — Nos limites"
+  description="Terms of Use for the Nos limites service."
+>
+  <section class="section page-header">
+    <div class="container">
+      <h1 class="section-title">{t('terms.title')}</h1>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container legal-content">
+      <h2>{t('terms.service.title')}</h2>
+      <p>{t('terms.service.text')}</p>
+      <h2>{t('terms.obligations.title')}</h2>
+      <p>{t('terms.obligations.text')}</p>
+      <h2>{t('terms.acceptable.title')}</h2>
+      <p>{t('terms.acceptable.text')}</p>
+      <h2>{t('terms.liability.title')}</h2>
+      <p>{t('terms.liability.text')}</p>
+      <h2>{t('terms.termination.title')}</h2>
+      <p>{t('terms.termination.text')}</p>
+    </div>
+  </section>
+</PageLayout>
+
+<style>
+  .page-header {
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.05) 0%, rgba(236, 72, 153, 0.05) 100%);
+    padding-bottom: var(--spacing-2xl);
+  }
+  .legal-content { max-width: 720px; }
+  .legal-content h2 { font-size: var(--font-size-xl); margin-top: var(--spacing-2xl); margin-bottom: var(--spacing-md); color: var(--color-text); }
+  .legal-content p { color: var(--color-text-light); line-height: 1.8; margin-bottom: var(--spacing-md); }
+</style>

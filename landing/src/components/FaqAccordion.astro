@@ -1,0 +1,73 @@
+---
+interface Props {
+  question: string;
+  answer: string;
+}
+
+const { question, answer } = Astro.props;
+---
+
+<details class="faq-item">
+  <summary class="faq-question">{question}</summary>
+  <div class="faq-answer">
+    <p>{answer}</p>
+  </div>
+</details>
+
+<style>
+  .faq-item {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    overflow: hidden;
+    transition: box-shadow 0.2s;
+  }
+
+  .faq-item[open] {
+    box-shadow: var(--shadow-sm);
+  }
+
+  .faq-question {
+    padding: var(--spacing-lg) var(--spacing-xl);
+    font-weight: 700;
+    font-size: var(--font-size-lg);
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    color: var(--color-text);
+    transition: color 0.2s;
+    min-height: 48px;
+  }
+
+  .faq-question::-webkit-details-marker {
+    display: none;
+  }
+
+  .faq-question::after {
+    content: '+';
+    font-size: var(--font-size-xl);
+    color: var(--color-primary);
+    flex-shrink: 0;
+    transition: transform 0.2s;
+  }
+
+  .faq-item[open] .faq-question::after {
+    content: '−';
+  }
+
+  .faq-question:hover {
+    color: var(--color-primary);
+  }
+
+  .faq-answer {
+    padding: 0 var(--spacing-xl) var(--spacing-lg);
+  }
+
+  .faq-answer p {
+    color: var(--color-text-light);
+    line-height: 1.7;
+  }
+</style>

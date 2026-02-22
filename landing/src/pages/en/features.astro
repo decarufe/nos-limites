@@ -1,0 +1,153 @@
+---
+import PageLayout from '../../layouts/PageLayout.astro';
+import FeatureCard from '../../components/FeatureCard.astro';
+import CTABanner from '../../components/CTABanner.astro';
+import { useTranslations } from '../../i18n/utils';
+
+const t = useTranslations('en');
+const APP_URL = 'https://nos-limites-app.vercel.app/';
+---
+
+<PageLayout
+  title="Features — Nos limites"
+  description={t('features.subtitle')}
+>
+  <section class="section page-header">
+    <div class="container">
+      <h1 class="section-title">{t('features.title')}</h1>
+      <p class="section-subtitle">{t('features.subtitle')}</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="features-grid">
+        <FeatureCard icon="🔒" title={t('feature.match.title')} description={t('feature.match.desc')} />
+        <FeatureCard icon="📱" title={t('feature.qr.title')} description={t('feature.qr.desc')} />
+        <FeatureCard icon="🎯" title={t('feature.categories.title')} description={t('feature.categories.desc')} />
+        <FeatureCard icon="🔑" title={t('feature.magiclink.title')} description={t('feature.magiclink.desc')} />
+        <FeatureCard icon="🔔" title={t('feature.notifications.title')} description={t('feature.notifications.desc')} />
+        <FeatureCard icon="📲" title={t('feature.pwa.title')} description={t('feature.pwa.desc')} />
+        <FeatureCard icon="🛡️" title={t('feature.gdpr.title')} description={t('feature.gdpr.desc')} />
+        <FeatureCard icon="📝" title={t('feature.notes.title')} description={t('feature.notes.desc')} />
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-alt">
+    <div class="container">
+      <h2 class="section-title">The 5 categories</h2>
+      <p class="section-subtitle">A complete spectrum to explore all aspects of your relationship.</p>
+      <div class="categories-list">
+        <div class="category-item">
+          <span class="category-emoji">🤝</span>
+          <div>
+            <h3>Professional contact</h3>
+            <p>Verbal communication, professional physical contact</p>
+          </div>
+        </div>
+        <div class="category-item">
+          <span class="category-emoji">😊</span>
+          <div>
+            <h3>Friendly contact</h3>
+            <p>Friendly communication, friendly physical contact, social activities</p>
+          </div>
+        </div>
+        <div class="category-item">
+          <span class="category-emoji">💬</span>
+          <div>
+            <h3>Flirting</h3>
+            <p>Verbal flirting, body language</p>
+          </div>
+        </div>
+        <div class="category-item">
+          <span class="category-emoji">🤗</span>
+          <div>
+            <h3>Close contact</h3>
+            <p>Tender gestures, more intimate contact</p>
+          </div>
+        </div>
+        <div class="category-item">
+          <span class="category-emoji">💕</span>
+          <div>
+            <h3>Intimacy</h3>
+            <p>Intimate closeness, intimate proposals</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <CTABanner
+    title={t('cta.title')}
+    subtitle={t('cta.subtitle')}
+    buttonText={t('cta.button')}
+    buttonHref={APP_URL}
+  />
+</PageLayout>
+
+<style>
+  .page-header {
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.05) 0%, rgba(236, 72, 153, 0.05) 100%);
+    padding-bottom: var(--spacing-2xl);
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--spacing-lg);
+  }
+
+  @media (min-width: 768px) {
+    .features-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (min-width: 1024px) {
+    .features-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  .section-alt {
+    background: linear-gradient(180deg, rgba(124, 58, 237, 0.03) 0%, rgba(236, 72, 153, 0.03) 100%);
+  }
+
+  .categories-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    max-width: 640px;
+    margin: 0 auto;
+  }
+
+  .category-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
+    padding: var(--spacing-lg) var(--spacing-xl);
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .category-item:hover {
+    transform: translateX(4px);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .category-emoji {
+    font-size: 2.5rem;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+
+  .category-item h3 {
+    font-size: var(--font-size-lg);
+    margin-bottom: var(--spacing-xs);
+  }
+
+  .category-item p {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    margin: 0;
+  }
+</style>

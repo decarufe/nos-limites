@@ -1,0 +1,20 @@
+{
+    "name": "nos-limites-landing",
+    "type": "module",
+    "version": "1.0.0",
+    "private": true,
+    "scripts": {
+        "dev": "astro dev",
+        "build": "astro build",
+        "preview": "astro preview",
+        "screenshots": "npx playwright test scripts/capture-screenshots.ts"
+    },
+    "dependencies": {
+        "astro": "^5.17.3",
+        "@astrojs/sitemap": "^3.3.1"
+    },
+    "devDependencies": {
+        "@playwright/test": "^1.49.0",
+        "typescript": "^5.6.0"
+    }
+}

@@ -1,0 +1,41 @@
+---
+import { getLangFromUrl } from '../i18n/utils';
+import { getLocalePath } from '../i18n/routes';
+import { languages } from '../i18n/ui';
+
+const lang = getLangFromUrl(Astro.url);
+const targetLang = lang === 'fr' ? 'en' : 'fr';
+const targetPath = getLocalePath(Astro.url.pathname, targetLang);
+---
+
+<a href={targetPath} class="lang-picker" aria-label={`Switch to ${languages[targetLang]}`}>
+  <span class="lang-flag">{targetLang === 'fr' ? '🇫🇷' : '🇬🇧'}</span>
+  <span class="lang-label">{languages[targetLang]}</span>
+</a>
+
+<style>
+  .lang-picker {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.75rem;
+    border-radius: var(--radius-full);
+    color: var(--color-text-light);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    text-decoration: none;
+    transition: background-color 0.2s, color 0.2s;
+    min-height: auto;
+    min-width: auto;
+  }
+
+  .lang-picker:hover {
+    background: var(--color-border);
+    color: var(--color-text);
+    text-decoration: none;
+  }
+
+  .lang-flag {
+    font-size: 1.125rem;
+  }
+</style>

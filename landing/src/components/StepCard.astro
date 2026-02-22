@@ -1,0 +1,64 @@
+---
+interface Props {
+  number: number;
+  title: string;
+  description: string;
+  icon: string;
+}
+
+const { number, title, description, icon } = Astro.props;
+---
+
+<div class="step-card">
+  <div class="step-number-wrap">
+    <span class="step-number">{number}</span>
+  </div>
+  <div class="step-icon">{icon}</div>
+  <h3 class="step-title">{title}</h3>
+  <p class="step-desc">{description}</p>
+</div>
+
+<style>
+  .step-card {
+    text-align: center;
+    position: relative;
+    padding: var(--spacing-xl) var(--spacing-lg);
+  }
+
+  .step-number-wrap {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    margin-bottom: var(--spacing-md);
+  }
+
+  .step-number {
+    color: white;
+    font-weight: 700;
+    font-size: var(--font-size-xl);
+  }
+
+  .step-icon {
+    font-size: 3rem;
+    margin-bottom: var(--spacing-md);
+    line-height: 1;
+  }
+
+  .step-title {
+    font-size: var(--font-size-xl);
+    margin-bottom: var(--spacing-sm);
+    color: var(--color-text);
+  }
+
+  .step-desc {
+    font-size: var(--font-size-base);
+    color: var(--color-text-light);
+    line-height: 1.6;
+    max-width: 300px;
+    margin: 0 auto;
+  }
+</style>

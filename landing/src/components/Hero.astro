@@ -1,0 +1,214 @@
+---
+interface Props {
+  title: string;
+  subtitle: string;
+  ctaText: string;
+  ctaHref: string;
+  secondaryCta?: string;
+  secondaryHref?: string;
+}
+
+const { title, subtitle, ctaText, ctaHref, secondaryCta, secondaryHref } = Astro.props;
+---
+
+<section class="hero">
+  <div class="container hero-inner">
+    <div class="hero-content">
+      <h1 class="hero-title">{title}</h1>
+      <p class="hero-subtitle">{subtitle}</p>
+      <div class="hero-actions">
+        <a href={ctaHref} class="btn btn-primary btn-lg">{ctaText}</a>
+        {secondaryCta && secondaryHref && (
+          <a href={secondaryHref} class="btn btn-outline">{secondaryCta}</a>
+        )}
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="hero-phone">
+        <div class="phone-screen">
+          <div class="phone-mockup">
+            <div class="mockup-header">
+              <div class="mockup-dot"></div>
+              <div class="mockup-dot"></div>
+              <div class="mockup-dot"></div>
+            </div>
+            <div class="mockup-body">
+              <div class="mockup-card" style="--accent: var(--color-primary);"></div>
+              <div class="mockup-card" style="--accent: var(--color-secondary);"></div>
+              <div class="mockup-card" style="--accent: var(--color-accent);"></div>
+              <div class="mockup-match">
+                <span>✓</span>
+                <span>+</span>
+                <span>✓</span>
+                <span>=</span>
+                <span>💕</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="hero-bg"></div>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    overflow: hidden;
+    padding: var(--spacing-4xl) 0;
+  }
+
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.05) 0%, rgba(236, 72, 153, 0.05) 50%, rgba(6, 182, 212, 0.03) 100%);
+    z-index: -1;
+  }
+
+  .hero-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-3xl);
+  }
+
+  .hero-content {
+    text-align: center;
+    max-width: 640px;
+  }
+
+  .hero-title {
+    margin-bottom: var(--spacing-lg);
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-subtitle {
+    font-size: var(--font-size-lg);
+    margin-bottom: var(--spacing-xl);
+    color: var(--color-text-light);
+    line-height: 1.7;
+  }
+
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+    justify-content: center;
+  }
+
+  .btn-lg {
+    padding: 1rem 2.5rem;
+    font-size: var(--font-size-lg);
+  }
+
+  .hero-visual {
+    width: 100%;
+    max-width: 320px;
+  }
+
+  .hero-phone {
+    position: relative;
+  }
+
+  .phone-screen {
+    background: white;
+    border-radius: 24px;
+    padding: 12px;
+    box-shadow: var(--shadow-xl), 0 0 0 1px rgba(0,0,0,0.05);
+  }
+
+  .phone-mockup {
+    border-radius: 16px;
+    overflow: hidden;
+    background: var(--color-background);
+    padding: var(--spacing-md);
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+
+  .mockup-header {
+    display: flex;
+    gap: 6px;
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .mockup-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--color-border);
+  }
+
+  .mockup-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    flex: 1;
+    justify-content: center;
+  }
+
+  .mockup-card {
+    height: 60px;
+    border-radius: var(--radius-md);
+    background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 60%, white));
+    opacity: 0.8;
+    animation: pulse-card 3s ease-in-out infinite alternate;
+  }
+
+  .mockup-card:nth-child(2) { animation-delay: 0.5s; }
+  .mockup-card:nth-child(3) { animation-delay: 1s; }
+
+  @keyframes pulse-card {
+    0% { opacity: 0.6; transform: scale(0.98); }
+    100% { opacity: 0.9; transform: scale(1); }
+  }
+
+  .mockup-match {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md);
+    background: white;
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-xl);
+    box-shadow: var(--shadow-sm);
+  }
+
+  @media (min-width: 768px) {
+    .hero {
+      padding: var(--spacing-4xl) 0 calc(var(--spacing-4xl) * 1.5);
+    }
+
+    .hero-inner {
+      flex-direction: row;
+      text-align: left;
+    }
+
+    .hero-content {
+      text-align: left;
+      flex: 1;
+    }
+
+    .hero-actions {
+      justify-content: flex-start;
+    }
+
+    .hero-visual {
+      flex: 0 0 320px;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .hero-visual {
+      flex: 0 0 360px;
+    }
+  }
+</style>

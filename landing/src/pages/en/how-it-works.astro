@@ -1,0 +1,177 @@
+---
+import PageLayout from '../../layouts/PageLayout.astro';
+import CTABanner from '../../components/CTABanner.astro';
+import { useTranslations } from '../../i18n/utils';
+
+const t = useTranslations('en');
+const APP_URL = 'https://nos-limites-app.vercel.app/';
+---
+
+<PageLayout
+  title="How it works — Nos limites"
+  description={t('how.subtitle')}
+>
+  <section class="section page-header">
+    <div class="container">
+      <h1 class="section-title">{t('how.title')}</h1>
+      <p class="section-subtitle">{t('how.subtitle')}</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="steps-vertical">
+        <div class="step-row">
+          <div class="step-visual">
+            <div class="step-circle">1</div>
+            <div class="step-line"></div>
+          </div>
+          <div class="step-content">
+            <h2>{t('how.step.1.title')}</h2>
+            <p>{t('how.step.1.desc')}</p>
+          </div>
+        </div>
+        <div class="step-row">
+          <div class="step-visual">
+            <div class="step-circle">2</div>
+            <div class="step-line"></div>
+          </div>
+          <div class="step-content">
+            <h2>{t('how.step.2.title')}</h2>
+            <p>{t('how.step.2.desc')}</p>
+          </div>
+        </div>
+        <div class="step-row">
+          <div class="step-visual">
+            <div class="step-circle">3</div>
+            <div class="step-line"></div>
+          </div>
+          <div class="step-content">
+            <h2>{t('how.step.3.title')}</h2>
+            <p>{t('how.step.3.desc')}</p>
+          </div>
+        </div>
+        <div class="step-row">
+          <div class="step-visual">
+            <div class="step-circle">4</div>
+          </div>
+          <div class="step-content">
+            <h2>{t('how.step.4.title')}</h2>
+            <p>{t('how.step.4.desc')}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-alt">
+    <div class="container match-section">
+      <h2 class="section-title">{t('how.privacy.title')}</h2>
+      <p class="match-explanation">{t('how.privacy.desc')}</p>
+
+      <div class="match-diagram">
+        <div class="match-person">
+          <div class="match-avatar">👤</div>
+          <div class="match-label">You</div>
+          <div class="match-checks">
+            <span class="check active">✓</span>
+            <span class="check active">✓</span>
+            <span class="check">✗</span>
+            <span class="check active">✓</span>
+          </div>
+        </div>
+        <div class="match-arrow">
+          <span>Only common<br/>limits</span>
+          <div class="arrow-line">→</div>
+        </div>
+        <div class="match-person">
+          <div class="match-avatar">👤</div>
+          <div class="match-label">The other</div>
+          <div class="match-checks">
+            <span class="check active">✓</span>
+            <span class="check">✗</span>
+            <span class="check active">✓</span>
+            <span class="check active">✓</span>
+          </div>
+        </div>
+        <div class="match-result">
+          <div class="result-icon">💕</div>
+          <div class="result-label">2 common limits revealed</div>
+          <div class="match-checks result-checks">
+            <span class="check match-yes">✓</span>
+            <span class="check match-hidden">?</span>
+            <span class="check match-hidden">?</span>
+            <span class="check match-yes">✓</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <CTABanner
+    title={t('cta.title')}
+    subtitle={t('cta.subtitle')}
+    buttonText={t('cta.button')}
+    buttonHref={APP_URL}
+  />
+</PageLayout>
+
+<style>
+  .page-header {
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.05) 0%, rgba(236, 72, 153, 0.05) 100%);
+    padding-bottom: var(--spacing-2xl);
+  }
+
+  .section-alt {
+    background: linear-gradient(180deg, rgba(124, 58, 237, 0.03) 0%, rgba(236, 72, 153, 0.03) 100%);
+  }
+
+  .steps-vertical {
+    max-width: 600px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .step-row { display: flex; gap: var(--spacing-xl); }
+  .step-visual { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+  .step-circle {
+    width: 48px; height: 48px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    color: white; font-weight: 700; font-size: var(--font-size-xl);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .step-line { width: 2px; flex: 1; min-height: 40px; background: linear-gradient(180deg, var(--color-primary), var(--color-secondary)); opacity: 0.3; }
+  .step-content { padding-bottom: var(--spacing-2xl); }
+  .step-content h2 { font-size: var(--font-size-xl); margin-bottom: var(--spacing-sm); }
+  .step-content p { color: var(--color-text-light); line-height: 1.7; }
+
+  .match-section { max-width: 720px; text-align: center; }
+  .match-explanation { font-size: var(--font-size-lg); color: var(--color-text-light); line-height: 1.7; margin-bottom: var(--spacing-3xl); }
+  .match-diagram {
+    display: flex; flex-direction: column; align-items: center; gap: var(--spacing-xl);
+    padding: var(--spacing-2xl); background: var(--color-surface); border-radius: var(--radius-xl); border: 1px solid var(--color-border);
+  }
+  @media (min-width: 768px) { .match-diagram { flex-direction: row; justify-content: center; flex-wrap: wrap; } }
+  .match-person { display: flex; flex-direction: column; align-items: center; gap: var(--spacing-sm); }
+  .match-avatar { font-size: 3rem; }
+  .match-label { font-weight: 700; }
+  .match-checks { display: flex; gap: var(--spacing-xs); }
+  .check {
+    width: 36px; height: 36px; border-radius: var(--radius-sm);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: var(--font-size-sm);
+    background: var(--color-border); color: var(--color-text-muted);
+  }
+  .check.active { background: var(--color-primary); color: white; }
+  .check.match-yes { background: #10B981; color: white; }
+  .check.match-hidden { background: var(--color-border); color: var(--color-text-muted); }
+  .match-arrow { font-size: var(--font-size-sm); color: var(--color-text-muted); text-align: center; font-weight: 600; }
+  .arrow-line { font-size: var(--font-size-2xl); color: var(--color-primary); }
+  .match-result {
+    display: flex; flex-direction: column; align-items: center; gap: var(--spacing-sm);
+    padding: var(--spacing-lg); background: rgba(124, 58, 237, 0.05); border-radius: var(--radius-lg); border: 2px dashed var(--color-primary);
+  }
+  .result-icon { font-size: 2rem; }
+  .result-label { font-weight: 700; color: var(--color-primary); font-size: var(--font-size-sm); }
+</style>

@@ -1,0 +1,194 @@
+---
+import PageLayout from '../layouts/PageLayout.astro';
+import Hero from '../components/Hero.astro';
+import FeatureCard from '../components/FeatureCard.astro';
+import StepCard from '../components/StepCard.astro';
+import CTABanner from '../components/CTABanner.astro';
+import { useTranslations } from '../i18n/utils';
+
+const t = useTranslations('fr');
+const APP_URL = 'https://nos-limites-app.vercel.app/';
+---
+
+<PageLayout
+  title="Nos limites — Explore tes limites en toute confiance"
+  description={t('hero.subtitle')}
+>
+  <Hero
+    title={t('hero.title')}
+    subtitle={t('hero.subtitle')}
+    ctaText={t('hero.cta')}
+    ctaHref={APP_URL}
+    secondaryCta={t('hero.cta.secondary')}
+    secondaryHref="/fonctionnalites"
+  />
+
+  <!-- Features highlights -->
+  <section class="section">
+    <div class="container">
+      <h2 class="section-title">{t('highlights.title')}</h2>
+      <p class="section-subtitle">{t('highlights.subtitle')}</p>
+      <div class="features-grid">
+        <FeatureCard
+          icon="🔒"
+          title={t('highlight.match.title')}
+          description={t('highlight.match.desc')}
+        />
+        <FeatureCard
+          icon="📱"
+          title={t('highlight.qr.title')}
+          description={t('highlight.qr.desc')}
+        />
+        <FeatureCard
+          icon="🎯"
+          title={t('highlight.categories.title')}
+          description={t('highlight.categories.desc')}
+        />
+        <FeatureCard
+          icon="🛡️"
+          title={t('highlight.privacy.title')}
+          description={t('highlight.privacy.desc')}
+        />
+      </div>
+    </div>
+  </section>
+
+  <!-- How it works summary -->
+  <section class="section section-alt">
+    <div class="container">
+      <h2 class="section-title">{t('steps.title')}</h2>
+      <p class="section-subtitle">{t('steps.subtitle')}</p>
+      <div class="steps-grid">
+        <StepCard
+          number={1}
+          icon="🤝"
+          title={t('step.1.title')}
+          description={t('step.1.desc')}
+        />
+        <StepCard
+          number={2}
+          icon="✅"
+          title={t('step.2.title')}
+          description={t('step.2.desc')}
+        />
+        <StepCard
+          number={3}
+          icon="💡"
+          title={t('step.3.title')}
+          description={t('step.3.desc')}
+        />
+      </div>
+    </div>
+  </section>
+
+  <!-- Trust / safety section -->
+  <section class="section">
+    <div class="container trust-section">
+      <div class="trust-content">
+        <h2>Un espace sûr pour explorer ta relation</h2>
+        <p>
+          Nos limites a été conçu avec un principe fondamental : <strong>ta vulnérabilité est toujours protégée</strong>.
+          Le système de match t'encourage à être honnête dans tes choix, car seules les limites mutuelles sont révélées.
+        </p>
+        <p>
+          Que ce soit pour une relation professionelle, amicale ou intime, Nos limites t'aide à ouvrir le dialogue
+          sans risque de jugement. C'est un premier pas vers une communication plus ouverte et plus saine.
+        </p>
+        <div class="trust-badges">
+          <div class="badge">
+            <span class="badge-icon">🔐</span>
+            <span class="badge-text">Données chiffrées</span>
+          </div>
+          <div class="badge">
+            <span class="badge-icon">🇪🇺</span>
+            <span class="badge-text">Conforme RGPD</span>
+          </div>
+          <div class="badge">
+            <span class="badge-icon">🆓</span>
+            <span class="badge-text">100% gratuit</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <CTABanner
+    title={t('cta.title')}
+    subtitle={t('cta.subtitle')}
+    buttonText={t('cta.button')}
+    buttonHref={APP_URL}
+  />
+</PageLayout>
+
+<style>
+  .features-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--spacing-lg);
+  }
+
+  @media (min-width: 768px) {
+    .features-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  .steps-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--spacing-xl);
+  }
+
+  @media (min-width: 768px) {
+    .steps-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  .section-alt {
+    background: linear-gradient(180deg, rgba(124, 58, 237, 0.03) 0%, rgba(236, 72, 153, 0.03) 100%);
+  }
+
+  .trust-section {
+    max-width: 720px;
+    text-align: center;
+  }
+
+  .trust-content h2 {
+    margin-bottom: var(--spacing-lg);
+  }
+
+  .trust-content p {
+    font-size: var(--font-size-lg);
+    margin-bottom: var(--spacing-md);
+    line-height: 1.7;
+  }
+
+  .trust-content strong {
+    color: var(--color-primary);
+  }
+
+  .trust-badges {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--spacing-lg);
+    margin-top: var(--spacing-xl);
+  }
+
+  .badge {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-lg);
+    background: var(--color-surface);
+    border-radius: var(--radius-full);
+    border: 1px solid var(--color-border);
+    font-weight: 600;
+    font-size: var(--font-size-sm);
+  }
+
+  .badge-icon {
+    font-size: 1.25rem;
+  }
+</style>

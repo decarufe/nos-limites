@@ -1,0 +1,46 @@
+---
+import PageLayout from '../../layouts/PageLayout.astro';
+import { useTranslations } from '../../i18n/utils';
+
+const t = useTranslations('en');
+---
+
+<PageLayout
+  title="Privacy Policy — Nos limites"
+  description={t('privacy.intro')}
+>
+  <section class="section page-header">
+    <div class="container">
+      <h1 class="section-title">{t('privacy.title')}</h1>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container legal-content">
+      <p class="intro">{t('privacy.intro')}</p>
+      <h2>{t('privacy.collected.title')}</h2>
+      <p>{t('privacy.collected.text')}</p>
+      <h2>{t('privacy.usage.title')}</h2>
+      <p>{t('privacy.usage.text')}</p>
+      <h2>{t('privacy.security.title')}</h2>
+      <p>{t('privacy.security.text')}</p>
+      <h2>{t('privacy.rights.title')}</h2>
+      <p>{t('privacy.rights.text')}</p>
+      <h2>{t('privacy.cookies.title')}</h2>
+      <p>{t('privacy.cookies.text')}</p>
+      <h2>{t('privacy.retention.title')}</h2>
+      <p>{t('privacy.retention.text')}</p>
+    </div>
+  </section>
+</PageLayout>
+
+<style>
+  .page-header {
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.05) 0%, rgba(236, 72, 153, 0.05) 100%);
+    padding-bottom: var(--spacing-2xl);
+  }
+  .legal-content { max-width: 720px; }
+  .legal-content .intro { font-size: var(--font-size-lg); margin-bottom: var(--spacing-2xl); color: var(--color-text-light); }
+  .legal-content h2 { font-size: var(--font-size-xl); margin-top: var(--spacing-2xl); margin-bottom: var(--spacing-md); color: var(--color-text); }
+  .legal-content p { color: var(--color-text-light); line-height: 1.8; margin-bottom: var(--spacing-md); }
+</style>

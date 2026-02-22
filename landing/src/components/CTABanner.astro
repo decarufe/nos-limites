@@ -1,0 +1,54 @@
+---
+interface Props {
+  title: string;
+  subtitle: string;
+  buttonText: string;
+  buttonHref: string;
+}
+
+const { title, subtitle, buttonText, buttonHref } = Astro.props;
+---
+
+<section class="cta-banner">
+  <div class="container cta-inner">
+    <h2 class="cta-title">{title}</h2>
+    <p class="cta-subtitle">{subtitle}</p>
+    <a href={buttonHref} class="btn btn-secondary btn-lg">{buttonText}</a>
+  </div>
+</section>
+
+<style>
+  .cta-banner {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 50%, #581C87 100%);
+    padding: var(--spacing-4xl) var(--spacing-lg);
+    text-align: center;
+  }
+
+  .cta-inner {
+    max-width: 640px;
+  }
+
+  .cta-title {
+    color: white;
+    margin-bottom: var(--spacing-md);
+    font-size: var(--font-size-3xl);
+  }
+
+  .cta-subtitle {
+    color: rgba(255, 255, 255, 0.85);
+    font-size: var(--font-size-lg);
+    margin-bottom: var(--spacing-xl);
+    line-height: 1.6;
+  }
+
+  .btn-lg {
+    padding: 1rem 2.5rem;
+    font-size: var(--font-size-lg);
+  }
+
+  @media (max-width: 768px) {
+    .cta-title {
+      font-size: var(--font-size-2xl);
+    }
+  }
+</style>
