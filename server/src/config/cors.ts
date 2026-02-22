@@ -41,6 +41,14 @@ export function createCorsOptions(
         return;
       }
 
+      if (
+        process.env.NODE_ENV !== "production" &&
+        /^https?:\/\/localhost(:\d+)?$/.test(normalizedOrigin)
+      ) {
+        callback(null, true);
+        return;
+      }
+
       callback(new Error(`Origin ${origin} not allowed by CORS`));
     },
     credentials: true,
