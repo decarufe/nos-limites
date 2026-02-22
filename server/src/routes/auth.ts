@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import { db } from "../db/connection";
 import { users, magicLinks, sessions } from "../db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 import jwt from "jsonwebtoken";
 import { requireAuth, AuthRequest } from "../middleware/auth";
@@ -41,14 +41,30 @@ router.post("/auth/magic-link", async (req: Request, res: Response) => {
     const token = uuidv4();
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString(); // 15 minutes
 
-    // Store magic link in database
-    await db.insert(magicLinks).values({
-      id: uuidv4(),
-      email: normalizedEmail,
-      token,
-      expiresAt,
-      used: false,
+    // Check for an existing unused, non-expired magic link for this email
+    const existingLink = await db.query.magicLinks.findFirst({
+      where: and(
+        eq(magicLinks.email, normalizedEmail),
+        eq(magicLinks.used, false),
+      ),
     });
+
+    if (existingLink && new Date(existingLink.expiresAt) > new Date()) {
+      // Reuse existing record: update token and expiration
+      await db
+        .update(magicLinks)
+        .set({ token, expiresAt })
+        .where(eq(magicLinks.id, existingLink.id));
+    } else {
+      // No reusable link found — insert a new record
+      await db.insert(magicLinks).values({
+        id: uuidv4(),
+        email: normalizedEmail,
+        token,
+        expiresAt,
+        used: false,
+      });
+    }
 
     // Build magic link URL
     const magicLinkBaseUrl = resolveFrontendBaseUrl(req, {
