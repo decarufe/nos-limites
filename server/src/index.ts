@@ -8,6 +8,8 @@ import healthRouter from "./routes/health";
 import limitsRouter from "./routes/limits";
 import authRouter from "./routes/auth";
 import profileRouter from "./routes/profile";
+import relationshipsRouter from "./routes/relationships";
+import notificationsRouter from "./routes/notifications";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -32,6 +34,8 @@ app.use("/api", healthRouter);
 app.use("/api", limitsRouter);
 app.use("/api", authRouter);
 app.use("/api", profileRouter);
+app.use("/api", relationshipsRouter);
+app.use("/api", notificationsRouter);
 
 // Start server
 app.listen(PORT, () => {
