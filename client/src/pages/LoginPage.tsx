@@ -20,9 +20,9 @@ export default function LoginPage() {
 
   if (isLoading) {
     return (
-      <div className={styles.container}>
+      <div className={styles.container} role="status" aria-label="Chargement en cours">
         <div className={styles.hero}>
-          <div className={styles.spinner} />
+          <div className={styles.spinner} aria-hidden="true" />
           <p>Chargement...</p>
         </div>
       </div>
@@ -94,11 +94,12 @@ export default function LoginPage() {
             strokeWidth="1.5"
             strokeLinecap="round"
             strokeLinejoin="round"
+            aria-hidden="true"
           >
             <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
           </svg>
         </div>
-        <h1 className={styles.title}>Nos limites</h1>
+        <h1 className={styles.title} id="login-heading">Nos limites</h1>
         <p className={styles.subtitle}>
           Définissez vos limites mutuelles en toute confiance
         </p>
