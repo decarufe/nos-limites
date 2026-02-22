@@ -181,3 +181,18 @@
 - Limits selection UI for relationships (frontend)
 - Notifications system
 - Profile photo upload
+
+### Session 9 - 2026-02-22
+
+**Features Completed:**
+- Feature #21: Relationships list shows real data from database ✅ PASSING
+  - Verified GET /api/relationships uses Drizzle ORM to query SQLite database
+  - Endpoint queries relationships table and enriches with partner displayName/avatarUrl from users table
+  - Frontend HomePage component calls api.get("/relationships") and displays real data
+  - No mock data patterns found (grep verified: no globalThis, devStore, mockData, etc.)
+  - TypeScript compiles successfully: client (228.66 kB) and server (zero errors)
+  - Server health check passes: database connected, 10 tables
+  - Data persists across server restarts (file-based SQLite at server/data/noslimites.db)
+  - Implementation complete: create, view, delete relationships all use real database
+
+**Current Status:** 24/76 features passing (31.6%)
