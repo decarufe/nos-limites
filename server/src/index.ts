@@ -6,6 +6,8 @@ import cors from "cors";
 import { db, testConnection } from "./db/connection";
 import healthRouter from "./routes/health";
 import limitsRouter from "./routes/limits";
+import authRouter from "./routes/auth";
+import profileRouter from "./routes/profile";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -28,12 +30,8 @@ app.use((req, res, next) => {
 // Routes
 app.use("/api", healthRouter);
 app.use("/api", limitsRouter);
-
-// TODO: Add routes as they are implemented
-// app.use("/api/auth", authRouter);
-// app.use("/api/profile", profileRouter);
-// app.use("/api/relationships", relationshipsRouter);
-// app.use("/api/notifications", notificationsRouter);
+app.use("/api", authRouter);
+app.use("/api", profileRouter);
 
 // Start server
 app.listen(PORT, () => {
