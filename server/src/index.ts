@@ -5,6 +5,7 @@ import express from "express";
 import cors from "cors";
 import { db, testConnection } from "./db/connection";
 import healthRouter from "./routes/health";
+import limitsRouter from "./routes/limits";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -18,14 +19,20 @@ app.use(
 );
 app.use(express.json());
 
+// Request logging middleware
+app.use((req, res, next) => {
+  console.log(`[API] ${req.method} ${req.path}`);
+  next();
+});
+
 // Routes
 app.use("/api", healthRouter);
+app.use("/api", limitsRouter);
 
 // TODO: Add routes as they are implemented
 // app.use("/api/auth", authRouter);
 // app.use("/api/profile", profileRouter);
 // app.use("/api/relationships", relationshipsRouter);
-// app.use("/api/limits", limitsRouter);
 // app.use("/api/notifications", notificationsRouter);
 
 // Start server
@@ -34,6 +41,7 @@ app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Database status: ${connected ? "connected" : "disconnected"}`);
   console.log(`Health check: http://localhost:${PORT}/api/health`);
+  console.log(`Limits categories: http://localhost:${PORT}/api/limits/categories`);
 });
 
 export default app;
