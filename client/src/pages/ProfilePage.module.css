@@ -1,0 +1,42 @@
+.container {
+  padding: var(--spacing-md);
+}
+
+.header {
+  padding: var(--spacing-md) 0;
+}
+
+.title {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--spacing-2xl) var(--spacing-md);
+  min-height: 50vh;
+}
+
+.avatar {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--spacing-lg);
+}
+
+.text {
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  opacity: 0.6;
+  max-width: 280px;
+  line-height: 1.5;
+}

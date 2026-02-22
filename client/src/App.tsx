@@ -1,30 +1,37 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import AppLayout from "./components/AppLayout";
+import LoginPage from "./pages/LoginPage";
+import HomePage from "./pages/HomePage";
+import ScanPage from "./pages/ScanPage";
+import NotificationsPage from "./pages/NotificationsPage";
+import ProfilePage from "./pages/ProfilePage";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/login" element={<div>Login Page - Coming Soon</div>} />
-        <Route path="/home" element={<div>Home Page - Coming Soon</div>} />
-        <Route path="/scan" element={<div>Scanner Page - Coming Soon</div>} />
-        <Route
-          path="/notifications"
-          element={<div>Notifications Page - Coming Soon</div>}
-        />
-        <Route
-          path="/profile"
-          element={<div>Profile Page - Coming Soon</div>}
-        />
-        <Route
-          path="/relationship/:id"
-          element={<div>Relationship Detail - Coming Soon</div>}
-        />
-        <Route
-          path="/invite/:token"
-          element={<div>Invitation Page - Coming Soon</div>}
-        />
-        <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="*" element={<div>404 - Page non trouv\u00E9e</div>} />
+        {/* Login page without bottom nav */}
+        <Route path="/login" element={<LoginPage />} />
+
+        {/* Main app with bottom tab navigation */}
+        <Route element={<AppLayout />}>
+          <Route path="/home" element={<HomePage />} />
+          <Route path="/scan" element={<ScanPage />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route
+            path="/relationship/:id"
+            element={<div style={{ padding: "16px" }}>Détail de la relation</div>}
+          />
+          <Route
+            path="/invite/:token"
+            element={<div style={{ padding: "16px" }}>Invitation</div>}
+          />
+        </Route>
+
+        {/* Default redirect */}
+        <Route path="/" element={<Navigate to="/home" replace />} />
+        <Route path="*" element={<Navigate to="/home" replace />} />
       </Routes>
     </BrowserRouter>
   );
