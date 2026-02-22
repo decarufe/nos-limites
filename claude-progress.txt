@@ -131,9 +131,53 @@
 - QR code: qrcode.react library installed for frontend QR generation
 - Privacy model: user_limits table stores per-user per-relationship limit acceptance; common-limits endpoint computes intersection
 
+### Session 8 - 2026-02-22
+
+**Features Completed:**
+- Feature #11: User can log out ✅ PASSING
+  - ProfilePage has "Déconnexion" button that calls POST /api/auth/logout
+  - Backend deletes session from DB
+  - Frontend clears localStorage token and auth context
+  - Redirects to /login after logout
+  - GET /api/auth/session returns 401 after logout (session destroyed)
+  - Protected routes no longer accessible after logout
+  - No mock data patterns found
+
+- Feature #16: User can update profile display name ✅ PASSING
+  - Added edit button (pencil icon) next to display name on ProfilePage
+  - Inline editing with text input, Save/Cancel buttons
+  - Calls PUT /api/profile with new displayName
+  - Success feedback "Nom d'affichage mis à jour avec succès !" shown
+  - AuthContext updated immediately via updateUser()
+  - Backend validates name (1-50 chars, non-empty)
+  - Database reflects change (verified via GET /api/profile)
+  - Keyboard support: Enter to save, Escape to cancel
+
+- Feature #17: User can delete account with confirmation ✅ PASSING
+  - Added "Supprimer mon compte" button on ProfilePage
+  - Confirmation modal with clear warning about irreversibility
+  - Cancel closes modal, account untouched
+  - Confirm calls DELETE /api/profile
+  - Backend explicitly deletes: user_limits, notifications, blocked_users, relationships, sessions, magic_links, then user
+  - User logged out and redirected to /login
+  - Re-registering with same email creates brand new user (isNewUser: true)
+  - All test data cleaned up after verification
+
+**Current Status:** ~20/75 features passing
+
+**Architecture Notes:**
+- Backend: Express + better-sqlite3 + Drizzle ORM on port 3001
+- Frontend: React + Vite + TypeScript on port 5173/5174
+- Database: SQLite file at server/data/noslimites.db (WAL mode)
+- Auth: JWT-based with magic link flow fully implemented
+- OAuth buttons present on UI but backend OAuth endpoints not yet implemented
+- API routes: /api/health, /api/limits/categories, /api/auth/*, /api/profile (GET/PUT/DELETE), /api/relationships (GET/POST invite/accept), /api/relationships/:id/limits (GET/PUT), /api/relationships/:id/common-limits (GET)
+- QR code: qrcode.react library installed for frontend QR generation
+- Privacy model: user_limits table stores per-user per-relationship limit acceptance; common-limits endpoint computes intersection
+- ProfilePage now has: edit display name, logout, delete account with confirmation modal
+
 **What Should Be Worked On Next:**
 - OAuth backend endpoints (Google, Facebook)
-- Relationships detail page (frontend)
 - Limits selection UI for relationships (frontend)
 - Notifications system
-- Profile management (delete account, etc.)
+- Profile photo upload
