@@ -279,3 +279,51 @@
 - Feature #30: Notifications for new common limits ✅ PASSING
 
 **Current Status:** 26/76 features passing (34.2%)
+
+### Session 11 - 2026-02-22
+
+**Features Completed:**
+- Feature #26: User can check/uncheck entire category of limits ✅ PASSING
+  - Verified toggleCategory function exists in RelationshipPage (lines 268-315)
+  - "Tout cocher" and "Tout décocher" buttons implemented in category actions (lines 676-691)
+  - Collects all limit IDs in category and updates via bulk API call
+  - Optimistic UI updates with error reversion on failure
+  - Backend PUT /api/relationships/:id/limits handles bulk limit updates
+  - TypeScript compiles with zero errors
+  - No mock data patterns found in codebase
+
+- Feature #33: User can mark all notifications as read ✅ PASSING
+  - Implemented PUT /api/notifications/read-all endpoint (backend)
+  - Implemented PUT /api/notifications/:id/read endpoint (backend)
+  - Both endpoints require authentication (401 for unauthenticated requests)
+  - Backend updates all notifications for user: SET isRead = true
+  - Updated NotificationsPage to fetch and display real notifications from database
+  - Added "Tout marquer comme lu" button in header (visible when unreadCount > 0)
+  - Button calls handleMarkAllRead which hits API and updates local state
+  - Notifications display with:
+    * Type-specific icons (relation_request, relation_accepted, new_common_limit, etc.)
+    * Formatted timestamps (relative: "Il y a 5 min", "Il y a 2h", etc.)
+    * Read/unread visual states (unread has blue background + dot indicator)
+    * Click-to-mark-read functionality for individual notifications
+  - Empty state with icon and helpful message when no notifications
+  - All TypeScript builds pass with zero errors
+  - No mock data patterns in codebase
+
+**Current Status:** 36/76 features passing (47.4%)
+
+**Architecture Notes:**
+- Notifications router properly registered in server/src/index.ts
+- GET /api/notifications returns all user notifications ordered by createdAt DESC
+- PUT /api/notifications/:id/read marks single notification as read (with ownership check)
+- PUT /api/notifications/read-all marks all user notifications as read
+- NotificationsPage uses AuthContext for authentication state
+- Real-time unread count calculation from state
+- Responsive notification list with proper spacing for mobile
+
+**What Should Be Worked On Next:**
+- OAuth backend endpoints (Google, Facebook)
+- Profile photo upload
+- Subcategory-level "check all" functionality
+- SSE (Server-Sent Events) for real-time notifications
+- Notification badge in navigation bar
+
