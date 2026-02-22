@@ -1,25 +1,29 @@
 ## Testing Commands
 
 **Project Type:** TypeScript monorepo (Vite React client + Express server)
-**Test Framework:** Not configured yet (no Jest/Vitest/Playwright test scripts detected)
+**Test Framework:** Node.js built-in test runner via `tsx --test` (server config checks) + Node test for client deployment config
 **Operating System:** Windows
 
 **Run All Tests:**
 
 ```
-# No unified test command configured yet
+# No single root-level unified command configured yet
 ```
 
 **Run Specific Test:**
 
 ```
-# No specific test command configured yet
+# Client deployment regression
+npm --prefix client run test:deployment
+
+# Server CORS config regression
+npm --prefix server run test:config
 ```
 
 **Run Tests with Coverage:**
 
 ```
-# No coverage command configured yet
+# Coverage not configured yet
 ```
 
 **Additional Notes:**
@@ -28,3 +32,4 @@
   - client: `npm run build`
   - server: `npm run build`
 - Client production SPA routes require Vercel rewrite support for BrowserRouter paths.
+- Server CORS policy must allow `https://nos-limites-app.vercel.app` for magic-link requests.

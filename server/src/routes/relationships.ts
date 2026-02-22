@@ -532,4 +532,78 @@ router.get(
   }
 );
 
+/**
+ * DELETE /api/relationships/:id
+ * Delete a relationship. Only a participant can delete it.
+ * Removes associated user_limits and creates a notification for the other user.
+ */
+router.delete(
+  "/relationships/:id",
+  requireAuth,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const userId = req.userId!;
+      const relationshipId = req.params.id;
+
+      // Verify the user is part of this relationship
+      const relationship = await db.query.relationships.findFirst({
+        where: and(
+          eq(relationships.id, relationshipId),
+          or(
+            eq(relationships.inviterId, userId),
+            eq(relationships.inviteeId, userId)
+          )
+        ),
+      });
+
+      if (!relationship) {
+        return res.status(404).json({
+          message: "Relation non trouvée.",
+        });
+      }
+
+      // Determine the other user for notification
+      const otherUserId =
+        relationship.inviterId === userId
+          ? relationship.inviteeId
+          : relationship.inviterId;
+
+      // Delete associated user_limits
+      await db
+        .delete(userLimits)
+        .where(eq(userLimits.relationshipId, relationshipId));
+
+      // Delete the relationship
+      await db
+        .delete(relationships)
+        .where(eq(relationships.id, relationshipId));
+
+      // Notify the other user (if they exist)
+      if (otherUserId) {
+        const deletingUser = await db.query.users.findFirst({
+          where: eq(users.id, userId),
+        });
+        await db.insert(notifications).values({
+          id: uuidv4(),
+          userId: otherUserId,
+          type: "relation_deleted",
+          title: "Relation supprimée",
+          message: `${deletingUser?.displayName || "Un utilisateur"} a supprimé la relation.`,
+          relatedUserId: userId,
+        });
+      }
+
+      return res.json({
+        success: true,
+        message: "Relation supprimée avec succès.",
+      });
+    } catch (error) {
+      console.error("Error deleting relationship:", error);
+      return res.status(500).json({
+        message: "Erreur lors de la suppression de la relation.",
+      });
+    }
+  }
+);
+
 export default router;
