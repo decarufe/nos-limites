@@ -24,6 +24,13 @@
   min-height: 50vh;
 }
 
+.profileSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: var(--spacing-xl);
+}
+
 .avatar {
   width: 96px;
   height: 96px;
@@ -35,10 +42,72 @@
   margin-bottom: var(--spacing-lg);
 }
 
+.avatarImage {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: var(--spacing-lg);
+  border: 3px solid var(--color-primary);
+}
+
+.displayName {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: var(--spacing-xs);
+}
+
+.email {
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  opacity: 0.6;
+}
+
 .text {
   font-size: var(--font-size-sm);
   color: var(--color-text);
   opacity: 0.6;
   max-width: 280px;
   line-height: 1.5;
+}
+
+.actions {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-lg);
+}
+
+.logoutButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  width: 100%;
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  background-color: transparent;
+  border: 2px solid var(--color-error);
+  color: var(--color-error);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.logoutButton:hover:not(:disabled) {
+  background-color: var(--color-error);
+  color: white;
+}
+
+.logoutButton:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.logoutButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }

@@ -24,6 +24,15 @@
   min-height: 50vh;
 }
 
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  text-align: center;
+}
+
 .icon {
   margin-bottom: var(--spacing-lg);
 }
@@ -34,4 +43,221 @@
   opacity: 0.6;
   max-width: 280px;
   line-height: 1.5;
+  margin-bottom: var(--spacing-lg);
+}
+
+.primaryButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 320px;
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--color-primary);
+  color: #fff;
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.primaryButton:hover {
+  background: #6D28D9;
+}
+
+.primaryButton:active {
+  transform: scale(0.98);
+}
+
+.primaryButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.secondaryButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 320px;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background: transparent;
+  color: var(--color-primary);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: var(--spacing-lg);
+}
+
+.secondaryButton:hover {
+  background: rgba(124, 58, 237, 0.05);
+}
+
+/* Spinner */
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(124, 58, 237, 0.2);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: var(--spacing-md);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Error */
+.errorIcon {
+  margin-bottom: var(--spacing-md);
+}
+
+.errorText {
+  font-size: var(--font-size-sm);
+  color: var(--color-error);
+  margin-bottom: var(--spacing-lg);
+  max-width: 280px;
+  text-align: center;
+}
+
+/* Generated invitation content */
+.inviteContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--spacing-md) 0;
+}
+
+.qrSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.qrLabel {
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  opacity: 0.7;
+  text-align: center;
+  margin-bottom: var(--spacing-md);
+}
+
+.qrContainer {
+  background: #fff;
+  padding: var(--spacing-md);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Divider */
+.divider {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 320px;
+  margin: var(--spacing-lg) 0;
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.dividerText {
+  padding: 0 var(--spacing-md);
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  opacity: 0.5;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+/* Link section */
+.linkSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.linkLabel {
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  opacity: 0.7;
+  text-align: center;
+  margin-bottom: var(--spacing-sm);
+}
+
+.linkBox {
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  width: 100%;
+  max-width: 320px;
+  overflow: hidden;
+  margin-bottom: var(--spacing-sm);
+}
+
+.linkText {
+  font-size: var(--font-size-sm);
+  color: var(--color-primary);
+  word-break: break-all;
+  line-height: 1.4;
+}
+
+.tokenInfo {
+  font-size: 12px;
+  color: var(--color-text);
+  opacity: 0.4;
+  margin-bottom: var(--spacing-md);
+}
+
+.tokenInfo code {
+  font-family: monospace;
+  font-size: 11px;
+  background: rgba(0, 0, 0, 0.05);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.copyButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  width: 100%;
+  max-width: 320px;
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--color-primary);
+  color: #fff;
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.copyButton:hover {
+  background: #6D28D9;
+}
+
+.copyButton:active {
+  transform: scale(0.98);
 }
