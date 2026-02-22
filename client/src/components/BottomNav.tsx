@@ -1,4 +1,5 @@
 import { NavLink } from "react-router-dom";
+import { useNotifications } from "../context/NotificationsContext";
 import styles from "./BottomNav.module.css";
 
 const navItems = [
@@ -47,6 +48,8 @@ function NavIcon({ icon, active }: { icon: string; active: boolean }) {
 }
 
 export default function BottomNav() {
+  const { unreadCount } = useNotifications();
+
   return (
     <nav className={styles.nav}>
       {navItems.map((item) => (
@@ -59,7 +62,12 @@ export default function BottomNav() {
         >
           {({ isActive }) => (
             <>
-              <NavIcon icon={item.icon} active={isActive} />
+              <div className={styles.iconWrapper}>
+                <NavIcon icon={item.icon} active={isActive} />
+                {item.icon === "notifications" && unreadCount > 0 && (
+                  <span className={styles.badge}>{unreadCount}</span>
+                )}
+              </div>
               <span className={styles.label}>{item.label}</span>
             </>
           )}

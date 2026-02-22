@@ -348,6 +348,23 @@
   flex-shrink: 0;
   accent-color: var(--color-primary, #6366f1);
   cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.checkbox:checked {
+  animation: checkboxPop 0.3s ease-out;
+}
+
+@keyframes checkboxPop {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 .limitName {
@@ -661,4 +678,51 @@
 
 .dismissButton:hover {
   opacity: 1;
+}
+
+/* Save success banner */
+.saveSuccessBanner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 10px;
+  margin-bottom: 12px;
+  animation: slideInFromTop 0.3s ease-out, fadeOut 0.5s ease-in 1.5s forwards;
+}
+
+@keyframes slideInFromTop {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.saveSuccessBanner svg {
+  flex-shrink: 0;
+  color: var(--color-success, #22c55e);
+}
+
+.saveSuccessBanner p {
+  flex: 1;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-success, #16a34a);
+  line-height: 1.4;
 }

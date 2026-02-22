@@ -111,7 +111,6 @@ export default function RelationshipPage() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [showSaveSuccess, setShowSaveSuccess] = useState(false);
-  const [_lastSavedLimitId, setLastSavedLimitId] = useState<string | null>(null);
 
   // Note editing
   const [editingNoteForLimit, setEditingNoteForLimit] = useState<string | null>(
@@ -256,13 +255,11 @@ export default function RelationshipPage() {
       });
 
       // Show success feedback
-      setLastSavedLimitId(limitId);
       setShowSaveSuccess(true);
 
       // Hide success toast after 2 seconds
       setTimeout(() => {
         setShowSaveSuccess(false);
-        setLastSavedLimitId(null);
       }, 2000);
     } catch (err) {
       console.error("Error toggling limit:", err);

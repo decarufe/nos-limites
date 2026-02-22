@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useNotifications } from "../context/NotificationsContext";
 import api from "../services/api";
 import styles from "./NotificationsPage.module.css";
 
@@ -24,6 +25,7 @@ interface NotificationsResponse {
 
 export default function NotificationsPage() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { refreshUnreadCount } = useNotifications();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -57,6 +59,8 @@ export default function NotificationsPage() {
       setNotifications((prev) =>
         prev.map((notif) => ({ ...notif, isRead: true }))
       );
+      // Update context
+      await refreshUnreadCount();
     } catch (err) {
       setError("Erreur lors de la mise à jour des notifications.");
       console.error(err);
@@ -74,6 +78,8 @@ export default function NotificationsPage() {
           notif.id === notificationId ? { ...notif, isRead: true } : notif
         )
       );
+      // Update context
+      await refreshUnreadCount();
     } catch (err) {
       console.error("Error marking notification as read:", err);
     }
