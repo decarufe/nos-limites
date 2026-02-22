@@ -71,10 +71,10 @@ router.put(
       }
 
       const trimmedName = displayName.trim();
-      if (trimmedName.length < 1 || trimmedName.length > 50) {
+      if (trimmedName.length < 2 || trimmedName.length > 50) {
         return res.status(400).json({
           message:
-            "Le nom d'affichage doit contenir entre 1 et 50 caractères.",
+            "Le nom d'affichage doit contenir entre 2 et 50 caractères.",
         });
       }
 

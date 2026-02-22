@@ -119,6 +119,7 @@ export default function RelationshipPage() {
   const [noteText, setNoteText] = useState("");
   const [savingNote, setSavingNote] = useState(false);
   const [deletingNote, setDeletingNote] = useState(false);
+  const [showDeleteNoteConfirm, setShowDeleteNoteConfirm] = useState(false);
 
   // Common limits
   const [commonLimits, setCommonLimits] = useState<CommonLimit[]>([]);
@@ -375,11 +376,17 @@ export default function RelationshipPage() {
     }
   };
 
-  const handleDeleteNote = async () => {
+  const handleDeleteNoteClick = () => {
+    setShowDeleteNoteConfirm(true);
+  };
+
+  const handleConfirmDeleteNote = async () => {
     if (!id || !editingNoteForLimit || deletingNote) return;
 
     setSavingNote(true);
     setDeletingNote(true);
+    setShowDeleteNoteConfirm(false);
+
     try {
       await api.delete(
         `/relationships/${id}/limits/${editingNoteForLimit}/note`
@@ -403,6 +410,10 @@ export default function RelationshipPage() {
       setSavingNote(false);
       setDeletingNote(false);
     }
+  };
+
+  const handleCancelDeleteNote = () => {
+    setShowDeleteNoteConfirm(false);
   };
 
   const handleCancelNote = () => {
@@ -977,7 +988,7 @@ export default function RelationshipPage() {
               {limitNotes.has(editingNoteForLimit) && (
                 <button
                   className={styles.modalDeleteButton}
-                  onClick={handleDeleteNote}
+                  onClick={handleDeleteNoteClick}
                   disabled={savingNote || deletingNote}
                 >
                   {deletingNote ? "Suppression..." : "Supprimer"}
@@ -989,6 +1000,40 @@ export default function RelationshipPage() {
                 disabled={savingNote || !noteText.trim()}
               >
                 {savingNote ? "Enregistrement..." : "Enregistrer"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete note confirmation modal */}
+      {showDeleteNoteConfirm && (
+        <div
+          className={styles.modalOverlay}
+          onClick={handleCancelDeleteNote}
+        >
+          <div
+            className={styles.modalContent}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className={styles.modalTitle}>Supprimer cette note ?</h3>
+            <p className={styles.modalText}>
+              Êtes-vous sûr de vouloir supprimer cette note ? Cette action est irréversible.
+            </p>
+            <div className={styles.modalActions}>
+              <button
+                className={styles.modalCancelButton}
+                onClick={handleCancelDeleteNote}
+                disabled={deletingNote}
+              >
+                Annuler
+              </button>
+              <button
+                className={styles.modalDeleteButton}
+                onClick={handleConfirmDeleteNote}
+                disabled={deletingNote}
+              >
+                {deletingNote ? "Suppression..." : "Oui, supprimer"}
               </button>
             </div>
           </div>

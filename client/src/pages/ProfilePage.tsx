@@ -64,6 +64,10 @@ export default function ProfilePage() {
       setEditError("Le nom d'affichage ne peut pas être vide.");
       return;
     }
+    if (trimmed.length < 2) {
+      setEditError("Le nom d'affichage doit contenir au moins 2 caractères.");
+      return;
+    }
     if (trimmed.length > 50) {
       setEditError("Le nom d'affichage ne peut pas dépasser 50 caractères.");
       return;
