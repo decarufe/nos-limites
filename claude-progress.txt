@@ -327,3 +327,66 @@
 - SSE (Server-Sent Events) for real-time notifications
 - Notification badge in navigation bar
 
+### Session 12 - 2026-02-22
+
+**Features Completed:**
+- Feature #15: User profile persists after page refresh ✅ PASSING
+  - Verified token stored in localStorage and retrieved on app init
+  - AuthContext calls GET /api/auth/session on mount to fetch user data
+  - Session endpoint queries users table and returns fresh profile data
+  - Display name, email, avatarUrl all persist correctly after refresh
+  - Created test-feature-15.js with full verification cycle
+  - Test creates user, updates display name, simulates refresh, confirms persistence
+  - All profile fields (id, email, displayName, avatarUrl) verified unchanged
+  - No mock data patterns found in codebase
+  - TypeScript builds successfully with zero errors
+
+- Feature #29: Common limits counter updates correctly per relationship ✅ PASSING
+  - Backend: Enhanced GET /api/relationships to include commonLimitsCount
+  - Batch fetches all user_limits for relationships (performance optimized)
+  - Calculates common limits count by finding intersection of accepted limits
+  - Frontend: Updated HomePage Relationship interface to include commonLimitsCount
+  - Displays counter in relationship cards: "X limite(s) en commun"
+  - Dynamic French pluralization (0/1/2+ cases)
+  - Counter updates in real-time when limits are checked/unchecked
+  - Counter matches GET /api/relationships/:id/common-limits endpoint
+  - Created test-feature-29.js with comprehensive verification
+  - Test creates 2 users, relationship, checks 3 common limits, verifies counter
+  - Unchecks 1 limit, confirms counter updates from 3 to 2
+  - No mock data patterns, TypeScript compiles successfully
+
+- Feature #53: Limit notes persist and display correctly ✅ PASSING
+  - Backend: Modified GET /api/relationships/:id/common-limits to include notes
+  - Enriches common limits with notes from current user (privacy preserved)
+  - Each user sees only their own notes, not their partner's
+  - Frontend: Updated CommonLimit interface to include note field
+  - Displays notes in "En commun" tab with visual styling
+  - Note icon with left border, lighter background, indented layout
+  - Notes display below common limit name with proper formatting
+  - Added CSS: .commonItemHeader, .commonNote classes in RelationshipPage.module.css
+  - Created test-feature-53.js with privacy verification
+  - Test confirms notes persist after page refresh
+  - Verifies User A sees their note, User B sees their own note (not A's)
+  - Notes stored in user_limits table with proper database persistence
+  - No mock data patterns, TypeScript compiles successfully
+
+**Current Status:** 37/76 features passing (48.7%)
+
+**Architecture Notes:**
+- GET /api/relationships now returns commonLimitsCount for each relationship
+- Performance: Batch query of all user_limits to avoid N+1 queries
+- Common limits counter calculated via Set intersection of limit IDs
+- GET /api/relationships/:id/common-limits enriched with user's own notes
+- Privacy model: notes are per-user, never shared across users
+- Frontend HomePage displays real-time common limits counter
+- "En commun" tab shows notes with icon and styling
+- All data persists in SQLite database (no in-memory state)
+
+**What Should Be Worked On Next:**
+- OAuth backend endpoints (Google, Facebook)
+- Profile photo upload
+- Subcategory-level "check all" functionality
+- SSE (Server-Sent Events) for real-time notifications
+- Notification badge in navigation bar
+- Additional Real Data Verification features
+
