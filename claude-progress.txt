@@ -19,7 +19,22 @@
   - Database file exists at server/data/noslimites.db (192KB)
   - No mock/static/placeholder patterns in route code
 
-**Current Status:** 5/75 features passing (6.7%)
+### Session 3 - 2026-02-22
+
+**Features Completed:**
+- Feature #24: Limit categories load from database with correct hierarchy ✅ PASSING
+  - GET /api/limits/categories returns full hierarchy from real SQLite database
+  - 5 main categories verified: Contact professionnel, Contact amical, Flirt et séduction, Contact rapproché, Intimité
+  - 11 subcategories total (2-3 per category)
+  - 43 individual limits total (3-5 per subcategory)
+  - sort_order respected at all levels (categories 1-5, subcategories, limits)
+  - Icons included in response (🤝, 😊, 💬, 🤗, 💕)
+  - imageUrl field present on all entities
+  - No mock data patterns found in source code
+  - Data persists after server restart (SQLite file-based)
+  - Drizzle ORM queries confirmed on limit_categories, limit_subcategories, limits tables
+
+**Current Status:** 7/75 features passing (9.3%)
 
 **Architecture Notes:**
 - Backend: Express + better-sqlite3 + Drizzle ORM on port 3001
