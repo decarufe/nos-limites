@@ -4,7 +4,7 @@ import styles from "./BottomNav.module.css";
 
 const navItems = [
   { to: "/home", label: "Accueil", icon: "home" },
-  { to: "/scan", label: "Scanner", icon: "scan" },
+  { to: "/scan", label: "Invitations", icon: "scan" },
   { to: "/notifications", label: "Notifications", icon: "notifications" },
   { to: "/profile", label: "Profil", icon: "profile" },
 ];
@@ -24,8 +24,10 @@ function NavIcon({ icon, active }: { icon: string; active: boolean }) {
     case "scan":
       return (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity }}>
-          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-          <circle cx="12" cy="13" r="4" />
+          <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+          <circle cx="8.5" cy="7" r="4" />
+          <line x1="20" y1="8" x2="20" y2="14" />
+          <line x1="23" y1="11" x2="17" y2="11" />
         </svg>
       );
     case "notifications":
