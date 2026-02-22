@@ -1,0 +1,36 @@
+## Session Progress Log
+
+### Session 2 - 2026-02-22
+
+**Features Completed:**
+- Feature #3: Data persists across server restart ✅ PASSING
+  - Inserted test user (RESTART_TEST_12345@test.com) into SQLite database
+  - Stopped server completely (killed node process)
+  - Restarted server
+  - Verified test user data survived restart
+  - Cleaned up test data
+  - No mock data patterns found in source code
+
+- Feature #5: Backend API queries real database ✅ PASSING
+  - GET /api/health executes real SQL: SELECT 1 and SELECT COUNT(*) FROM sqlite_master
+  - GET /api/limits/categories uses Drizzle ORM queries on limit_categories, limit_subcategories, limits tables
+  - Returns real seeded data (5 categories, 14 subcategories, 43 limits with UUIDs)
+  - Server logs confirm [DB Query] prefixed SQL operations
+  - Database file exists at server/data/noslimites.db (192KB)
+  - No mock/static/placeholder patterns in route code
+
+**Current Status:** 5/75 features passing (6.7%)
+
+**Architecture Notes:**
+- Backend: Express + better-sqlite3 + Drizzle ORM on port 3001
+- Frontend: React + Vite + TypeScript on port 5173
+- Database: SQLite file at server/data/noslimites.db (WAL mode)
+- Auth: JWT-based (middleware exists, not yet fully implemented)
+- API routes implemented: /api/health, /api/limits/categories
+- All other routes (auth, profile, relationships, notifications) are TODO
+
+**What Should Be Worked On Next:**
+- Authentication endpoints (magic link, OAuth)
+- Profile CRUD
+- Relationships management
+- Frontend pages beyond placeholders
