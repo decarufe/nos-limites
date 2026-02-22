@@ -214,3 +214,59 @@
   - Verified with grep: no hardcoded partnerName or partnerAvatarUrl assignments
 
 **Current Status:** 26/76 features passing (34.2%)
+
+### Session 10 - 2026-02-22
+
+**Features Completed:**
+- Feature #22: User can delete a relationship ✅ PASSING
+  - DELETE /api/relationships/:id endpoint already existed (implemented in session 7)
+  - Added delete button (trash icon) to RelationshipPage header
+  - Implemented confirmation modal: "Êtes-vous sûr de vouloir supprimer cette relation avec..."
+  - Modal warns that all common limits will be permanently deleted (irreversible action)
+  - On confirm: calls DELETE endpoint, deletes user_limits + relationship from DB
+  - Sends notification to other user when relationship deleted
+  - Redirects to /home after successful deletion
+  - Both builds pass with zero errors, no mock data patterns
+
+- Feature #23: User can block another user ✅ PASSING
+  - Implemented POST /api/relationships/:id/block endpoint
+  - Validates user is part of relationship before blocking
+  - Prevents duplicate blocking (checks blocked_users table)
+  - Deletes associated user_limits and relationship records
+  - Adds entry to blocked_users table (blockerId + blockedId)
+  - Sends notification to blocked user (transparency)
+  - Added validation to accept endpoint: prevents acceptance if either user has blocked the other (403)
+  - Frontend: replaced delete button with options menu (three dots)
+  - Dropdown menu with "Bloquer" and "Supprimer la relation" options
+  - Block confirmation modal with warning about future invitation prevention
+  - Redirects to /home after successful blocking
+  - All code compiles, no mock data patterns
+
+- Feature #20: User can decline a relationship invitation ✅ PASSING
+  - Implemented POST /api/relationships/decline/:token endpoint
+  - Validates token exists and user is not inviter
+  - Prevents declining already accepted or already declined invitations
+  - Updates relationship status to "declined", sets inviteeId
+  - Sends notification to inviter: "Un utilisateur a refusé votre invitation"
+  - Updated GET /api/relationships to filter only "accepted" relationships (declined ones hidden)
+  - Frontend InvitePage: added "declining" and "declined" states
+  - handleDecline function calls API endpoint
+  - Shows loading spinner while declining
+  - Shows success message: "Invitation refusée. Vous ne recevrez plus de notifications..."
+  - Decline button calls handleDecline (was just navigating away before)
+  - TypeScript compiles successfully, no mock data patterns
+
+**Current Status:** 33/76 features passing (43.4%)
+
+**Architecture Updates:**
+- blocked_users table now actively used for blocking functionality
+- Relationships filtering enhanced: only "accepted" status shown in active lists
+- Options menu pattern established for multi-action contexts (block + delete)
+- Invitation flow: accept/decline now both fully functional with proper status tracking
+
+**What Should Be Worked On Next:**
+- Limit notes (add/edit/delete notes on individual limits)
+- Common limits display enhancements
+- OAuth backend endpoints (Google, Facebook)
+- Profile photo upload
+- Notifications UI improvements
