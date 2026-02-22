@@ -60,14 +60,19 @@ cleanup();
       id: uuidv4(),
       email: "test_f31_simple_a@example.com",
       displayName: "User A Simple",
-      token: uuidv4(),
     };
     const userB = {
       id: uuidv4(),
       email: "test_f31_simple_b@example.com",
       displayName: "User B Simple",
-      token: uuidv4(),
     };
+
+    // Create JWTs
+    const jwtA = jwt.sign({ userId: userA.id }, JWT_SECRET, { expiresIn: '24h' });
+    const jwtB = jwt.sign({ userId: userB.id }, JWT_SECRET, { expiresIn: '24h' });
+
+    userA.token = jwtA;
+    userB.token = jwtB;
 
     // Create users
     db.prepare(
@@ -80,17 +85,17 @@ cleanup();
        VALUES (?, ?, ?, ?, datetime('now'), datetime('now'))`
     ).run(userB.id, userB.email, userB.displayName, 'magic_link');
 
-    // Create sessions
+    // Create sessions (store the JWT tokens)
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
     db.prepare(
       `INSERT INTO sessions (id, user_id, token, expires_at, created_at)
        VALUES (?, ?, ?, ?, datetime('now'))`
-    ).run(uuidv4(), userA.id, userA.token, expiresAt);
+    ).run(uuidv4(), userA.id, jwtA, expiresAt);
 
     db.prepare(
       `INSERT INTO sessions (id, user_id, token, expires_at, created_at)
        VALUES (?, ?, ?, ?, datetime('now'))`
-    ).run(uuidv4(), userB.id, userB.token, expiresAt);
+    ).run(uuidv4(), userB.id, jwtB, expiresAt);
 
     console.log(`✅ Created User A: ${userA.displayName}`);
     console.log(`✅ Created User B: ${userB.displayName}`);
