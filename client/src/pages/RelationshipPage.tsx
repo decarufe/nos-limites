@@ -110,6 +110,8 @@ export default function RelationshipPage() {
   const [limitsLoading, setLimitsLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [showSaveSuccess, setShowSaveSuccess] = useState(false);
+  const [_lastSavedLimitId, setLastSavedLimitId] = useState<string | null>(null);
 
   // Note editing
   const [editingNoteForLimit, setEditingNoteForLimit] = useState<string | null>(
@@ -247,10 +249,21 @@ export default function RelationshipPage() {
     // Save to backend
     setSaving(true);
     setSaveError("");
+    setShowSaveSuccess(false);
     try {
       await api.put(`/relationships/${id}/limits`, {
         limits: [{ limitId, isAccepted }],
       });
+
+      // Show success feedback
+      setLastSavedLimitId(limitId);
+      setShowSaveSuccess(true);
+
+      // Hide success toast after 2 seconds
+      setTimeout(() => {
+        setShowSaveSuccess(false);
+        setLastSavedLimitId(null);
+      }, 2000);
     } catch (err) {
       console.error("Error toggling limit:", err);
       // Revert on failure
@@ -292,6 +305,7 @@ export default function RelationshipPage() {
     // Save to backend
     setSaving(true);
     setSaveError("");
+    setShowSaveSuccess(false);
     try {
       const limitUpdates = limitIds.map((limitId) => ({
         limitId,
@@ -300,6 +314,14 @@ export default function RelationshipPage() {
       await api.put(`/relationships/${id}/limits`, {
         limits: limitUpdates,
       });
+
+      // Show success feedback
+      setShowSaveSuccess(true);
+
+      // Hide success toast after 2 seconds
+      setTimeout(() => {
+        setShowSaveSuccess(false);
+      }, 2000);
     } catch (err) {
       console.error("Error toggling category:", err);
       // Revert on failure
@@ -630,6 +652,24 @@ export default function RelationshipPage() {
             <div className={styles.saveErrorBanner} role="alert">
               <p>{saveError}</p>
               <button onClick={() => setSaveError("")} className={styles.dismissButton}>✕</button>
+            </div>
+          )}
+          {showSaveSuccess && (
+            <div className={styles.saveSuccessBanner} role="status">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+              </svg>
+              <p>Sauvegardé automatiquement</p>
             </div>
           )}
           {limitsLoading ? (
