@@ -5,9 +5,7 @@
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
-  (import.meta.env.PROD
-    ? "https://nos-limites-api.vercel.app/api"
-    : "/api");
+  (import.meta.env.PROD ? "https://nos-limites-api.vercel.app/api" : "/api");
 
 interface ApiOptions {
   method?: string;
@@ -28,7 +26,7 @@ class ApiService {
 
   private async request<T>(
     endpoint: string,
-    options: ApiOptions = {}
+    options: ApiOptions = {},
   ): Promise<T> {
     const { method = "GET", body, headers = {} } = options;
 
