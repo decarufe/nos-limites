@@ -1,0 +1,36 @@
+name: Client Deployment Regression
+
+on:
+  pull_request:
+    paths:
+      - "client/**"
+      - ".github/workflows/client-deployment-regression.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "client/**"
+      - ".github/workflows/client-deployment-regression.yml"
+
+jobs:
+  deployment-regression:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run deployment regression test
+        run: npm run test:deployment

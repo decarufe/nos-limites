@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:deployment": "node --test tests/vercel-spa-rewrite.test.mjs"
   },
   "dependencies": {
     "qrcode.react": "^4.2.0",
