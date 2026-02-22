@@ -8,6 +8,8 @@ import HomePage from "./pages/HomePage";
 import ScanPage from "./pages/ScanPage";
 import NotificationsPage from "./pages/NotificationsPage";
 import ProfilePage from "./pages/ProfilePage";
+import InvitePage from "./pages/InvitePage";
+import RelationshipPage from "./pages/RelationshipPage";
 
 function App() {
   return (
@@ -27,13 +29,11 @@ function App() {
             <Route path="/profile" element={<ProfilePage />} />
             <Route
               path="/relationship/:id"
-              element={
-                <div style={{ padding: "16px" }}>Détail de la relation</div>
-              }
+              element={<RelationshipPage />}
             />
             <Route
               path="/invite/:token"
-              element={<div style={{ padding: "16px" }}>Invitation</div>}
+              element={<InvitePage />}
             />
           </Route>
 
