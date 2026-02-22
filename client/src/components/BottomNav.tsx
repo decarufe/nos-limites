@@ -4,7 +4,7 @@ import styles from "./BottomNav.module.css";
 const navItems = [
   { to: "/home", label: "Accueil", icon: "home" },
   { to: "/scan", label: "Scanner", icon: "scan" },
-  { to: "/notifications", label: "Notifs", icon: "notifications" },
+  { to: "/notifications", label: "Notifications", icon: "notifications" },
   { to: "/profile", label: "Profil", icon: "profile" },
 ];
 
