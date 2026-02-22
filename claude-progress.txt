@@ -195,4 +195,22 @@
   - Data persists across server restarts (file-based SQLite at server/data/noslimites.db)
   - Implementation complete: create, view, delete relationships all use real database
 
-**Current Status:** 24/76 features passing (31.6%)
+- Feature #72: App handles user with many relationships without degradation ✅ PASSING
+  - Fixed N+1 query problem in GET /api/relationships endpoint
+  - Changed from N individual user queries to single batch query using inArray()
+  - Reduced queries from 1+N to constant 2 queries (relationships + partners batch)
+  - Backend uses Map for O(1) partner lookup instead of repeated findFirst calls
+  - Frontend uses efficient map/filter operations (fine for 20-50 items)
+  - TypeScript compiles successfully after optimization
+  - Server starts without errors
+
+- Feature #71: Home screen relationship list shows real avatars and names ✅ PASSING
+  - Verified complete data flow from database to UI
+  - Backend fetches partner displayName and avatarUrl from users table via batch query
+  - Frontend displays real names: {rel.partnerName || "Utilisateur"}
+  - Frontend displays avatars: shows image if avatarUrl exists, else first letter of name
+  - No mock/hardcoded partner data found in codebase
+  - All data persists in SQLite database (users.displayName, users.avatarUrl)
+  - Verified with grep: no hardcoded partnerName or partnerAvatarUrl assignments
+
+**Current Status:** 26/76 features passing (34.2%)

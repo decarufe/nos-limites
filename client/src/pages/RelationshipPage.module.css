@@ -32,12 +32,16 @@
   flex: 1;
 }
 
-.deleteButton {
+.menuContainer {
+  position: relative;
+}
+
+.menuButton {
   background: none;
   border: none;
   cursor: pointer;
   padding: 8px;
-  color: var(--color-error, #dc2626);
+  color: var(--color-text, #1c1917);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -45,8 +49,50 @@
   transition: background 0.2s;
 }
 
-.deleteButton:hover {
-  background: rgba(220, 38, 38, 0.1);
+.menuButton:hover {
+  background: var(--color-bg-secondary, #f5f5f4);
+}
+
+.dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  background: white;
+  border: 1px solid var(--color-border, #e7e5e4);
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  min-width: 200px;
+  overflow: hidden;
+  z-index: 100;
+}
+
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--color-text, #1c1917);
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.dropdownItem:hover {
+  background: var(--color-bg-secondary, #f5f5f4);
+}
+
+.dropdownItemDanger {
+  color: var(--color-error, #dc2626);
+}
+
+.dropdownItem svg {
+  flex-shrink: 0;
 }
 
 .loading {

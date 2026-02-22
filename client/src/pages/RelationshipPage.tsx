@@ -116,6 +116,11 @@ export default function RelationshipPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
+  // Block user
+  const [showBlockModal, setShowBlockModal] = useState(false);
+  const [blocking, setBlocking] = useState(false);
+  const [showOptionsMenu, setShowOptionsMenu] = useState(false);
+
   // Fetch relationship
   useEffect(() => {
     if (!id || !isAuthenticated || authLoading) return;
@@ -254,6 +259,22 @@ export default function RelationshipPage() {
     }
   };
 
+  const handleBlockUser = async () => {
+    if (!id || blocking) return;
+
+    setBlocking(true);
+    try {
+      await api.post(`/relationships/${id}/block`);
+      // Navigate back to home on success
+      navigate("/home");
+    } catch (err) {
+      setError("Erreur lors du blocage de l'utilisateur.");
+      setShowBlockModal(false);
+    } finally {
+      setBlocking(false);
+    }
+  };
+
   if (authLoading) {
     return (
       <div className={styles.container}>
@@ -341,25 +362,76 @@ export default function RelationshipPage() {
         <h1 className={styles.title}>
           {relationship.partnerName || "Relation"}
         </h1>
-        <button
-          className={styles.deleteButton}
-          onClick={() => setShowDeleteModal(true)}
-          title="Supprimer la relation"
-        >
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+        <div className={styles.menuContainer}>
+          <button
+            className={styles.menuButton}
+            onClick={() => setShowOptionsMenu(!showOptionsMenu)}
+            title="Options"
           >
-            <polyline points="3 6 5 6 21 6" />
-            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-          </svg>
-        </button>
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="12" cy="12" r="1" />
+              <circle cx="12" cy="5" r="1" />
+              <circle cx="12" cy="19" r="1" />
+            </svg>
+          </button>
+          {showOptionsMenu && (
+            <div className={styles.dropdown}>
+              <button
+                className={styles.dropdownItem}
+                onClick={() => {
+                  setShowOptionsMenu(false);
+                  setShowBlockModal(true);
+                }}
+              >
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+                </svg>
+                Bloquer
+              </button>
+              <button
+                className={`${styles.dropdownItem} ${styles.dropdownItemDanger}`}
+                onClick={() => {
+                  setShowOptionsMenu(false);
+                  setShowDeleteModal(true);
+                }}
+              >
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <polyline points="3 6 5 6 21 6" />
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                </svg>
+                Supprimer la relation
+              </button>
+            </div>
+          )}
+        </div>
       </header>
 
       <div className={styles.profileSection}>
@@ -546,10 +618,41 @@ export default function RelationshipPage() {
         </div>
       )}
 
+      {/* Block confirmation modal */}
+      {showBlockModal && (
+        <div className={styles.modalOverlay} onClick={() => setShowBlockModal(false)}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <h3 className={styles.modalTitle}>Bloquer cet utilisateur</h3>
+            <p className={styles.modalText}>
+              Êtes-vous sûr de vouloir bloquer {relationship.partnerName} ? Cette
+              action supprimera votre relation et empêchera cette personne de vous
+              envoyer de nouvelles invitations. Vous pouvez débloquer cet utilisateur
+              plus tard depuis les paramètres.
+            </p>
+            <div className={styles.modalActions}>
+              <button
+                className={styles.modalCancelButton}
+                onClick={() => setShowBlockModal(false)}
+                disabled={blocking}
+              >
+                Annuler
+              </button>
+              <button
+                className={styles.modalDeleteButton}
+                onClick={handleBlockUser}
+                disabled={blocking}
+              >
+                {blocking ? "Blocage..." : "Bloquer"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Delete confirmation modal */}
       {showDeleteModal && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modalContent}>
+        <div className={styles.modalOverlay} onClick={() => setShowDeleteModal(false)}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <h3 className={styles.modalTitle}>Supprimer la relation</h3>
             <p className={styles.modalText}>
               Êtes-vous sûr de vouloir supprimer cette relation avec{" "}
