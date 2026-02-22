@@ -5,12 +5,11 @@ import { eq } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 import jwt from "jsonwebtoken";
 import { requireAuth, AuthRequest } from "../middleware/auth";
+import { resolveFrontendBaseUrl } from "../utils/frontend-url";
 
 const router = Router();
 
 const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-in-production";
-const MAGIC_LINK_BASE_URL =
-  process.env.MAGIC_LINK_BASE_URL || "http://localhost:5173";
 
 /**
  * POST /api/auth/magic-link
@@ -51,7 +50,10 @@ router.post("/auth/magic-link", async (req: Request, res: Response) => {
     });
 
     // Build magic link URL
-    const magicLinkUrl = `${MAGIC_LINK_BASE_URL}/auth/verify?token=${token}`;
+    const magicLinkBaseUrl = resolveFrontendBaseUrl(req, {
+      preferredBaseUrl: process.env.MAGIC_LINK_BASE_URL,
+    });
+    const magicLinkUrl = `${magicLinkBaseUrl}/auth/verify?token=${token}`;
 
     // In development, log the magic link to console
     console.log("\n========================================");
@@ -67,7 +69,10 @@ router.post("/auth/magic-link", async (req: Request, res: Response) => {
       message:
         "Lien magique envoyé ! Vérifiez votre boîte mail (ou la console en mode développement).",
       // In dev mode, also return the token for easier testing
-      ...(process.env.NODE_ENV === "development" && { token, url: magicLinkUrl }),
+      ...(process.env.NODE_ENV === "development" && {
+        token,
+        url: magicLinkUrl,
+      }),
     });
   } catch (error) {
     console.error("Error sending magic link:", error);
@@ -159,7 +164,7 @@ router.get("/auth/verify", async (req: Request, res: Response) => {
     // Create session
     const sessionId = uuidv4();
     const sessionExpiresAt = new Date(
-      Date.now() + 30 * 24 * 60 * 60 * 1000
+      Date.now() + 30 * 24 * 60 * 60 * 1000,
     ).toISOString(); // 30 days
 
     await db.insert(sessions).values({
@@ -220,7 +225,7 @@ router.get(
         message: "Erreur lors de la vérification de la session.",
       });
     }
-  }
+  },
 );
 
 /**
@@ -248,7 +253,7 @@ router.post(
         message: "Erreur lors de la déconnexion.",
       });
     }
-  }
+  },
 );
 
 export default router;

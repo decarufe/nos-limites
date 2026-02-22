@@ -1,9 +1,16 @@
 import { Router, Response } from "express";
 import { db } from "../db/connection";
-import { relationships, userLimits, limits, users, notifications } from "../db/schema";
+import {
+  relationships,
+  userLimits,
+  limits,
+  users,
+  notifications,
+} from "../db/schema";
 import { eq, or, and, inArray } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 import { requireAuth, AuthRequest } from "../middleware/auth";
+import { resolveFrontendBaseUrl } from "../utils/frontend-url";
 
 const router = Router();
 
@@ -21,7 +28,7 @@ router.get(
       const userRelationships = await db.query.relationships.findMany({
         where: or(
           eq(relationships.inviterId, userId),
-          eq(relationships.inviteeId, userId)
+          eq(relationships.inviteeId, userId),
         ),
       });
 
@@ -46,7 +53,7 @@ router.get(
             partnerName,
             partnerAvatarUrl,
           };
-        })
+        }),
       );
 
       return res.json({
@@ -60,7 +67,7 @@ router.get(
         message: "Erreur lors de la récupération des relations.",
       });
     }
-  }
+  },
 );
 
 /**
@@ -88,7 +95,7 @@ router.post(
         data: {
           id: relationshipId,
           invitationToken,
-          inviteUrl: `${process.env.FRONTEND_URL || "http://localhost:5173"}/invite/${invitationToken}`,
+          inviteUrl: `${resolveFrontendBaseUrl(req)}/invite/${invitationToken}`,
         },
         message: "Invitation créée avec succès.",
       });
@@ -98,7 +105,7 @@ router.post(
         message: "Erreur lors de la création de l'invitation.",
       });
     }
-  }
+  },
 );
 
 /**
@@ -161,7 +168,7 @@ router.get(
         message: "Erreur lors de la récupération de l'invitation.",
       });
     }
-  }
+  },
 );
 
 /**
@@ -208,13 +215,13 @@ router.post(
           or(
             and(
               eq(relationships.inviterId, relationship.inviterId),
-              eq(relationships.inviteeId, userId)
+              eq(relationships.inviteeId, userId),
             ),
             and(
               eq(relationships.inviterId, userId),
-              eq(relationships.inviteeId, relationship.inviterId)
-            )
-          )
+              eq(relationships.inviteeId, relationship.inviterId),
+            ),
+          ),
         ),
       });
 
@@ -265,7 +272,7 @@ router.post(
         message: "Erreur lors de l'acceptation de l'invitation.",
       });
     }
-  }
+  },
 );
 
 /**
@@ -286,8 +293,8 @@ router.get(
           eq(relationships.id, relationshipId),
           or(
             eq(relationships.inviterId, userId),
-            eq(relationships.inviteeId, userId)
-          )
+            eq(relationships.inviteeId, userId),
+          ),
         ),
       });
 
@@ -301,7 +308,7 @@ router.get(
       const myLimits = await db.query.userLimits.findMany({
         where: and(
           eq(userLimits.userId, userId),
-          eq(userLimits.relationshipId, relationshipId)
+          eq(userLimits.relationshipId, relationshipId),
         ),
       });
 
@@ -318,7 +325,7 @@ router.get(
         message: "Erreur lors de la récupération des limites.",
       });
     }
-  }
+  },
 );
 
 /**
@@ -341,14 +348,15 @@ router.put(
           eq(relationships.id, relationshipId),
           or(
             eq(relationships.inviterId, userId),
-            eq(relationships.inviteeId, userId)
-          )
+            eq(relationships.inviteeId, userId),
+          ),
         ),
       });
 
       if (!relationship) {
         return res.status(403).json({
-          message: "Accès interdit. Vous ne faites pas partie de cette relation.",
+          message:
+            "Accès interdit. Vous ne faites pas partie de cette relation.",
         });
       }
 
@@ -382,7 +390,7 @@ router.put(
           where: and(
             eq(userLimits.userId, userId),
             eq(userLimits.relationshipId, relationshipId),
-            eq(userLimits.limitId, limitId)
+            eq(userLimits.limitId, limitId),
           ),
         });
 
@@ -413,7 +421,7 @@ router.put(
       const myLimits = await db.query.userLimits.findMany({
         where: and(
           eq(userLimits.userId, userId),
-          eq(userLimits.relationshipId, relationshipId)
+          eq(userLimits.relationshipId, relationshipId),
         ),
       });
 
@@ -431,7 +439,7 @@ router.put(
         message: "Erreur lors de la mise à jour des limites.",
       });
     }
-  }
+  },
 );
 
 /**
@@ -454,14 +462,15 @@ router.get(
           eq(relationships.id, relationshipId),
           or(
             eq(relationships.inviterId, userId),
-            eq(relationships.inviteeId, userId)
-          )
+            eq(relationships.inviteeId, userId),
+          ),
         ),
       });
 
       if (!relationship) {
         return res.status(403).json({
-          message: "Accès interdit. Vous ne faites pas partie de cette relation.",
+          message:
+            "Accès interdit. Vous ne faites pas partie de cette relation.",
         });
       }
 
@@ -488,7 +497,7 @@ router.get(
         where: and(
           eq(userLimits.userId, userId),
           eq(userLimits.relationshipId, relationshipId),
-          eq(userLimits.isAccepted, true)
+          eq(userLimits.isAccepted, true),
         ),
       });
 
@@ -497,7 +506,7 @@ router.get(
         where: and(
           eq(userLimits.userId, otherUserId),
           eq(userLimits.relationshipId, relationshipId),
-          eq(userLimits.isAccepted, true)
+          eq(userLimits.isAccepted, true),
         ),
       });
 
@@ -529,7 +538,7 @@ router.get(
         message: "Erreur lors de la récupération des limites communes.",
       });
     }
-  }
+  },
 );
 
 /**
@@ -551,8 +560,8 @@ router.delete(
           eq(relationships.id, relationshipId),
           or(
             eq(relationships.inviterId, userId),
-            eq(relationships.inviteeId, userId)
-          )
+            eq(relationships.inviteeId, userId),
+          ),
         ),
       });
 
@@ -603,7 +612,7 @@ router.delete(
         message: "Erreur lors de la suppression de la relation.",
       });
     }
-  }
+  },
 );
 
 export default router;
