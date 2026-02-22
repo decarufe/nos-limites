@@ -94,7 +94,32 @@
   - Auth required - unauthenticated access returns 401
   - "Nouvelle invitation" button to generate fresh invitations
 
-**Current Status:** 14/75 features passing (18.7%)
+### Session 7 - 2026-02-22
+
+**Features Completed:**
+- Feature #13: User cannot access another user's relationship limits ✅ PASSING
+  - Added PUT /api/relationships/:id/limits endpoint with 403 for non-members
+  - Added GET /api/relationships/:id/common-limits endpoint with 403 for non-members
+  - Existing GET /api/relationships/:id/limits returns 404 for non-members
+  - Unauthenticated access returns 401 on all endpoints
+  - Created 3 test users (A, B, C): A+B in a relationship, C is outsider
+  - User C gets 403/404 on all 3 relationship endpoints (GET limits, PUT limits, GET common-limits)
+  - User A and B can access their own relationship normally (200)
+  - No mock data patterns found in source code
+  - TypeScript compiles with zero errors
+
+- Feature #14: Non-common limits are never exposed to the other user ✅ PASSING
+  - Core privacy model verified end-to-end with 28 test assertions
+  - User A checked L1, L2, L3; User B checked L2, L3, L4
+  - GET common-limits returns ONLY L2, L3 (mutual matches) for both users
+  - L1 (User A only) never visible to User B in any API response
+  - L4 (User B only) never visible to User A in any API response
+  - GET /limits returns ONLY the requesting user's own limits (no cross-user data)
+  - No userId leakage in API responses
+  - Data persists across server restart (SQLite)
+  - No mock data patterns in codebase
+
+**Current Status:** ~19/75 features passing
 
 **Architecture Notes:**
 - Backend: Express + better-sqlite3 + Drizzle ORM on port 3001
@@ -102,12 +127,13 @@
 - Database: SQLite file at server/data/noslimites.db (WAL mode)
 - Auth: JWT-based with magic link flow fully implemented
 - OAuth buttons present on UI but backend OAuth endpoints not yet implemented
-- API routes implemented: /api/health, /api/limits/categories, /api/auth/magic-link, /api/auth/verify, /api/auth/session, /api/auth/logout, /api/profile (GET/PUT), /api/relationships (GET), /api/relationships/invite (POST)
+- API routes: /api/health, /api/limits/categories, /api/auth/*, /api/profile, /api/relationships (GET/POST invite/accept), /api/relationships/:id/limits (GET/PUT), /api/relationships/:id/common-limits (GET)
 - QR code: qrcode.react library installed for frontend QR generation
+- Privacy model: user_limits table stores per-user per-relationship limit acceptance; common-limits endpoint computes intersection
 
 **What Should Be Worked On Next:**
 - OAuth backend endpoints (Google, Facebook)
-- Invitation acceptance flow (scan QR / open invite link)
-- Relationships detail page
-- Limits selection UI for relationships
+- Relationships detail page (frontend)
+- Limits selection UI for relationships (frontend)
 - Notifications system
+- Profile management (delete account, etc.)
