@@ -31,6 +31,77 @@ chmod +x init.sh
 Ou manuellement :
 
 ```bash
+````markdown
+# Nos limites
+
+**Définissez vos limites mutuelles en toute confiance.**
+
+Nos limites est une application web progressive (PWA) en français qui permet à deux personnes de définir mutuellement et de façon transparente les limites de leur relation. Chaque participant coche indépendamment les comportements qu'il/elle accepte de l'autre, et seules les limites cochées par les deux sont révélées — un système de "match" qui encourage l'ouverture tout en protégeant la vulnérabilité de chacun.
+
+## Stack Technique
+
+- **Frontend:** React + Vite + TypeScript
+- **Backend:** Node.js + Express + TypeScript
+- **Base de données:** SQLite (via better-sqlite3 + Drizzle ORM)
+- **Authentification:** Magic link (email) + OAuth social (Google, Facebook)
+- **Temps réel:** Server-Sent Events (SSE)
+- **PWA:** Service Worker + manifest.json
+
+## Prérequis
+
+- Node.js 18+
+- npm
+
+## Installation et démarrage
+
+```bash
+# Rendre le script exécutable (Unix/macOS)
+chmod +x init.sh
+
+# Lancer l'environnement de développement
+./init.sh
+```
+
+Ou manuellement :
+
+```bash
+# Backend
+cd server
+npm install
+````markdown
+# Nos limites
+
+**Définissez vos limites mutuelles en toute confiance.**
+
+Nos limites est une application web progressive (PWA) en français qui permet à deux personnes de définir mutuellement et de façon transparente les limites de leur relation. Chaque participant coche indépendamment les comportements qu'il/elle accepte de l'autre, et seules les limites cochées par les deux sont révélées — un système de "match" qui encourage l'ouverture tout en protégeant la vulnérabilité de chacun.
+
+## Stack Technique
+
+- **Frontend:** React + Vite + TypeScript
+- **Backend:** Node.js + Express + TypeScript
+- **Base de données:** SQLite (via better-sqlite3 + Drizzle ORM)
+- **Authentification:** Magic link (email) + OAuth social (Google, Facebook)
+- **Temps réel:** Server-Sent Events (SSE)
+- **PWA:** Service Worker + manifest.json
+
+## Prérequis
+
+- Node.js 18+
+- npm
+
+## Installation et démarrage
+
+```bash
+# Rendre le script exécutable (Unix/macOS)
+chmod +x init.sh
+
+# Lancer l'environnement de développement
+./init.sh
+```
+
+Ou manuellement :
+
+```bash
 # Backend
 cd server
 npm install
@@ -54,39 +125,41 @@ npm run dev
 
 ```
 app/
-\u251C\u2500\u2500 client/                 # Frontend React (Vite)
-\u2502   \u251C\u2500\u2500 public/             # Fichiers statiques
-\u2502   \u2514\u2500\u2500 src/
-\u2502       \u251C\u2500\u2500 components/     # Composants r\u00E9utilisables
-\u2502       \u251C\u2500\u2500 pages/          # Pages/\u00E9crans de l'app
-\u2502       \u251C\u2500\u2500 hooks/          # Hooks React personnalis\u00E9s
-\u2502       \u251C\u2500\u2500 services/       # Appels API
-\u2502       \u251C\u2500\u2500 context/        # Contextes React (auth, etc.)
-\u2502       \u251C\u2500\u2500 styles/         # Styles globaux et variables CSS
-\u2502       \u2514\u2500\u2500 utils/          # Fonctions utilitaires
-\u251C\u2500\u2500 server/                 # Backend Express
-\u2502   \u251C\u2500\u2500 data/               # Fichier SQLite
-\u2502   \u2514\u2500\u2500 src/
-\u2502       \u251C\u2500\u2500 db/             # Schema, connexion, migrations, seed
-\u2502       \u251C\u2500\u2500 routes/         # Routes API Express
-\u2502       \u251C\u2500\u2500 middleware/     # Middleware (auth, etc.)
-\u2502       \u251C\u2500\u2500 services/       # Logique m\u00E9tier
-\u2502       \u2514\u2500\u2500 utils/          # Fonctions utilitaires
-\u2514\u2500\u2500 init.sh                 # Script de setup et d\u00E9marrage
+├── client/                 # Frontend React (Vite)
+│   ├── public/             # Fichiers statiques
+│   └── src/
+│       ├── components/     # Composants réutilisables
+│       ├── pages/          # Pages/écrans de l'app
+│       ├── hooks/          # Hooks React personnalisés
+│       ├── services/       # Appels API
+│       ├── context/        # Contextes React (auth, etc.)
+│       └── styles/         # Styles globaux et variables CSS
+│       └── utils/          # Fonctions utilitaires
+├── server/                 # Backend Express
+│   ├── data/               # Fichier SQLite
+│   └── src/
+│       ├── db/             # Schema, connexion, migrations, seed
+│       ├── routes/         # Routes API Express
+│       ├── middleware/     # Middleware (auth, etc.)
+│       ├── services/       # Logique métier
+│       └── utils/          # Fonctions utilitaires
+└── init.sh                 # Script de setup et démarrage
 ```
 
-## Cat\u00E9gories de limites
+## Catégories de limites
 
-L'application couvre un spectre de comportements organis\u00E9s en 5 cat\u00E9gories :
+L'application couvre un spectre de comportements organisés en 5 catégories :
 
-1. **Contact professionnel** \uD83E\uDD1D - Cadre professionnel respectueux
-2. **Contact amical** \uD83D\uDE0A - Interactions amicales et chaleureuses
-3. **Flirt et s\u00E9duction** \uD83D\uDCAC - Interactions \u00E0 caract\u00E8re s\u00E9ducteur
-4. **Contact rapproch\u00E9** \uD83E\uDD17 - Contacts physiques plus intimes
-5. **Intimit\u00E9** \uD83D\uDC95 - Propositions et contacts intimes
+1. **Contact professionnel** 🤝 - Cadre professionnel respectueux
+2. **Contact amical** 😊 - Interactions amicales et chaleureuses
+3. **Flirt et séduction** 💬 - Interactions à caractère séducteur
+4. **Contact rapproché** 🤗 - Contacts physiques plus intimes
+5. **Intimité** 💕 - Propositions et contacts intimes
 
-## Confidentialit\u00E9
+## Confidentialité
 
-- Les limites non-communes sont **invisibles** \u00E0 l'autre personne
-- Les donn\u00E9es sensibles sont chiffr\u00E9es au repos
-- Conformit\u00E9 RGPD (export et suppression des donn\u00E9es)
+- Les limites non-communes sont **invisibles** à l'autre personne
+- Les données sensibles sont chiffrées au repos
+- Conformité RGPD (export et suppression des données)
+
+````
