@@ -33,7 +33,7 @@ export default function InvitePage() {
 
   const [invite, setInvite] = useState<InviteDetails | null>(null);
   const [status, setStatus] = useState<
-    "loading" | "loaded" | "accepting" | "accepted" | "error"
+    "loading" | "loaded" | "accepting" | "accepted" | "declining" | "declined" | "error"
   >("loading");
   const [errorMessage, setErrorMessage] = useState("");
   const [isOwnInvitation, setIsOwnInvitation] = useState(false);
@@ -100,6 +100,23 @@ export default function InvitePage() {
     }
   };
 
+  const handleDecline = async () => {
+    if (!token) return;
+    setStatus("declining");
+
+    try {
+      await api.post(`/relationships/decline/${token}`);
+      setStatus("declined");
+    } catch (err) {
+      setErrorMessage(
+        err instanceof Error
+          ? err.message
+          : "Erreur lors du refus de l'invitation."
+      );
+      setStatus("error");
+    }
+  };
+
   const handleGoToRelations = () => {
     navigate("/home");
   };
@@ -142,7 +159,7 @@ export default function InvitePage() {
             </button>
             <button
               className={styles.declineButton}
-              onClick={() => navigate("/home")}
+              onClick={handleDecline}
             >
               Refuser
             </button>
@@ -154,6 +171,44 @@ export default function InvitePage() {
         <div className={styles.content}>
           <div className={styles.spinner} />
           <p className={styles.text}>Acceptation en cours...</p>
+        </div>
+      )}
+
+      {status === "declining" && (
+        <div className={styles.content}>
+          <div className={styles.spinner} />
+          <p className={styles.text}>Refus en cours...</p>
+        </div>
+      )}
+
+      {status === "declined" && (
+        <div className={styles.content}>
+          <div className={styles.successIcon}>
+            <svg
+              width="64"
+              height="64"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="var(--color-text-secondary, #78716c)"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+              <polyline points="22 4 12 14.01 9 11.01" />
+            </svg>
+          </div>
+          <h2 className={styles.successTitle}>Invitation refusée</h2>
+          <p className={styles.text}>
+            L'invitation a été refusée. Vous ne recevrez plus de notifications
+            de cette personne.
+          </p>
+          <button
+            className={styles.primaryButton}
+            onClick={handleGoToRelations}
+          >
+            Retour à l'accueil
+          </button>
         </div>
       )}
 

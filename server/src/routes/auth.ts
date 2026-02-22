@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 import jwt from "jsonwebtoken";
 import { requireAuth, AuthRequest } from "../middleware/auth";
 import { resolveFrontendBaseUrl } from "../utils/frontend-url";
+import { emailService } from "../services/email";
 
 const router = Router();
 
@@ -55,15 +56,12 @@ router.post("/auth/magic-link", async (req: Request, res: Response) => {
     });
     const magicLinkUrl = `${magicLinkBaseUrl}/auth/verify?token=${token}`;
 
-    // In development, log the magic link to console
-    console.log("\n========================================");
-    console.log("  MAGIC LINK (dev mode)");
-    console.log("========================================");
-    console.log(`  Email: ${normalizedEmail}`);
-    console.log(`  Link: ${magicLinkUrl}`);
-    console.log(`  Token: ${token}`);
-    console.log(`  Expires: ${expiresAt}`);
-    console.log("========================================\n");
+    // Send the magic link via configured email provider
+    await emailService.sendMagicLink({
+      to: normalizedEmail,
+      magicLinkUrl,
+      expiresInMinutes: 15,
+    });
 
     return res.json({
       message:

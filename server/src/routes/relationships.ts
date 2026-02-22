@@ -27,9 +27,12 @@ router.get(
       const userId = req.userId!;
 
       const userRelationships = await db.query.relationships.findMany({
-        where: or(
-          eq(relationships.inviterId, userId),
-          eq(relationships.inviteeId, userId),
+        where: and(
+          or(
+            eq(relationships.inviterId, userId),
+            eq(relationships.inviteeId, userId),
+          ),
+          eq(relationships.status, "accepted"),
         ),
       });
 
@@ -302,6 +305,93 @@ router.post(
       console.error("Error accepting invitation:", error);
       return res.status(500).json({
         message: "Erreur lors de l'acceptation de l'invitation.",
+      });
+    }
+  },
+);
+
+/**
+ * POST /api/relationships/decline/:token
+ * Decline a relationship invitation.
+ * Changes status to 'declined' and optionally notifies the inviter.
+ */
+router.post(
+  "/relationships/decline/:token",
+  requireAuth,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const { token } = req.params;
+      const userId = req.userId!;
+
+      const relationship = await db.query.relationships.findFirst({
+        where: eq(relationships.invitationToken, token),
+      });
+
+      if (!relationship) {
+        return res.status(404).json({
+          message: "Invitation non trouvée ou expirée.",
+        });
+      }
+
+      // Can't decline own invitation
+      if (relationship.inviterId === userId) {
+        return res.status(400).json({
+          message: "Vous ne pouvez pas refuser votre propre invitation.",
+        });
+      }
+
+      // Can't decline if already accepted
+      if (relationship.status === "accepted") {
+        return res.status(400).json({
+          message: "Cette invitation a déjà été acceptée.",
+        });
+      }
+
+      // Can't decline if already declined
+      if (relationship.status === "declined") {
+        return res.status(400).json({
+          message: "Cette invitation a déjà été refusée.",
+        });
+      }
+
+      // Update status to declined
+      await db
+        .update(relationships)
+        .set({
+          inviteeId: userId,
+          status: "declined",
+          updatedAt: new Date().toISOString(),
+        })
+        .where(eq(relationships.id, relationship.id));
+
+      // Optionally notify the inviter
+      const decliningUser = await db.query.users.findFirst({
+        where: eq(users.id, userId),
+      });
+
+      await db.insert(notifications).values({
+        id: uuidv4(),
+        userId: relationship.inviterId,
+        type: "relation_request",
+        title: "Invitation refusée",
+        message: `${decliningUser?.displayName || "Un utilisateur"} a refusé votre invitation.`,
+        relatedUserId: userId,
+        relatedRelationshipId: relationship.id,
+        isRead: false,
+      });
+
+      return res.json({
+        success: true,
+        data: {
+          relationshipId: relationship.id,
+          status: "declined",
+        },
+        message: "Invitation refusée.",
+      });
+    } catch (error) {
+      console.error("Error declining invitation:", error);
+      return res.status(500).json({
+        message: "Erreur lors du refus de l'invitation.",
       });
     }
   },
@@ -631,6 +721,180 @@ router.get(
       console.error("Error fetching common limits:", error);
       return res.status(500).json({
         message: "Erreur lors de la récupération des limites communes.",
+      });
+    }
+  },
+);
+
+/**
+ * PUT /api/relationships/:id/limits/:limitId/note
+ * Add or update a note for a specific limit in a relationship.
+ * Only the user who is part of the relationship can manage their own notes.
+ */
+router.put(
+  "/relationships/:id/limits/:limitId/note",
+  requireAuth,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const userId = req.userId!;
+      const relationshipId = req.params.id;
+      const limitId = req.params.limitId;
+      const { note } = req.body;
+
+      // Validate note
+      if (!note || typeof note !== "string" || note.trim().length === 0) {
+        return res.status(400).json({
+          message: "La note ne peut pas être vide.",
+        });
+      }
+
+      if (note.length > 500) {
+        return res.status(400).json({
+          message: "La note ne peut pas dépasser 500 caractères.",
+        });
+      }
+
+      // Verify the user is part of this relationship
+      const relationship = await db.query.relationships.findFirst({
+        where: and(
+          eq(relationships.id, relationshipId),
+          or(
+            eq(relationships.inviterId, userId),
+            eq(relationships.inviteeId, userId),
+          ),
+        ),
+      });
+
+      if (!relationship) {
+        return res.status(403).json({
+          message:
+            "Accès interdit. Vous ne faites pas partie de cette relation.",
+        });
+      }
+
+      // Verify the limit exists
+      const limitExists = await db.query.limits.findFirst({
+        where: eq(limits.id, limitId),
+      });
+
+      if (!limitExists) {
+        return res.status(404).json({
+          message: "Limite non trouvée.",
+        });
+      }
+
+      // Check if user_limit exists
+      const existing = await db.query.userLimits.findFirst({
+        where: and(
+          eq(userLimits.userId, userId),
+          eq(userLimits.relationshipId, relationshipId),
+          eq(userLimits.limitId, limitId),
+        ),
+      });
+
+      if (existing) {
+        // Update existing note
+        await db
+          .update(userLimits)
+          .set({
+            note: note.trim(),
+            updatedAt: new Date().toISOString(),
+          })
+          .where(eq(userLimits.id, existing.id));
+      } else {
+        // Create new user_limit with note (limit not checked yet, but has a note)
+        await db.insert(userLimits).values({
+          id: uuidv4(),
+          userId,
+          relationshipId,
+          limitId,
+          isAccepted: false,
+          note: note.trim(),
+        });
+      }
+
+      return res.json({
+        success: true,
+        message: "Note ajoutée avec succès.",
+      });
+    } catch (error) {
+      console.error("Error adding note to limit:", error);
+      return res.status(500).json({
+        message: "Erreur lors de l'ajout de la note.",
+      });
+    }
+  },
+);
+
+/**
+ * DELETE /api/relationships/:id/limits/:limitId/note
+ * Delete a note from a specific limit in a relationship.
+ * Only the user who is part of the relationship can delete their own notes.
+ */
+router.delete(
+  "/relationships/:id/limits/:limitId/note",
+  requireAuth,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const userId = req.userId!;
+      const relationshipId = req.params.id;
+      const limitId = req.params.limitId;
+
+      // Verify the user is part of this relationship
+      const relationship = await db.query.relationships.findFirst({
+        where: and(
+          eq(relationships.id, relationshipId),
+          or(
+            eq(relationships.inviterId, userId),
+            eq(relationships.inviteeId, userId),
+          ),
+        ),
+      });
+
+      if (!relationship) {
+        return res.status(403).json({
+          message:
+            "Accès interdit. Vous ne faites pas partie de cette relation.",
+        });
+      }
+
+      // Find the user_limit
+      const existing = await db.query.userLimits.findFirst({
+        where: and(
+          eq(userLimits.userId, userId),
+          eq(userLimits.relationshipId, relationshipId),
+          eq(userLimits.limitId, limitId),
+        ),
+      });
+
+      if (!existing) {
+        return res.status(404).json({
+          message: "Note non trouvée.",
+        });
+      }
+
+      // If the limit is not accepted and only has a note, delete the entire record
+      // Otherwise, just clear the note field
+      if (!existing.isAccepted) {
+        await db.delete(userLimits).where(eq(userLimits.id, existing.id));
+      } else {
+        await db
+          .update(userLimits)
+          .set({
+            note: null,
+            updatedAt: new Date().toISOString(),
+          })
+          .where(eq(userLimits.id, existing.id));
+      }
+
+      return res.json({
+        success: true,
+        message: "Note supprimée avec succès.",
+      });
+    } catch (error) {
+      console.error("Error deleting note from limit:", error);
+      return res.status(500).json({
+        message: "Erreur lors de la suppression de la note.",
       });
     }
   },
