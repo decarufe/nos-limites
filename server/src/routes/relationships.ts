@@ -59,7 +59,48 @@ router.get(
         partners.map((p) => [p.id, { name: p.displayName, avatarUrl: p.avatarUrl }]),
       );
 
-      // Enrich relationships with partner data
+      // Batch fetch common limits counts for all relationships
+      const relationshipIds = userRelationships.map((r) => r.id);
+      const allUserLimits = relationshipIds.length > 0
+        ? await db.query.userLimits.findMany({
+            where: and(
+              inArray(userLimits.relationshipId, relationshipIds),
+              eq(userLimits.isAccepted, true),
+            ),
+          })
+        : [];
+
+      // Calculate common limits count for each relationship
+      const commonLimitsCounts = new Map<string, number>();
+
+      for (const rel of userRelationships) {
+        const partnerId =
+          rel.inviterId === userId ? rel.inviteeId : rel.inviterId;
+
+        if (!partnerId) {
+          commonLimitsCounts.set(rel.id, 0);
+          continue;
+        }
+
+        // Get my accepted limits for this relationship
+        const myLimitIds = new Set(
+          allUserLimits
+            .filter((ul) => ul.userId === userId && ul.relationshipId === rel.id)
+            .map((ul) => ul.limitId)
+        );
+
+        // Count partner's accepted limits that match mine
+        const commonCount = allUserLimits.filter(
+          (ul) =>
+            ul.userId === partnerId &&
+            ul.relationshipId === rel.id &&
+            myLimitIds.has(ul.limitId)
+        ).length;
+
+        commonLimitsCounts.set(rel.id, commonCount);
+      }
+
+      // Enrich relationships with partner data and common limits count
       const enriched = userRelationships.map((rel) => {
         const partnerId =
           rel.inviterId === userId ? rel.inviteeId : rel.inviterId;
@@ -68,6 +109,7 @@ router.get(
           ...rel,
           partnerName: partnerData?.name || null,
           partnerAvatarUrl: partnerData?.avatarUrl || null,
+          commonLimitsCount: commonLimitsCounts.get(rel.id) || 0,
         };
       });
 
@@ -498,6 +540,8 @@ router.put(
 
       // Track newly discovered common limits for notifications
       const newlyCommonLimits: string[] = [];
+      // Track newly removed common limits for notifications
+      const removedCommonLimits: string[] = [];
 
       // Process each limit update
       for (const limitUpdate of limitUpdates) {
@@ -524,6 +568,25 @@ router.put(
             eq(userLimits.limitId, limitId),
           ),
         });
+
+        // Check if this removes a common limit
+        if (!isAccepted && existing && existing.isAccepted && otherUserId) {
+          // User is unchecking a previously accepted limit
+          // Check if the other user still has it accepted (was common)
+          const otherUserLimit = await db.query.userLimits.findFirst({
+            where: and(
+              eq(userLimits.userId, otherUserId),
+              eq(userLimits.relationshipId, relationshipId),
+              eq(userLimits.limitId, limitId),
+              eq(userLimits.isAccepted, true),
+            ),
+          });
+
+          // If other user still has it accepted, this was a common limit being removed
+          if (otherUserLimit) {
+            removedCommonLimits.push(limitId);
+          }
+        }
 
         // Check if this creates a new common limit
         if (isAccepted && otherUserId) {
@@ -596,6 +659,31 @@ router.put(
             title: "Nouvelle limite commune découverte",
             message: `Vous et votre partenaire avez tous deux coché "${limit?.name || "une limite"}". C'est maintenant une limite commune !`,
             relatedUserId: otherUserId,
+            relatedRelationshipId: relationshipId,
+            isRead: false,
+          });
+        }
+      }
+
+      // Create notifications for removed common limits
+      if (removedCommonLimits.length > 0 && otherUserId) {
+        const currentUser = await db.query.users.findFirst({
+          where: eq(users.id, userId),
+        });
+
+        for (const limitId of removedCommonLimits) {
+          const limit = await db.query.limits.findFirst({
+            where: eq(limits.id, limitId),
+          });
+
+          // Notify the other user that a common limit was removed
+          await db.insert(notifications).values({
+            id: uuidv4(),
+            userId: otherUserId,
+            type: "limit_removed",
+            title: "Limite commune retirée",
+            message: `${currentUser?.displayName || "Un utilisateur"} a décoché "${limit?.name || "une limite"}". Cette limite n'est plus commune.`,
+            relatedUserId: userId,
             relatedRelationshipId: relationshipId,
             isRead: false,
           });
@@ -707,6 +795,19 @@ router.get(
         commonLimitDetails = await db.query.limits.findMany({
           where: inArray(limits.id, commonLimitIds),
         });
+
+        // Create a map of my notes for these limits
+        const myNotesMap = new Map(
+          myLimits
+            .filter((ul) => ul.note)
+            .map((ul) => [ul.limitId, ul.note])
+        );
+
+        // Enrich common limits with notes from the current user
+        commonLimitDetails = commonLimitDetails.map((limit) => ({
+          ...limit,
+          note: myNotesMap.get(limit.id) || null,
+        }));
       }
 
       return res.json({

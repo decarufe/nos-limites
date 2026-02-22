@@ -423,18 +423,38 @@
 
 .commonItem {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  gap: 8px;
   padding: 12px 14px;
   background: rgba(99, 102, 241, 0.05);
   border: 1px solid rgba(99, 102, 241, 0.15);
   border-radius: 10px;
 }
 
+.commonItemHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .commonName {
   font-size: 15px;
   color: var(--color-text, #1c1917);
   font-weight: 500;
+}
+
+.commonNote {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  margin-left: 30px;
+  background: rgba(255, 255, 255, 0.6);
+  border-left: 2px solid rgba(99, 102, 241, 0.3);
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--color-text-secondary, #57534e);
+  line-height: 1.5;
 }
 
 /* Delete modal */

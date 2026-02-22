@@ -11,6 +11,7 @@ interface Relationship {
   status: string;
   partnerName: string | null;
   partnerAvatarUrl: string | null;
+  commonLimitsCount: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -132,7 +133,13 @@ export default function HomePage() {
                 <span className={styles.relationName}>
                   {rel.partnerName || "Utilisateur"}
                 </span>
-                <span className={styles.relationStatus}>Relation active</span>
+                <span className={styles.relationStatus}>
+                  {rel.commonLimitsCount === 0
+                    ? "Aucune limite en commun"
+                    : rel.commonLimitsCount === 1
+                    ? "1 limite en commun"
+                    : `${rel.commonLimitsCount} limites en commun`}
+                </span>
               </div>
               <svg
                 width="20"
