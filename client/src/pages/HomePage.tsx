@@ -104,8 +104,8 @@ export default function HomePage() {
             Aucune relation pour l'instant
           </h2>
           <p className={styles.emptyText}>
-            Invitez quelqu'un en scannant un QR code ou en partageant un lien
-            d'invitation.
+            Affichez un QR code que votre contact peut scanner, ou partagez
+            un lien d'invitation pour l'ajouter à vos relations.
           </p>
         </div>
       ) : (

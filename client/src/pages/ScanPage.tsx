@@ -120,8 +120,8 @@ export default function ScanPage() {
             </svg>
           </div>
           <p className={styles.text}>
-            Generez un QR code ou un lien d'invitation pour ajouter une nouvelle
-            relation.
+            Affichez un QR code que votre contact peut scanner pour rejoindre
+            votre liste de relations, ou partagez un lien d'invitation.
           </p>
           <button
             className={styles.primaryButton}
@@ -171,7 +171,7 @@ export default function ScanPage() {
         <div className={styles.inviteContent}>
           <div className={styles.qrSection}>
             <p className={styles.qrLabel}>
-              Faites scanner ce QR code par votre partenaire :
+              Votre relation scanne ce QR code pour s'ajouter à votre liste :
             </p>
             <div className={styles.qrContainer}>
               <QRCodeSVG
