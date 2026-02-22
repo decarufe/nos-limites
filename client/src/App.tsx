@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { NotificationsProvider } from "./context/NotificationsContext";
 import AppLayout from "./components/AppLayout";
+import ProtectedRoute from "./components/ProtectedRoute";
 import LoginPage from "./pages/LoginPage";
 import AuthVerifyPage from "./pages/AuthVerifyPage";
 import ProfileSetupPage from "./pages/ProfileSetupPage";
@@ -25,17 +26,53 @@ function App() {
 
             {/* Main app with bottom tab navigation */}
             <Route element={<AppLayout />}>
-              <Route path="/home" element={<HomePage />} />
-              <Route path="/scan" element={<ScanPage />} />
-              <Route path="/notifications" element={<NotificationsPage />} />
-              <Route path="/profile" element={<ProfilePage />} />
+              <Route
+                path="/home"
+                element={
+                  <ProtectedRoute>
+                    <HomePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/scan"
+                element={
+                  <ProtectedRoute>
+                    <ScanPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/notifications"
+                element={
+                  <ProtectedRoute>
+                    <NotificationsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <ProfilePage />
+                  </ProtectedRoute>
+                }
+              />
               <Route
                 path="/relationship/:id"
-                element={<RelationshipPage />}
+                element={
+                  <ProtectedRoute>
+                    <RelationshipPage />
+                  </ProtectedRoute>
+                }
               />
               <Route
                 path="/invite/:token"
-                element={<InvitePage />}
+                element={
+                  <ProtectedRoute>
+                    <InvitePage />
+                  </ProtectedRoute>
+                }
               />
             </Route>
 
