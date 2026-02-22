@@ -492,3 +492,89 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+.modalSaveButton {
+  padding: 10px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  color: white;
+  background: var(--color-primary, #6366f1);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.modalSaveButton:hover:not(:disabled) {
+  background: #4f46e5;
+}
+
+.modalSaveButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Note functionality */
+.limitRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.limitRow .limitItem {
+  flex: 1;
+  margin: 0;
+}
+
+.noteButton {
+  background: none;
+  border: 1px solid var(--color-border, #e7e5e4);
+  border-radius: 8px;
+  padding: 8px;
+  cursor: pointer;
+  color: var(--color-text-secondary, #78716c);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.noteButton:hover {
+  background: var(--color-bg-secondary, #f5f5f4);
+  border-color: var(--color-primary, #6366f1);
+  color: var(--color-primary, #6366f1);
+}
+
+.noteButtonActive {
+  background: rgba(99, 102, 241, 0.1);
+  border-color: var(--color-primary, #6366f1);
+  color: var(--color-primary, #6366f1);
+}
+
+.noteTextarea {
+  width: 100%;
+  padding: 12px;
+  font-size: 15px;
+  font-family: inherit;
+  color: var(--color-text, #1c1917);
+  background: var(--color-bg-secondary, #f5f5f4);
+  border: 1px solid var(--color-border, #e7e5e4);
+  border-radius: 10px;
+  resize: vertical;
+  min-height: 100px;
+}
+
+.noteTextarea:focus {
+  outline: none;
+  border-color: var(--color-primary, #6366f1);
+  background: white;
+}
+
+.noteCharCount {
+  font-size: 13px;
+  color: var(--color-text-secondary, #78716c);
+  text-align: right;
+  margin-top: 4px;
+  margin-bottom: 12px;
+}

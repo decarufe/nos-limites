@@ -102,11 +102,20 @@ export default function RelationshipPage() {
   // Limits data
   const [categories, setCategories] = useState<Category[]>([]);
   const [checkedLimits, setCheckedLimits] = useState<Set<string>>(new Set());
+  const [limitNotes, setLimitNotes] = useState<Map<string, string>>(new Map());
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
     new Set()
   );
   const [limitsLoading, setLimitsLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  // Note editing
+  const [editingNoteForLimit, setEditingNoteForLimit] = useState<string | null>(
+    null
+  );
+  const [noteText, setNoteText] = useState("");
+  const [savingNote, setSavingNote] = useState(false);
+  const [deletingNote, setDeletingNote] = useState(false);
 
   // Common limits
   const [commonLimits, setCommonLimits] = useState<CommonLimit[]>([]);
@@ -155,14 +164,19 @@ export default function RelationshipPage() {
       ]);
       setCategories(catRes.data);
 
-      // Build set of accepted limit IDs
+      // Build set of accepted limit IDs and map of notes
       const accepted = new Set<string>();
+      const notes = new Map<string, string>();
       for (const ul of limRes.data.limits) {
         if (ul.isAccepted) {
           accepted.add(ul.limitId);
         }
+        if (ul.note) {
+          notes.set(ul.limitId, ul.note);
+        }
       }
       setCheckedLimits(accepted);
+      setLimitNotes(notes);
     } catch {
       // Silently fail - categories may not be loaded
     } finally {
@@ -241,6 +255,125 @@ export default function RelationshipPage() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const toggleCategory = async (categoryId: string, checkAll: boolean) => {
+    if (!id || saving) return;
+
+    const category = categories.find((c) => c.id === categoryId);
+    if (!category) return;
+
+    // Collect all limit IDs in this category
+    const limitIds: string[] = [];
+    for (const subcategory of category.subcategories) {
+      for (const limit of subcategory.limits) {
+        limitIds.push(limit.id);
+      }
+    }
+
+    // Optimistic update
+    const newChecked = new Set(checkedLimits);
+    if (checkAll) {
+      limitIds.forEach((limitId) => newChecked.add(limitId));
+    } else {
+      limitIds.forEach((limitId) => newChecked.delete(limitId));
+    }
+    setCheckedLimits(newChecked);
+
+    // Save to backend
+    setSaving(true);
+    try {
+      const limitUpdates = limitIds.map((limitId) => ({
+        limitId,
+        isAccepted: checkAll,
+      }));
+      await api.put(`/relationships/${id}/limits`, {
+        limits: limitUpdates,
+      });
+    } catch {
+      // Revert on failure
+      const reverted = new Set(checkedLimits);
+      setCheckedLimits(reverted);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleAddNote = (limitId: string) => {
+    const currentNote = limitNotes.get(limitId) || "";
+    setNoteText(currentNote);
+    setEditingNoteForLimit(limitId);
+  };
+
+  const handleSaveNote = async () => {
+    if (!id || !editingNoteForLimit || savingNote) return;
+
+    const trimmedNote = noteText.trim();
+    if (!trimmedNote) {
+      setError("La note ne peut pas être vide.");
+      return;
+    }
+
+    setSavingNote(true);
+    try {
+      await api.put(
+        `/relationships/${id}/limits/${editingNoteForLimit}/note`,
+        { note: trimmedNote }
+      );
+
+      // Update local state
+      const newNotes = new Map(limitNotes);
+      newNotes.set(editingNoteForLimit, trimmedNote);
+      setLimitNotes(newNotes);
+
+      // Close modal
+      setEditingNoteForLimit(null);
+      setNoteText("");
+      setError("");
+    } catch (err: any) {
+      setError(
+        err.response?.data?.message ||
+          "Erreur lors de l'enregistrement de la note."
+      );
+    } finally {
+      setSavingNote(false);
+    }
+  };
+
+  const handleDeleteNote = async () => {
+    if (!id || !editingNoteForLimit || deletingNote) return;
+
+    setSavingNote(true);
+    setDeletingNote(true);
+    try {
+      await api.delete(
+        `/relationships/${id}/limits/${editingNoteForLimit}/note`
+      );
+
+      // Update local state
+      const newNotes = new Map(limitNotes);
+      newNotes.delete(editingNoteForLimit);
+      setLimitNotes(newNotes);
+
+      // Close modal
+      setEditingNoteForLimit(null);
+      setNoteText("");
+      setError("");
+    } catch (err: any) {
+      setError(
+        err.response?.data?.message ||
+          "Erreur lors de la suppression de la note."
+      );
+    } finally {
+      setSavingNote(false);
+      setDeletingNote(false);
+    }
+  };
+
+  const handleCancelNote = () => {
+    setEditingNoteForLimit(null);
+    setNoteText("");
+    setError("");
   };
 
   const handleDeleteRelationship = async () => {
@@ -529,21 +662,44 @@ export default function RelationshipPage() {
                           </h4>
                           <div className={styles.limitsList}>
                             {subcategory.limits.map((limit) => (
-                              <label
-                                key={limit.id}
-                                className={styles.limitItem}
-                              >
-                                <input
-                                  type="checkbox"
-                                  className={styles.checkbox}
-                                  checked={checkedLimits.has(limit.id)}
-                                  onChange={() => toggleLimit(limit.id)}
-                                  disabled={saving}
-                                />
-                                <span className={styles.limitName}>
-                                  {limit.name}
-                                </span>
-                              </label>
+                              <div key={limit.id} className={styles.limitRow}>
+                                <label className={styles.limitItem}>
+                                  <input
+                                    type="checkbox"
+                                    className={styles.checkbox}
+                                    checked={checkedLimits.has(limit.id)}
+                                    onChange={() => toggleLimit(limit.id)}
+                                    disabled={saving}
+                                  />
+                                  <span className={styles.limitName}>
+                                    {limit.name}
+                                  </span>
+                                </label>
+                                <button
+                                  className={`${styles.noteButton} ${limitNotes.has(limit.id) ? styles.noteButtonActive : ""}`}
+                                  onClick={() => handleAddNote(limit.id)}
+                                  title={
+                                    limitNotes.has(limit.id)
+                                      ? "Modifier la note"
+                                      : "Ajouter une note"
+                                  }
+                                  type="button"
+                                >
+                                  <svg
+                                    width="18"
+                                    height="18"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  >
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                  </svg>
+                                </button>
+                              </div>
                             ))}
                           </div>
                         </div>
@@ -673,6 +829,67 @@ export default function RelationshipPage() {
                 disabled={deleting}
               >
                 {deleting ? "Suppression..." : "Supprimer"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Note editing modal */}
+      {editingNoteForLimit && (
+        <div
+          className={styles.modalOverlay}
+          onClick={handleCancelNote}
+        >
+          <div
+            className={styles.modalContent}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className={styles.modalTitle}>
+              {limitNotes.has(editingNoteForLimit)
+                ? "Modifier la note"
+                : "Ajouter une note"}
+            </h3>
+            <p className={styles.modalText}>
+              Ajoutez un commentaire personnel sur cette limite (maximum 500
+              caractères).
+            </p>
+            <textarea
+              className={styles.noteTextarea}
+              value={noteText}
+              onChange={(e) => setNoteText(e.target.value)}
+              placeholder="Votre note personnelle..."
+              maxLength={500}
+              rows={4}
+              autoFocus
+            />
+            <div className={styles.noteCharCount}>
+              {noteText.length} / 500 caractères
+            </div>
+            {error && <p className={styles.errorText}>{error}</p>}
+            <div className={styles.modalActions}>
+              <button
+                className={styles.modalCancelButton}
+                onClick={handleCancelNote}
+                disabled={savingNote}
+              >
+                Annuler
+              </button>
+              {limitNotes.has(editingNoteForLimit) && (
+                <button
+                  className={styles.modalDeleteButton}
+                  onClick={handleDeleteNote}
+                  disabled={savingNote || deletingNote}
+                >
+                  {deletingNote ? "Suppression..." : "Supprimer"}
+                </button>
+              )}
+              <button
+                className={styles.modalSaveButton}
+                onClick={handleSaveNote}
+                disabled={savingNote || !noteText.trim()}
+              >
+                {savingNote ? "Enregistrement..." : "Enregistrer"}
               </button>
             </div>
           </div>
