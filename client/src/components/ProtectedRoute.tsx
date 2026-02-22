@@ -1,6 +1,8 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import styles from "./ProtectedRoute.module.css";
+
+const PENDING_REDIRECT_KEY = "nos_limites_pending_redirect";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -8,6 +10,7 @@ interface ProtectedRouteProps {
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading } = useAuth();
+  const location = useLocation();
 
   if (isLoading) {
     return (
@@ -19,6 +22,10 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
 
   if (!isAuthenticated) {
+    const redirectPath = location.pathname + location.search;
+    if (redirectPath !== "/login") {
+      sessionStorage.setItem(PENDING_REDIRECT_KEY, redirectPath);
+    }
     return <Navigate to="/login" replace />;
   }
 

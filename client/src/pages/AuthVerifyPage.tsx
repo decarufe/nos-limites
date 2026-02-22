@@ -43,13 +43,20 @@ export default function AuthVerifyPage() {
         login(response.token, response.user);
         setStatus("success");
 
+        const pendingRedirect = sessionStorage.getItem("nos_limites_pending_redirect");
+
         // Redirect based on whether it's a new user
         if (response.isNewUser) {
-          // New user - go to profile setup
+          // New user - go to profile setup (pending redirect will be consumed after setup)
           navigate("/profile/setup", { replace: true });
         } else {
-          // Existing user - go to home
-          navigate("/home", { replace: true });
+          // Existing user - go to pending redirect or home
+          if (pendingRedirect) {
+            sessionStorage.removeItem("nos_limites_pending_redirect");
+            navigate(pendingRedirect, { replace: true });
+          } else {
+            navigate("/home", { replace: true });
+          }
         }
       } catch (err) {
         setStatus("error");

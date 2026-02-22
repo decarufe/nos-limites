@@ -59,7 +59,13 @@ export default function ProfileSetupPage() {
       });
 
       updateUser(response.user);
-      navigate("/home", { replace: true });
+      const pendingRedirect = sessionStorage.getItem("nos_limites_pending_redirect");
+      if (pendingRedirect) {
+        sessionStorage.removeItem("nos_limites_pending_redirect");
+        navigate(pendingRedirect, { replace: true });
+      } else {
+        navigate("/home", { replace: true });
+      }
     } catch (err) {
       setStatus("error");
       setErrorMessage(

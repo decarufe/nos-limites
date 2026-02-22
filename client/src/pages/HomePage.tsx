@@ -137,8 +137,8 @@ export default function HomePage() {
                   {rel.commonLimitsCount === 0
                     ? "Aucune limite en commun"
                     : rel.commonLimitsCount === 1
-                    ? "1 limite en commun"
-                    : `${rel.commonLimitsCount} limites en commun`}
+                      ? "1 limite en commun"
+                      : `${rel.commonLimitsCount} limites en commun`}
                 </span>
               </div>
               <svg
