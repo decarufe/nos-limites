@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate, Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
@@ -134,6 +134,9 @@ export default function RelationshipPage() {
   const [blocking, setBlocking] = useState(false);
   const [showOptionsMenu, setShowOptionsMenu] = useState(false);
 
+  // Track pending limit toggle requests to prevent race conditions
+  const pendingToggles = useRef<Map<string, AbortController>>(new Map());
+
   // Fetch relationship
   useEffect(() => {
     if (!id || !isAuthenticated || authLoading) return;
@@ -233,8 +236,20 @@ export default function RelationshipPage() {
   };
 
   const toggleLimit = async (limitId: string) => {
-    if (!id || saving) return;
+    if (!id) return;
 
+    // Cancel any pending request for this specific limit
+    const existingController = pendingToggles.current.get(limitId);
+    if (existingController) {
+      existingController.abort();
+    }
+
+    // Create new abort controller for this request
+    const controller = new AbortController();
+    pendingToggles.current.set(limitId, controller);
+
+    // Store the original state before optimistic update
+    const originalChecked = new Set(checkedLimits);
     const newChecked = new Set(checkedLimits);
     const isAccepted = !newChecked.has(limitId);
 
@@ -253,7 +268,10 @@ export default function RelationshipPage() {
     try {
       await api.put(`/relationships/${id}/limits`, {
         limits: [{ limitId, isAccepted }],
-      });
+      }, { signal: controller.signal });
+
+      // Remove from pending after successful completion
+      pendingToggles.current.delete(limitId);
 
       // Show success feedback
       setShowSaveSuccess(true);
@@ -262,16 +280,22 @@ export default function RelationshipPage() {
       setTimeout(() => {
         setShowSaveSuccess(false);
       }, 2000);
-    } catch (err) {
+    } catch (err: any) {
+      // Don't handle aborted requests (they were intentionally cancelled)
+      if (err.name === 'AbortError' || err.name === 'CanceledError') {
+        return;
+      }
+
       console.error("Error toggling limit:", err);
-      // Revert on failure
-      const reverted = new Set(checkedLimits);
-      setCheckedLimits(reverted);
+      // Revert to original state on failure
+      setCheckedLimits(originalChecked);
       setSaveError(
         err instanceof Error
           ? err.message
           : "Erreur lors de la mise à jour de la limite."
       );
+      // Remove from pending on error
+      pendingToggles.current.delete(limitId);
     } finally {
       setSaving(false);
     }

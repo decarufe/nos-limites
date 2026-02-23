@@ -11,6 +11,7 @@ interface ApiOptions {
   method?: string;
   body?: unknown;
   headers?: Record<string, string>;
+  signal?: AbortSignal;
 }
 
 class ApiService {
@@ -28,7 +29,7 @@ class ApiService {
     endpoint: string,
     options: ApiOptions = {},
   ): Promise<T> {
-    const { method = "GET", body, headers = {} } = options;
+    const { method = "GET", body, headers = {}, signal } = options;
 
     const requestHeaders: Record<string, string> = {
       "Content-Type": "application/json",
@@ -43,6 +44,7 @@ class ApiService {
       method,
       headers: requestHeaders,
       body: body ? JSON.stringify(body) : undefined,
+      signal,
     });
 
     if (!response.ok) {
@@ -55,20 +57,20 @@ class ApiService {
     return response.json();
   }
 
-  get<T>(endpoint: string): Promise<T> {
-    return this.request<T>(endpoint);
+  get<T>(endpoint: string, options?: { signal?: AbortSignal }): Promise<T> {
+    return this.request<T>(endpoint, options);
   }
 
-  post<T>(endpoint: string, body?: unknown): Promise<T> {
-    return this.request<T>(endpoint, { method: "POST", body });
+  post<T>(endpoint: string, body?: unknown, options?: { signal?: AbortSignal }): Promise<T> {
+    return this.request<T>(endpoint, { method: "POST", body, ...options });
   }
 
-  put<T>(endpoint: string, body?: unknown): Promise<T> {
-    return this.request<T>(endpoint, { method: "PUT", body });
+  put<T>(endpoint: string, body?: unknown, options?: { signal?: AbortSignal }): Promise<T> {
+    return this.request<T>(endpoint, { method: "PUT", body, ...options });
   }
 
-  delete<T>(endpoint: string): Promise<T> {
-    return this.request<T>(endpoint, { method: "DELETE" });
+  delete<T>(endpoint: string, options?: { signal?: AbortSignal }): Promise<T> {
+    return this.request<T>(endpoint, { method: "DELETE", ...options });
   }
 }
 
