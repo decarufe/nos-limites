@@ -1235,3 +1235,57 @@
 - Profile photo upload functionality
 - PWA features (service worker, manifest.json enhancements)
 
+### Session 22 - 2026-02-23
+
+**Features Completed:**
+- Feature #67: Blocked user cannot send invitation to blocker ✅ PASSING
+  - Identified security issue: GET /api/relationships/invite/:token did NOT check blocked_users table
+  - Before fix: Blocked users could view invitation details (name, avatar, status)
+  - After fix: Returns 403 "Impossible de consulter cette invitation" when blocked
+  - Implementation Details:
+    * Added blocked_users check to GET endpoint (lines 207-220)
+    * Checks bidirectional blocking: A blocks B OR B blocks A
+    * Uses same logic as POST /accept/:token for consistency
+    * Query: `SELECT * FROM blocked_users WHERE (blocker_id=A AND blocked_id=B) OR (blocker_id=B AND blocked_id=A)`
+  - Test Verification (test-feature-67.mjs):
+    * Created User A and User B
+    * Established relationship, then User A blocks User B
+    * User B creates new invitation after being blocked
+    * GET /invite/:token returns 403 (blocked users cannot view)
+    * POST /accept/:token returns 403 (blocked users cannot accept)
+    * No relationship created between blocked users
+    * All 9 verification steps passing
+  - Code Changes:
+    * Modified: server/src/routes/relationships.ts (added blocked check to GET endpoint)
+    * Created: test-feature-67.mjs (comprehensive blocking test)
+  - Security Verification:
+    * Blocked users cannot view invitation details ✅
+    * Blocked users cannot accept invitations ✅
+    * Block relationship is bidirectional ✅
+    * No data leakage to blocked users ✅
+
+**Current Status:** 73/76 features passing (96.1%)
+
+**Technical Verification:**
+- TypeScript compiles successfully: 243.92 kB bundle (client), 0 errors (server)
+- No mock data patterns found in codebase
+- Server health check passes: database connected, 10 tables
+- Both GET and POST endpoints now consistently check blocked_users
+- Test creates unique users per run (timestamp-based emails)
+- All database queries use real SQLite database
+
+**Architecture Notes:**
+- Blocking is implemented at two levels:
+  1. Database: blocked_users table with blocker_id and blocked_id
+  2. API: Both GET and POST invitation endpoints check this table
+- Blocking relationship is bidirectional (A blocks B = B cannot interact with A)
+- Block happens after relationship acceptance (requires relationship ID)
+- Blocking deletes the relationship and prevents future relationships
+- Security: Blocked users cannot see ANY information about invitations from blocker
+
+**What Should Be Worked On Next:**
+- Remaining 3 features to reach 100% completion
+- OAuth backend endpoints (Google, Facebook)
+- Profile photo upload functionality
+- PWA features (service worker, manifest.json enhancements)
+
