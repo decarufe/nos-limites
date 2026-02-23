@@ -300,10 +300,11 @@ async function runTest() {
       },
     });
     const notificationsAData = await notificationsARes.json();
-    const userAHasNewCommonLimitNotif =
-      notificationsAData.data.notifications.some(
-        (n) => n.type === "new_common_limit",
-      );
+    // Fix: API returns { success, data: [...notifications], count }
+    const userANotifications = notificationsAData.data || [];
+    const userAHasNewCommonLimitNotif = userANotifications.some(
+      (n) => n.type === "new_common_limit",
+    );
 
     const notificationsBRes = await fetch(`${API_URL}/notifications`, {
       method: "GET",
@@ -312,10 +313,10 @@ async function runTest() {
       },
     });
     const notificationsBData = await notificationsBRes.json();
-    const userBHasNewCommonLimitNotif =
-      notificationsBData.data.notifications.some(
-        (n) => n.type === "new_common_limit",
-      );
+    const userBNotifications = notificationsBData.data || [];
+    const userBHasNewCommonLimitNotif = userBNotifications.some(
+      (n) => n.type === "new_common_limit",
+    );
 
     if (userAHasNewCommonLimitNotif || userBHasNewCommonLimitNotif) {
       console.log("✅ Notifications were generated for common limit\n");
