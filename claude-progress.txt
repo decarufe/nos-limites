@@ -566,3 +566,34 @@
 - PWA features (service worker, manifest.json enhancements)
 - Image uploads for limit categories
 
+
+### Session 14 - 2026-02-23
+
+**Features Completed:**
+- Feature #44: Notifications display timestamps correctly ✅ PASSING
+- Feature #74: Notifications display timestamps correctly in French locale ✅ PASSING
+
+**Implementation Details:**
+- Both features were duplicates and already implemented in previous session
+- NotificationsPage.tsx has formatDate function with comprehensive French timestamp formatting:
+  * Very recent (< 1 min): "À l'instant"
+  * Minutes (< 60 min): "Il y a X min"
+  * Hours (< 24 hours): "Il y a Xh"
+  * Days (< 7 days): "Il y a Xj"
+  * Recent dates (< 30 days): "15 févr." (day + French month abbreviation)
+  * Older dates (≥ 30 days): "15/02/2024" (DD/MM/YYYY format)
+- All timestamps use French locale (fr-FR)
+- Created comprehensive test suite (test-feature-44.mjs) with 18 assertions
+- All tests passing: relative time, French date formatting, DD/MM/YYYY format
+- TypeScript compiles successfully with zero errors
+- No mock data patterns found in codebase
+
+**Current Status:** 53/76 features passing (69.7%)
+
+**What Should Be Worked On Next:**
+- OAuth backend endpoints (Google, Facebook)
+- Profile photo upload
+- SSE (Server-Sent Events) for real-time notifications
+- PWA features (service worker, manifest.json enhancements)
+- Additional UI/UX enhancements
+
