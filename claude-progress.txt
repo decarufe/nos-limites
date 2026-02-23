@@ -1483,3 +1483,48 @@ test coverage.
 The "Nos limites" application is complete and ready for deployment! 🚀
 
 ═══════════════════════════════════════════════════════════════════════
+
+### Session 24 - 2026-02-23
+
+**Features Completed:**
+- Feature #82: Google OAuth environment configuration and graceful fallback ✅ PASSING
+
+**Feature #82 Implementation Details:**
+- Backend Changes (server/src/routes/auth.ts):
+  * Added `isGoogleOAuthConfigured()` helper that checks GOOGLE_CLIENT_ID & GOOGLE_CLIENT_SECRET
+  * Added GET /api/auth/providers endpoint (public, no auth required)
+    - Returns: `{providers: {magic_link: true, google: bool, facebook: false}}`
+    - google is true only when both GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are set
+  * Added GET /api/auth/google with graceful fallback:
+    - Returns 501 with French message when credentials missing
+    - Redirects to Google OAuth consent screen when credentials configured
+    - Includes CSRF state token in OAuth redirect URL
+  * Full OAuth callback handler also present (from features #78/#79)
+
+- Frontend Changes (client/src/pages/LoginPage.tsx):
+  * Added useEffect to fetch /api/auth/providers on mount
+  * Added googleAvailable state variable (default: false)
+  * Google button + "ou" divider conditionally rendered: `{googleAvailable && (...)}`
+  * Graceful fallback: if providers endpoint fails, hides social buttons
+
+- Environment Configuration:
+  * .env.example updated with GOOGLE_CALLBACK_URL and setup instructions
+  * Comments added for Google Cloud Console and Facebook Developer URLs
+
+- Verification Results:
+  * Without credentials: Login page shows only email form, no Google button ✅
+  * With credentials: Login page shows email form + "ou" divider + Google button ✅
+  * GET /api/auth/google returns 501 when not configured ✅
+  * GET /api/auth/google returns 302 redirect to Google when configured ✅
+  * GET /api/auth/providers returns correct provider availability ✅
+  * Server starts and runs normally without Google OAuth credentials ✅
+  * Zero JS console errors ✅
+  * No mock data patterns in codebase ✅
+
+**Current Status:** 77/83 features passing (92.8%)
+
+**What Should Be Worked On Next:**
+- Remaining 6 features to complete
+- Other OAuth features (#78, #79 may now be completable)
+- Profile photo upload functionality
+- PWA features enhancements
