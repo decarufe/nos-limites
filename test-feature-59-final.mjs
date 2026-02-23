@@ -13,11 +13,14 @@ const require = createRequire(import.meta.url);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Import better-sqlite3 from server's node_modules
+// Import dependencies from server's node_modules
 const Database = require('./server/node_modules/better-sqlite3');
+const jwt = require('./server/node_modules/jsonwebtoken');
+
+const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production';
 
 const API_URL = 'http://localhost:3001/api';
-const DB_PATH = join(__dirname, 'server', 'database.db');
+const DB_PATH = join(__dirname, 'server', 'data', 'noslimites.db');
 
 async function apiRequest(endpoint, options = {}) {
   const url = `${API_URL}${endpoint}`;
@@ -60,10 +63,12 @@ async function testDataExport() {
 
     console.log('✓ Created test users');
 
-    // Create session for User A
-    const sessionToken = `test_token_${timestamp}_${Math.random().toString(36).substr(2)}`;
+    // Create session for User A with JWT token
     const sessionId = `session_${timestamp}`;
     const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+
+    // Create JWT token
+    const sessionToken = jwt.sign({ userId: userAId }, JWT_SECRET, { expiresIn: '30d' });
 
     db.prepare(`
       INSERT INTO sessions (id, user_id, token, expires_at, created_at)
