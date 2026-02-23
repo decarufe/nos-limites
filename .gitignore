@@ -48,3 +48,4 @@ coverage/
 .github/instructions/
 .github/prompts/
 # END NexKit
+server/database.db
