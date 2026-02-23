@@ -5,6 +5,7 @@ import AppLayout from "./components/AppLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import LoginPage from "./pages/LoginPage";
 import AuthVerifyPage from "./pages/AuthVerifyPage";
+import OAuthCallbackPage from "./pages/OAuthCallbackPage";
 import ProfileSetupPage from "./pages/ProfileSetupPage";
 import HomePage from "./pages/HomePage";
 import ScanPage from "./pages/ScanPage";
@@ -22,6 +23,7 @@ function App() {
             {/* Auth pages without bottom nav */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/auth/verify" element={<AuthVerifyPage />} />
+            <Route path="/auth/oauth-callback" element={<OAuthCallbackPage />} />
             <Route path="/profile/setup" element={<ProfileSetupPage />} />
 
             {/* Main app with bottom tab navigation */}
