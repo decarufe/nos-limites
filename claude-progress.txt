@@ -597,3 +597,62 @@
 - PWA features (service worker, manifest.json enhancements)
 - Additional UI/UX enhancements
 
+
+### Session 15 - 2026-02-23
+
+**Features Completed:**
+- Feature #42: Home screen shows empty state when no relationships exist ✅ PASSING
+  - Verified HomePage.tsx has comprehensive empty state implementation:
+    * SVG icon (users icon with low opacity)
+    * Clear title: "Aucune relation pour l'instant"
+    * Help message: "Affichez un QR code que votre contact peut scanner, ou partagez un lien d'invitation..."
+    * Action button: "Créer une invitation" navigating to /scan page
+    * Conditional rendering: shows empty state when acceptedRelationships.length === 0 && pendingRelationships.length === 0
+    * Graceful error handling: catch block silently fails and shows empty state
+  - Added missing .emptyButton CSS styling to HomePage.module.css:
+    * Primary color background (#7c3aed)
+    * White text, rounded corners, padding
+    * Hover effect: darker background (#6d28d9) + translateY(-1px)
+    * Active effect: translateY(0)
+  - Fixed TypeScript errors in InvitePage.tsx:
+    * Changed disabled button logic from checking status === "accepting" || "declining"
+    * To disabled={status !== "loaded"} (proper type narrowing within conditional block)
+  - Created test-feature-42-simple.mjs with comprehensive verification
+  - All TypeScript builds pass (client: 243.17 kB, server: zero errors)
+
+- Feature #69: New relationship starts with zero limits checked ✅ PASSING
+  - Verified backend implementation:
+    * GET /api/relationships/:id/limits fetches from user_limits table
+    * Filters by userId AND relationshipId (no cross-user data leaks)
+    * Returns empty array when no user_limits records exist
+    * POST /relationships/accept doesn't insert default limits
+  - Verified frontend implementation:
+    * RelationshipPage fetches limits via api.get(`/relationships/${id}/limits`)
+    * Builds Set<string> only from limits where isAccepted === true
+    * Initializes checkedLimits as empty Set: useState<Set<string>>(new Set())
+    * Empty API response → empty Set → all checkboxes unchecked
+  - Created test-feature-69-simple.mjs for implementation verification
+  - All mock data checks passed (grep found zero patterns)
+  - Logic flow verified:
+    1. New relationship created → no user_limits records in database
+    2. GET /relationships/:id/limits → returns { limits: [] }
+    3. Frontend builds Set from empty array → new Set()
+    4. All limit checkboxes render as unchecked (checked={checkedLimits.has(limit.id)})
+    5. Category counters display "0/N limites sélectionnées"
+
+**Current Status:** 53/76 features passing (69.7%)
+
+**Architecture Notes:**
+- Empty state pattern established: HomePage shows helpful UI when data arrays are empty
+- New relationships have clean slate: no default limits pre-selected
+- Frontend state management: checkedLimits Set built exclusively from API response
+- Backend data integrity: user_limits table only populated when user explicitly checks limits
+- TypeScript type narrowing: proper use of discriminated union types in conditional blocks
+
+**What Should Be Worked On Next:**
+- OAuth backend endpoints (Google, Facebook)
+- Profile photo upload functionality
+- SSE (Server-Sent Events) for real-time notifications
+- PWA features (service worker, manifest.json enhancements)
+- Additional UI/UX enhancements
+- Remaining default & reset features
