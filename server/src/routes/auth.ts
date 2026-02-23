@@ -7,6 +7,10 @@ import jwt from "jsonwebtoken";
 import { requireAuth, AuthRequest } from "../middleware/auth";
 import { resolveFrontendBaseUrl } from "../utils/frontend-url";
 import { emailService } from "../services/email";
+import {
+  createDeviceToken,
+  refreshDeviceToken,
+} from "../services/deviceService";
 
 const router = Router();
 
@@ -188,6 +192,12 @@ router.get("/auth/verify", async (req: Request, res: Response) => {
       expiresAt: sessionExpiresAt,
     });
 
+    // Always register a device token for persistent sessions
+    const device = await createDeviceToken(
+      user.id,
+      req.headers["user-agent"]?.substring(0, 120) || "Navigateur",
+    );
+
     return res.json({
       token: jwtToken,
       user: {
@@ -197,11 +207,65 @@ router.get("/auth/verify", async (req: Request, res: Response) => {
         avatarUrl: user.avatarUrl,
       },
       isNewUser,
+      deviceId: device.deviceId,
+      deviceToken: device.deviceToken,
     });
   } catch (error) {
     console.error("Error verifying magic link:", error);
     return res.status(500).json({
       message: "Erreur lors de la vérification du lien magique.",
+    });
+  }
+});
+
+/**
+ * POST /api/auth/device/refresh
+ * Refresh an expired session using a long-lived device token.
+ * Returns a new JWT, new device token (rotation), and user info.
+ */
+router.post("/auth/device/refresh", async (req: Request, res: Response) => {
+  try {
+    const { deviceId, deviceToken } = req.body;
+
+    if (
+      !deviceId ||
+      !deviceToken ||
+      typeof deviceId !== "string" ||
+      typeof deviceToken !== "string"
+    ) {
+      return res.status(400).json({
+        message: "Device ID et token requis.",
+      });
+    }
+
+    const result = await refreshDeviceToken(deviceId, deviceToken);
+
+    // Fetch user info for the response
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, result.userId),
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        message: "Utilisateur non trouvé.",
+      });
+    }
+
+    return res.json({
+      token: result.jwtToken,
+      user: {
+        id: user.id,
+        email: user.email,
+        displayName: user.displayName,
+        avatarUrl: user.avatarUrl,
+      },
+      deviceId,
+      deviceToken: result.deviceToken,
+    });
+  } catch (error: any) {
+    console.error("Device refresh failed:", error?.message);
+    return res.status(401).json({
+      message: "Session d'appareil invalide ou expirée.",
     });
   }
 });

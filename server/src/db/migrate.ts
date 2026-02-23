@@ -104,6 +104,17 @@ export function migrate() {
       UNIQUE(blocker_id, blocked_id)
     );
 
+    CREATE TABLE IF NOT EXISTS devices (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      device_name TEXT,
+      refresh_token_hash TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      last_seen TEXT NOT NULL DEFAULT (datetime('now')),
+      expires_at TEXT NOT NULL,
+      revoked INTEGER DEFAULT 0
+    );
+
     -- Indexes for performance
     CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
     CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token);
@@ -121,6 +132,8 @@ export function migrate() {
     CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications(is_read);
     CREATE INDEX IF NOT EXISTS idx_blocked_users_blocker ON blocked_users(blocker_id);
     CREATE INDEX IF NOT EXISTS idx_blocked_users_blocked ON blocked_users(blocked_id);
+    CREATE INDEX IF NOT EXISTS idx_devices_user_id ON devices(user_id);
+    CREATE INDEX IF NOT EXISTS idx_devices_refresh_token_hash ON devices(refresh_token_hash);
   `);
 
   console.log("Database migrations completed successfully.");

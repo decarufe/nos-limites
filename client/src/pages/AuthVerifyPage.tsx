@@ -13,6 +13,8 @@ interface VerifyResponse {
     avatarUrl: string | null;
   };
   isNewUser: boolean;
+  deviceId?: string;
+  deviceToken?: string;
 }
 
 export default function AuthVerifyPage() {
@@ -20,7 +22,7 @@ export default function AuthVerifyPage() {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [status, setStatus] = useState<"verifying" | "success" | "error">(
-    "verifying"
+    "verifying",
   );
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -36,14 +38,21 @@ export default function AuthVerifyPage() {
     const verifyToken = async () => {
       try {
         const response = await api.get<VerifyResponse>(
-          `/auth/verify?token=${token}`
+          `/auth/verify?token=${token}`,
         );
 
-        // Log in the user
-        login(response.token, response.user);
+        // Log in the user with device token for persistent sessions
+        login(
+          response.token,
+          response.user,
+          response.deviceId,
+          response.deviceToken,
+        );
         setStatus("success");
 
-        const pendingRedirect = sessionStorage.getItem("nos_limites_pending_redirect");
+        const pendingRedirect = sessionStorage.getItem(
+          "nos_limites_pending_redirect",
+        );
 
         // Redirect based on whether it's a new user
         if (response.isNewUser) {
@@ -63,7 +72,7 @@ export default function AuthVerifyPage() {
         setErrorMessage(
           err instanceof Error
             ? err.message
-            : "Erreur lors de la vérification du lien magique."
+            : "Erreur lors de la vérification du lien magique.",
         );
       }
     };

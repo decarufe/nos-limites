@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
@@ -14,6 +14,14 @@ interface ProfileResponse {
     createdAt: string;
     updatedAt: string;
   };
+}
+
+interface DeviceInfo {
+  id: string;
+  deviceName: string | null;
+  createdAt: string;
+  lastSeen: string;
+  revoked: boolean;
 }
 
 export default function ProfilePage() {
@@ -32,6 +40,30 @@ export default function ProfilePage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  // Devices state
+  const [devicesList, setDevicesList] = useState<DeviceInfo[]>([]);
+  const [devicesLoading, setDevicesLoading] = useState(false);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      setDevicesLoading(true);
+      api
+        .get<{ devices: DeviceInfo[] }>("/devices")
+        .then((data) => setDevicesList(data.devices.filter((d) => !d.revoked)))
+        .catch(() => { })
+        .finally(() => setDevicesLoading(false));
+    }
+  }, [isAuthenticated]);
+
+  const handleRevokeDevice = async (deviceId: string) => {
+    try {
+      await api.delete(`/devices/${deviceId}`);
+      setDevicesList((prev) => prev.filter((d) => d.id !== deviceId));
+    } catch {
+      // silently fail
+    }
+  };
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -99,7 +131,7 @@ export default function ProfilePage() {
       setEditError(
         err instanceof Error
           ? err.message
-          : "Erreur lors de la mise à jour du profil."
+          : "Erreur lors de la mise à jour du profil.",
       );
     } finally {
       setIsSaving(false);
@@ -119,7 +151,7 @@ export default function ProfilePage() {
       setDeleteError(
         err instanceof Error
           ? err.message
-          : "Erreur lors de la suppression du compte."
+          : "Erreur lors de la suppression du compte.",
       );
       setIsDeleting(false);
     }
@@ -146,12 +178,23 @@ export default function ProfilePage() {
         </header>
         <div className={styles.content}>
           <div className={styles.avatar}>
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="48"
+              height="48"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="white"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
               <circle cx="12" cy="7" r="4" />
             </svg>
           </div>
-          <p className={styles.text}>Connectez-vous pour accéder à votre profil.</p>
+          <p className={styles.text}>
+            Connectez-vous pour accéder à votre profil.
+          </p>
         </div>
       </div>
     );
@@ -172,7 +215,16 @@ export default function ProfilePage() {
             />
           ) : (
             <div className={styles.avatar}>
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                width="48"
+                height="48"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="white"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                 <circle cx="12" cy="7" r="4" />
               </svg>
@@ -198,9 +250,7 @@ export default function ProfilePage() {
                   if (e.key === "Escape") handleCancelEdit();
                 }}
               />
-              {editError && (
-                <p className={styles.errorText}>{editError}</p>
-              )}
+              {editError && <p className={styles.errorText}>{editError}</p>}
               <div className={styles.editButtons}>
                 <button
                   className={styles.saveButton}
@@ -244,14 +294,59 @@ export default function ProfilePage() {
             </div>
           )}
 
-          {editSuccess && (
-            <p className={styles.successText}>{editSuccess}</p>
-          )}
+          {editSuccess && <p className={styles.successText}>{editSuccess}</p>}
 
           <p className={styles.email}>{user.email}</p>
         </div>
 
         <div className={styles.actions}>
+          {/* Devices section */}
+          <div className={styles.devicesSection}>
+            <h3 className={styles.devicesSectionTitle}>Appareils connectés</h3>
+            {devicesLoading ? (
+              <p className={styles.text}>Chargement...</p>
+            ) : devicesList.length === 0 ? (
+              <p className={styles.text}>Aucun appareil enregistré.</p>
+            ) : (
+              <ul className={styles.devicesList}>
+                {devicesList.map((device) => (
+                  <li key={device.id} className={styles.deviceItem}>
+                    <div className={styles.deviceInfo}>
+                      <span className={styles.deviceName}>
+                        {device.deviceName || "Navigateur"}
+                      </span>
+                      <span className={styles.deviceMeta}>
+                        Dernière activité :{" "}
+                        {new Date(device.lastSeen).toLocaleDateString("fr-FR")}
+                      </span>
+                    </div>
+                    <button
+                      className={styles.deviceRevokeButton}
+                      onClick={() => handleRevokeDevice(device.id)}
+                      aria-label={`Révoquer l'appareil ${device.deviceName}`}
+                      title="Révoquer"
+                    >
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                      </svg>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
           {/* Logout button */}
           <button
             className={styles.logoutButton}
@@ -305,16 +400,18 @@ export default function ProfilePage() {
 
         {/* Delete confirmation modal */}
         {showDeleteConfirm && (
-          <div className={styles.modalOverlay} onClick={() => !isDeleting && setShowDeleteConfirm(false)}>
+          <div
+            className={styles.modalOverlay}
+            onClick={() => !isDeleting && setShowDeleteConfirm(false)}
+          >
             <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
               <h3 className={styles.modalTitle}>Supprimer votre compte ?</h3>
               <p className={styles.modalText}>
-                Cette action est irréversible. Toutes vos données seront supprimées :
-                relations, limites, notifications et informations de profil.
+                Cette action est irréversible. Toutes vos données seront
+                supprimées : relations, limites, notifications et informations
+                de profil.
               </p>
-              {deleteError && (
-                <p className={styles.errorText}>{deleteError}</p>
-              )}
+              {deleteError && <p className={styles.errorText}>{deleteError}</p>}
               <div className={styles.modalButtons}>
                 <button
                   className={styles.confirmDeleteButton}

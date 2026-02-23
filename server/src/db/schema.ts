@@ -126,12 +126,30 @@ export const notifications = sqliteTable("notifications", {
   relatedUserId: text("related_user_id").references(() => users.id),
   relatedRelationshipId: text("related_relationship_id").references(
     () => relationships.id,
-    { onDelete: "set null" }
+    { onDelete: "set null" },
   ),
   isRead: integer("is_read", { mode: "boolean" }).default(false),
   createdAt: text("created_at")
     .notNull()
     .$defaultFn(() => new Date().toISOString()),
+});
+
+// Devices table (long-lived refresh tokens per browser/device)
+export const devices = sqliteTable("devices", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  deviceName: text("device_name"),
+  refreshTokenHash: text("refresh_token_hash").notNull(),
+  createdAt: text("created_at")
+    .notNull()
+    .$defaultFn(() => new Date().toISOString()),
+  lastSeen: text("last_seen")
+    .notNull()
+    .$defaultFn(() => new Date().toISOString()),
+  expiresAt: text("expires_at").notNull(),
+  revoked: integer("revoked", { mode: "boolean" }).default(false),
 });
 
 // Blocked users table

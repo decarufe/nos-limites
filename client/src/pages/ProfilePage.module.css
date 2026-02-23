@@ -35,7 +35,9 @@
   width: 96px;
   height: 96px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  background: linear-gradient(135deg,
+      var(--color-primary),
+      var(--color-secondary));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -234,6 +236,81 @@
 .logoutButton:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* Devices section */
+.devicesSection {
+  width: 100%;
+  text-align: left;
+  margin-bottom: var(--spacing-md);
+}
+
+.devicesSectionTitle {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: var(--spacing-sm);
+}
+
+.devicesList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.deviceItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--color-border, #e5e5e5);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface, #fff);
+}
+
+.deviceInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.deviceName {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 240px;
+}
+
+.deviceMeta {
+  font-size: 0.7rem;
+  color: var(--color-text);
+  opacity: 0.5;
+}
+
+.deviceRevokeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background-color: transparent;
+  color: var(--color-error);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color 0.2s ease;
+}
+
+.deviceRevokeButton:hover {
+  background-color: rgba(239, 68, 68, 0.1);
 }
 
 /* Delete account button */

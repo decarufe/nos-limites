@@ -12,6 +12,7 @@ import authRouter from "./routes/auth";
 import profileRouter from "./routes/profile";
 import relationshipsRouter from "./routes/relationships";
 import notificationsRouter from "./routes/notifications";
+import devicesRouter from "./routes/devices";
 
 ensureDatabaseInitialized();
 
@@ -35,6 +36,7 @@ app.use("/api", authRouter);
 app.use("/api", profileRouter);
 app.use("/api", relationshipsRouter);
 app.use("/api", notificationsRouter);
+app.use("/api", devicesRouter);
 
 if (!process.env.VERCEL) {
   app.listen(PORT, () => {

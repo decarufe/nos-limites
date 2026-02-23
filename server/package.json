@@ -7,6 +7,8 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "test:config": "tsx --test tests/cors-config.test.ts tests/frontend-base-url.test.ts",
+    "test:devices": "tsx --test tests/device-service.test.ts",
+    "test": "tsx --test tests/cors-config.test.ts tests/frontend-base-url.test.ts tests/device-service.test.ts",
     "start": "node dist/index.js",
     "db:migrate": "tsx src/db/migrate.ts",
     "db:seed": "tsx src/db/seed.ts"
