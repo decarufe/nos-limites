@@ -753,3 +753,46 @@
 - Profile photo upload functionality
 - Additional UI/UX enhancements
 - PWA features (service worker, manifest.json enhancements)
+
+### Session 17 - 2026-02-23
+
+**Features Completed:**
+- Feature #46: Deleting account removes all user's limits, relationships, and notifications ✅ PASSING
+  - Verified DELETE /api/profile endpoint already has comprehensive cascade deletion
+  - Deletes in order: user_limits, notifications, blocked_users, relationships, sessions, magic_links, then user
+  - All foreign key references properly removed before user deletion
+  - Created comprehensive test (test-feature-46.mjs) with 11 assertions
+  - Verified other users' data is NOT affected (User B and C relationships preserved)
+  - Test creates 3 users (A, B, C) with 2 relationships (A-B, B-C)
+  - After User A deletion: all A's data gone, B-C relationship intact
+  - User A cannot authenticate after deletion (401 on session endpoint)
+  - No mock data patterns, all deletions verified against SQLite database
+
+- Feature #47: Deleting a relationship removes associated user_limits for both users ✅ PASSING
+  - Fixed FOREIGN KEY constraint issue in notifications table
+  - Added `onDelete: "set null"` to notifications.relatedRelationshipId foreign key
+  - Updated DELETE /api/relationships/:id to clear relatedRelationshipId in notifications
+  - Updated POST /api/relationships/:id/block to clear relatedRelationshipId in notifications
+  - Notifications are preserved for transparency even after relationship deletion
+  - Created comprehensive test (test-feature-47.mjs) with 8 assertions
+  - Test verifies: A-B relationship deleted removes all user_limits for both users
+  - Test verifies: User A's limits in A-C relationship are NOT affected
+  - Test verifies: User C's limits in A-C relationship are NOT affected
+  - All cascade deletion verified against SQLite database
+  - TypeScript compiles successfully with zero errors
+
+**Current Status:** 57/76 features passing (75.0%)
+
+**Technical Details:**
+- Schema change: notifications.relatedRelationshipId now has `onDelete: "set null"`
+- Backend properly handles notification cleanup before relationship deletion
+- Database recreated to apply schema changes (old database deleted)
+- All tests pass with real database queries (no mock data)
+- Cascade deletion pattern: user_limits → notifications → relationship
+
+**What Should Be Worked On Next:**
+- Additional data cleanup and cascade features
+- OAuth backend endpoints (Google, Facebook)
+- Profile photo upload functionality
+- UI/UX enhancements
+- PWA features (service worker, manifest.json enhancements)
