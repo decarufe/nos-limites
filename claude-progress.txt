@@ -705,3 +705,51 @@
 - Additional double-action protection features
 - PWA features (service worker, manifest.json enhancements)
 
+### Session 16 - 2026-02-23
+
+**Features Completed:**
+- Feature #50: Limit categories display images and icons ✅ PASSING
+  - Verified categories API returns icon field for all 5 categories from database
+  - Icons: handshake (Contact professionnel), smile (Contact amical), speech bubble (Flirt et séduction), hug (Contact rapproché), hearts (Intimité)
+  - Frontend already implemented: displays category.icon in category header with fallback
+  - Icons come from database seed data, not hardcoded in frontend
+  - All 5 categories have correct emoji icons matching the specification
+  - Created comprehensive test verifying icons are from database
+
+- Feature #51: Limit counter per category updates dynamically ✅ PASSING
+  - Category counter already implemented in RelationshipPage
+  - Displays format: X/Y (e.g., "2/7 limites sélectionnées")
+  - Counter functions: countCheckedInCategory() and countLimitsInCategory()
+  - Counter updates dynamically when limits are checked/unchecked
+  - Counts based on real checkedLimits Set state (no hardcoded values)
+  - Verified all categories show correct total limit counts:
+    * Contact professionnel: 7 limits
+    * Contact amical: 13 limits
+    * Flirt et séduction: 9 limits
+    * Contact rapproché: 9 limits
+    * Intimité: 8 limits
+
+- Feature #65: Encouragement message displays on limits page ✅ PASSING
+  - Added encouragement message at top of "Mes limites" tab
+  - Message: "Plus vous cochez de limites, plus vous en découvrirez en commun"
+  - Displays with heart icon (SVG) in purple/primary color theme
+  - Styled with gradient background and border for visual appeal
+  - Message always visible (does not disappear on scroll)
+  - CSS styling: .encouragementMessage with flex layout, gradient background, primary color
+  - Message positioned before save success/error banners for good UX
+
+**Current Status:** 61/76 features passing (80.3%)
+
+**Technical Verification:**
+- All three features verified with automated test (test-features-50-51-65.mjs)
+- No mock data patterns found in codebase (grep verified)
+- TypeScript compiles successfully: 244.17 kB bundle
+- Server health check passes: database connected, 10 tables
+- All icons from database seed data, not frontend constants
+- Category structure validated: all have subcategories and limits for counting
+
+**What Should Be Worked On Next:**
+- OAuth backend endpoints (Google, Facebook)
+- Profile photo upload functionality
+- Additional UI/UX enhancements
+- PWA features (service worker, manifest.json enhancements)
