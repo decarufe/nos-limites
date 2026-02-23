@@ -1037,3 +1037,55 @@
 - OAuth backend endpoints (Google, Facebook)
 - Profile photo upload functionality
 - PWA features (service worker, manifest.json enhancements)
+
+### Session 21 - 2026-02-23
+
+**Features Completed:**
+- Feature #66: Limit selections persist across sessions ✅ PASSING
+  - Verified comprehensive logout/login persistence flow
+  - Implementation Details:
+    * Backend: GET /api/relationships/:id/limits fetches from user_limits table
+    * Backend: Filters by userId AND relationshipId for data isolation
+    * Frontend: RelationshipPage.fetchLimitsData() loads from API on mount
+    * Frontend: Builds checkedLimits Set and limitNotes Map from API response
+    * State management: All limit data comes from database, not session storage
+  - Test Verification (test-feature-66.mjs):
+    * User A logs in and checks 5 limits with notes
+    * Verified 5 limits saved to database before logout
+    * User A logs out (session invalidated)
+    * User A logs back in (new session token)
+    * GET /api/relationships/:id/limits returns same 5 limits
+    * All notes preserved with exact content match
+    * No data loss across session boundary
+  - Database Architecture:
+    * user_limits table: UNIQUE(user_id, relationship_id, limit_id)
+    * is_accepted column: boolean flag for checked state
+    * note column: text field for user notes
+    * Data persists independently of session lifecycle
+  - Data Verification:
+    * No mock data patterns found (grep checks passed)
+    * All data from real SQLite database (server/data/noslimites.db)
+    * TypeScript builds successfully: 243.92 kB bundle
+    * No console errors during test execution
+  - Test Results:
+    * All 9 verification steps passed
+    * 5/5 limits persisted correctly
+    * 5/5 notes preserved with exact content
+    * User ID consistent across re-login
+    * Relationship ID unchanged
+    * Database queries execute successfully
+
+**Current Status:** 72/76 features passing (94.7%)
+
+**Architecture Notes:**
+- Session-independent data storage: user_limits table stores all limit selections
+- Authentication flow preserves user identity (same userId after re-login)
+- Frontend React state rebuilt from database on each page load
+- No client-side persistence (localStorage, sessionStorage) needed for limits
+- Database is single source of truth for all user preferences
+
+**What Should Be Worked On Next:**
+- Remaining 4 features to reach 100% completion
+- OAuth backend endpoints (Google, Facebook)
+- Profile photo upload functionality
+- PWA features (service worker, manifest.json enhancements)
