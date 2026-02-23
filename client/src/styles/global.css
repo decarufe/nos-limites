@@ -10,7 +10,7 @@
   --color-text: #1C1917;          /* Gris fonc\u00E9 */
   --color-success: #10B981;       /* Vert */
   --color-warning: #F59E0B;       /* Orange */
-  --color-error: #DC2626;         /* Rouge (WCAG AA compliant - 6.06:1 on #FAFAF9) */
+  --color-error: #EF4444;         /* Rouge */
 
   /* Typography */
   --font-family: 'Nunito', sans-serif;

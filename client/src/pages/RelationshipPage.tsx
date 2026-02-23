@@ -798,6 +798,9 @@ export default function RelationshipPage() {
                                     checked={checkedLimits.has(limit.id)}
                                     onChange={() => toggleLimit(limit.id)}
                                     disabled={saving}
+                                    aria-checked={checkedLimits.has(limit.id)}
+                                    aria-label={limit.name}
+                                    id={`limit-${limit.id}`}
                                   />
                                   <span className={styles.limitName}>
                                     {limit.name}
