@@ -204,6 +204,26 @@ router.get(
         });
       }
 
+      // Check if either user has blocked the other
+      const isBlocked = await db.query.blockedUsers.findFirst({
+        where: or(
+          and(
+            eq(blockedUsers.blockerId, userId),
+            eq(blockedUsers.blockedId, relationship.inviterId),
+          ),
+          and(
+            eq(blockedUsers.blockerId, relationship.inviterId),
+            eq(blockedUsers.blockedId, userId),
+          ),
+        ),
+      });
+
+      if (isBlocked) {
+        return res.status(403).json({
+          message: "Impossible de consulter cette invitation.",
+        });
+      }
+
       // Get inviter info
       const inviter = await db.query.users.findFirst({
         where: eq(users.id, relationship.inviterId),

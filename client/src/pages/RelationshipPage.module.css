@@ -762,3 +762,143 @@
   color: var(--color-success, #16a34a);
   line-height: 1.4;
 }
+
+/* Mobile optimizations for small screens (375px and below) */
+@media (max-width: 400px) {
+  /* Ensure container doesn't overflow */
+  .container {
+    padding: 0 12px 24px;
+  }
+
+  /* Reduce header padding on small screens */
+  .header {
+    padding: 12px 0;
+  }
+
+  /* Make title smaller on very small screens */
+  .title {
+    font-size: 18px;
+  }
+
+  /* Ensure categories don't overflow */
+  .categoryCard {
+    overflow: hidden;
+  }
+
+  /* Optimize category header for touch */
+  .categoryHeader {
+    padding: 12px 14px;
+    min-height: 48px; /* Adequate touch target */
+  }
+
+  /* Ensure checkbox rows have good touch targets */
+  .limitItem {
+    padding: 12px 8px;
+    min-height: 44px; /* WCAG touch target size */
+  }
+
+  /* Make note buttons easier to tap */
+  .noteButton {
+    padding: 10px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  /* Ensure action buttons are tappable */
+  .categoryActionButton {
+    padding: 10px 12px;
+    min-height: 44px;
+  }
+
+  /* Optimize tabs for touch */
+  .tab {
+    padding: 14px 12px;
+    min-height: 48px;
+  }
+
+  /* Make modal narrower on small screens */
+  .modalContent {
+    padding: 20px;
+    max-width: calc(100vw - 32px);
+  }
+
+  /* Ensure modal buttons stack on very small screens */
+  .modalActions {
+    flex-wrap: wrap;
+  }
+
+  /* Make dropdown more accessible */
+  .dropdown {
+    min-width: 180px;
+    max-width: calc(100vw - 32px);
+  }
+
+  /* Ensure dropdownItem has good touch target */
+  .dropdownItem {
+    padding: 14px 16px;
+    min-height: 48px;
+  }
+
+  /* Optimize encouragement message */
+  .encouragementMessage {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .encouragementMessage p {
+    font-size: 13px;
+  }
+
+  /* Ensure subcategory names wrap properly */
+  .subcategoryName {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
+  /* Ensure limit names wrap on small screens */
+  .limitName {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    font-size: 14px;
+  }
+
+  /* Make common items more compact */
+  .commonItem {
+    padding: 10px 12px;
+  }
+
+  /* Adjust common note margin */
+  .commonNote {
+    margin-left: 20px;
+  }
+}
+
+/* Optimize for very small screens (360px and below) */
+@media (max-width: 360px) {
+  .container {
+    padding: 0 8px 24px;
+  }
+
+  .categoryHeader {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .categoryIcon {
+    font-size: 18px;
+  }
+
+  .categoryName {
+    font-size: 14px;
+  }
+
+  .limitName {
+    font-size: 13px;
+  }
+
+  .noteButton {
+    padding: 8px;
+    min-width: 40px;
+    min-height: 40px;
+  }
+}
