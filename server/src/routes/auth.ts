@@ -4,6 +4,8 @@ import { users, magicLinks, sessions } from "../db/schema";
 import { eq, and } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
+import { OAuth2Client } from "google-auth-library";
 import { requireAuth, AuthRequest } from "../middleware/auth";
 import { resolveFrontendBaseUrl } from "../utils/frontend-url";
 import { emailService } from "../services/email";
@@ -15,6 +17,97 @@ import {
 const router = Router();
 
 const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-in-production";
+
+// Google OAuth configuration
+// These are helper functions to read env vars at runtime (not module load time)
+// to avoid ESM import hoisting issues where imports run before dotenv.config()
+function getGoogleClientId(): string {
+  return process.env.GOOGLE_CLIENT_ID || "";
+}
+function getGoogleClientSecret(): string {
+  return process.env.GOOGLE_CLIENT_SECRET || "";
+}
+function getGoogleCallbackUrl(): string {
+  return (
+    process.env.GOOGLE_CALLBACK_URL ||
+    "http://localhost:3001/api/auth/google/callback"
+  );
+}
+
+// In-memory CSRF state store (keyed by state value, with expiry)
+const oauthStateStore = new Map<
+  string,
+  { createdAt: number; redirectUri: string }
+>();
+
+// Clean up expired states every 5 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, value] of oauthStateStore) {
+    if (now - value.createdAt > 10 * 60 * 1000) {
+      // 10-minute expiry
+      oauthStateStore.delete(key);
+    }
+  }
+}, 5 * 60 * 1000);
+
+// Helper: check if Google OAuth credentials are configured
+// Uses process.env directly to avoid ESM import hoisting issues with dotenv
+function isGoogleOAuthConfigured(): boolean {
+  const clientId = process.env.GOOGLE_CLIENT_ID || "";
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET || "";
+  return !!(
+    clientId &&
+    clientId.trim() !== "" &&
+    clientSecret &&
+    clientSecret.trim() !== ""
+  );
+}
+
+/**
+ * GET /api/auth/providers
+ * Returns which authentication providers are available.
+ * This is a public endpoint (no auth required).
+ */
+router.get("/auth/providers", (_req: Request, res: Response) => {
+  return res.json({
+    providers: {
+      magic_link: true,
+      google: isGoogleOAuthConfigured(),
+      facebook: false, // Not yet implemented
+    },
+  });
+});
+
+/**
+ * GET /api/auth/google
+ * Initiates Google OAuth flow.
+ * Returns 501 if Google OAuth is not configured.
+ */
+router.get("/auth/google", (_req: Request, res: Response) => {
+  if (!isGoogleOAuthConfigured()) {
+    return res.status(501).json({
+      message:
+        "L'authentification Google n'est pas configurée. Veuillez définir GOOGLE_CLIENT_ID et GOOGLE_CLIENT_SECRET.",
+      error: "google_oauth_not_configured",
+    });
+  }
+
+  // Generate CSRF state token
+  const state = crypto.randomBytes(32).toString("hex");
+  const callbackUrl = getGoogleCallbackUrl();
+  oauthStateStore.set(state, {
+    createdAt: Date.now(),
+    redirectUri: callbackUrl,
+  });
+
+  const clientId = getGoogleClientId();
+  const scope = encodeURIComponent("openid email profile");
+  const redirectUri = encodeURIComponent(callbackUrl);
+  const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&access_type=offline&prompt=consent&state=${state}`;
+
+  return res.redirect(googleAuthUrl);
+});
 
 /**
  * POST /api/auth/magic-link
@@ -332,6 +425,294 @@ router.post(
       });
     }
   },
+);
+
+// ============================================================
+// Google OAuth Callback (Features #78 & #79)
+// ============================================================
+
+/**
+ * GET /api/auth/google/callback
+ * Handles the OAuth callback from Google.
+ * - Validates the CSRF state parameter (Feature #78)
+ * - Exchanges the authorization code for tokens (Feature #78)
+ * - Verifies the ID token and extracts user profile (Feature #79)
+ * - Creates or updates the user account and issues a session
+ */
+router.get(
+  "/auth/google/callback",
+  async (req: Request, res: Response) => {
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+
+    try {
+      const { code, state, error: oauthError } = req.query;
+
+      // Handle OAuth errors from Google (user denied, etc.)
+      if (oauthError) {
+        console.error(`[Google OAuth] Error from Google: ${oauthError}`);
+        return res.redirect(
+          `${frontendUrl}/login?error=google_denied`
+        );
+      }
+
+      // Validate required parameters
+      if (!code || typeof code !== "string") {
+        console.error("[Google OAuth] Missing authorization code");
+        return res.redirect(
+          `${frontendUrl}/login?error=missing_code`
+        );
+      }
+
+      if (!state || typeof state !== "string") {
+        console.error("[Google OAuth] Missing state parameter");
+        return res.redirect(
+          `${frontendUrl}/login?error=missing_state`
+        );
+      }
+
+      // Feature #78: Validate the CSRF state parameter
+      const storedState = oauthStateStore.get(state);
+      if (!storedState) {
+        console.error("[Google OAuth] Invalid or expired state parameter");
+        return res.redirect(
+          `${frontendUrl}/login?error=invalid_state`
+        );
+      }
+
+      // Check state expiry (10 minutes)
+      if (Date.now() - storedState.createdAt > 10 * 60 * 1000) {
+        oauthStateStore.delete(state);
+        console.error("[Google OAuth] State parameter expired");
+        return res.redirect(
+          `${frontendUrl}/login?error=state_expired`
+        );
+      }
+
+      // Remove used state to prevent replay attacks
+      oauthStateStore.delete(state);
+
+      // Feature #78: Exchange authorization code for tokens
+      const clientId = getGoogleClientId();
+      const clientSecret = getGoogleClientSecret();
+      const callbackUrl = getGoogleCallbackUrl();
+      const oauth2Client = new OAuth2Client(
+        clientId,
+        clientSecret,
+        callbackUrl
+      );
+
+      let tokenResponse;
+      try {
+        tokenResponse = await oauth2Client.getToken(code);
+      } catch (tokenError: any) {
+        console.error(
+          "[Google OAuth] Token exchange failed:",
+          tokenError?.message || tokenError
+        );
+        return res.redirect(
+          `${frontendUrl}/login?error=token_exchange_failed`
+        );
+      }
+
+      const { id_token } = tokenResponse.tokens;
+
+      if (!id_token) {
+        console.error("[Google OAuth] No ID token received from Google");
+        return res.redirect(
+          `${frontendUrl}/login?error=no_id_token`
+        );
+      }
+
+      console.log(
+        `[Google OAuth] Token exchange successful, verifying ID token...`
+      );
+
+      // Feature #79: Verify the ID token and extract user profile
+      let ticket;
+      try {
+        ticket = await oauth2Client.verifyIdToken({
+          idToken: id_token,
+          audience: clientId,
+        });
+      } catch (verifyError: any) {
+        console.error(
+          "[Google OAuth] ID token verification failed:",
+          verifyError?.message || verifyError
+        );
+        return res.redirect(
+          `${frontendUrl}/login?error=token_verification_failed`
+        );
+      }
+
+      const payload = ticket.getPayload();
+      if (!payload) {
+        console.error("[Google OAuth] No payload in verified ID token");
+        return res.redirect(
+          `${frontendUrl}/login?error=invalid_token_payload`
+        );
+      }
+
+      // Feature #79: Validate issuer
+      const validIssuers = [
+        "accounts.google.com",
+        "https://accounts.google.com",
+      ];
+      if (!payload.iss || !validIssuers.includes(payload.iss)) {
+        console.error(
+          `[Google OAuth] Invalid issuer: ${payload.iss}`
+        );
+        return res.redirect(
+          `${frontendUrl}/login?error=invalid_issuer`
+        );
+      }
+
+      // Feature #79: Validate audience
+      if (payload.aud !== clientId) {
+        console.error(
+          `[Google OAuth] Invalid audience: ${payload.aud}`
+        );
+        return res.redirect(
+          `${frontendUrl}/login?error=invalid_audience`
+        );
+      }
+
+      // Feature #79: Reject unverified emails
+      if (!payload.email_verified) {
+        console.error("[Google OAuth] Email not verified by Google");
+        return res.redirect(
+          `${frontendUrl}/login?error=email_not_verified`
+        );
+      }
+
+      // Feature #79: Extract user profile from verified token
+      const googleSub = payload.sub; // Unique Google user ID
+      const email = payload.email?.toLowerCase().trim();
+      const name =
+        payload.name || payload.given_name || email?.split("@")[0] || "User";
+      const picture = payload.picture || null;
+
+      if (!email || !googleSub) {
+        console.error("[Google OAuth] Missing email or sub in token");
+        return res.redirect(
+          `${frontendUrl}/login?error=missing_user_info`
+        );
+      }
+
+      console.log(
+        `[Google OAuth] Verified user: ${email} (sub: ${googleSub})`
+      );
+
+      // Find or create user in database
+      let user = await db.query.users.findFirst({
+        where: eq(users.email, email),
+      });
+
+      let isNewUser = false;
+
+      if (!user) {
+        // Create new user from Google profile
+        isNewUser = true;
+        const userId = uuidv4();
+        await db.insert(users).values({
+          id: userId,
+          email,
+          displayName: name,
+          avatarUrl: picture,
+          authProvider: "google",
+          authProviderId: googleSub,
+        });
+
+        user = await db.query.users.findFirst({
+          where: eq(users.id, userId),
+        });
+      } else if (user.authProvider !== "google") {
+        // User exists with different auth provider — update to link Google
+        await db
+          .update(users)
+          .set({
+            authProvider: "google",
+            authProviderId: googleSub,
+            avatarUrl: user.avatarUrl || picture,
+            updatedAt: new Date().toISOString(),
+          })
+          .where(eq(users.id, user.id));
+
+        user = await db.query.users.findFirst({
+          where: eq(users.id, user.id),
+        });
+      } else {
+        // Existing Google user — update avatar and provider ID if changed
+        await db
+          .update(users)
+          .set({
+            authProviderId: googleSub,
+            avatarUrl: picture || user.avatarUrl,
+            updatedAt: new Date().toISOString(),
+          })
+          .where(eq(users.id, user.id));
+      }
+
+      if (!user) {
+        console.error("[Google OAuth] Failed to create/find user");
+        return res.redirect(
+          `${frontendUrl}/login?error=user_creation_failed`
+        );
+      }
+
+      // Create JWT session (same as magic link flow)
+      const jwtToken = jwt.sign({ userId: user.id }, JWT_SECRET, {
+        expiresIn: "30d",
+      });
+
+      const sessionId = uuidv4();
+      const sessionExpiresAt = new Date(
+        Date.now() + 30 * 24 * 60 * 60 * 1000
+      ).toISOString();
+
+      await db.insert(sessions).values({
+        id: sessionId,
+        userId: user.id,
+        token: jwtToken,
+        expiresAt: sessionExpiresAt,
+      });
+
+      // Register device token for persistent sessions
+      const device = await createDeviceToken(
+        user.id,
+        req.headers["user-agent"]?.substring(0, 120) || "Google OAuth"
+      );
+
+      console.log(
+        `[Google OAuth] Session created for user ${user.email} (isNew: ${isNewUser})`
+      );
+
+      // Redirect to frontend with auth data as URL parameter
+      // The frontend OAuthCallbackPage will read these and store them
+      const authData = encodeURIComponent(
+        JSON.stringify({
+          token: jwtToken,
+          user: {
+            id: user.id,
+            email: user.email,
+            displayName: user.displayName,
+            avatarUrl: user.avatarUrl,
+          },
+          isNewUser,
+          deviceId: device.deviceId,
+          deviceToken: device.deviceToken,
+        })
+      );
+
+      return res.redirect(
+        `${frontendUrl}/auth/oauth-callback?data=${authData}`
+      );
+    } catch (error) {
+      console.error("[Google OAuth] Unexpected error in callback:", error);
+      return res.redirect(
+        `${frontendUrl}/login?error=oauth_error`
+      );
+    }
+  }
 );
 
 export default router;

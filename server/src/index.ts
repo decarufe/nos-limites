@@ -47,6 +47,9 @@ if (!process.env.VERCEL) {
     console.log(
       `Limits categories: http://localhost:${PORT}/api/limits/categories`,
     );
+    console.log(
+      `Google OAuth: ${process.env.GOOGLE_CLIENT_ID ? "configured" : "not configured"}`,
+    );
   });
 }
 

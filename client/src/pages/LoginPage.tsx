@@ -1,8 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
 import styles from "./LoginPage.module.css";
+
+interface ProvidersResponse {
+  providers: {
+    magic_link: boolean;
+    google: boolean;
+    facebook: boolean;
+  };
+}
 
 export default function LoginPage() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -12,6 +20,20 @@ export default function LoginPage() {
   );
   const [errorMessage, setErrorMessage] = useState("");
   const [devLink, setDevLink] = useState<string | null>(null);
+  const [googleAvailable, setGoogleAvailable] = useState(false);
+
+  // Fetch available auth providers on mount
+  useEffect(() => {
+    api
+      .get<ProvidersResponse>("/auth/providers")
+      .then((data) => {
+        setGoogleAvailable(data.providers.google);
+      })
+      .catch(() => {
+        // If providers endpoint fails, hide social buttons
+        setGoogleAvailable(false);
+      });
+  }, []);
 
   // If already authenticated, redirect to home
   if (isAuthenticated) {
@@ -191,37 +213,28 @@ export default function LoginPage() {
               </button>
             </form>
 
-            {/* OAuth social buttons disabled for now
-            <div className={styles.divider}>
-              <span className={styles.dividerLine} />
-              <span className={styles.dividerText}>ou</span>
-              <span className={styles.dividerLine} />
-            </div>
+            {googleAvailable && (
+              <>
+                <div className={styles.divider}>
+                  <span className={styles.dividerLine} />
+                  <span className={styles.dividerText}>ou</span>
+                  <span className={styles.dividerLine} />
+                </div>
 
-            <div className={styles.socialButtons}>
-              <button
-                type="button"
-                className={styles.googleButton}
-                aria-label="Se connecter avec Google"
-                onClick={() => {
-                  window.location.href = "/api/auth/google";
-                }}
-              >
-                Continuer avec Google
-              </button>
-
-              <button
-                type="button"
-                className={styles.facebookButton}
-                aria-label="Se connecter avec Facebook"
-                onClick={() => {
-                  window.location.href = "/api/auth/facebook";
-                }}
-              >
-                Continuer avec Facebook
-              </button>
-            </div>
-            */}
+                <div className={styles.socialButtons}>
+                  <button
+                    type="button"
+                    className={styles.googleButton}
+                    aria-label="Se connecter avec Google"
+                    onClick={() => {
+                      window.location.href = "/api/auth/google";
+                    }}
+                  >
+                    Continuer avec Google
+                  </button>
+                </div>
+              </>
+            )}
           </>
         )}
       </div>
