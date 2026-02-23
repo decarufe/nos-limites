@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate, Navigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useParams, useNavigate } from "react-router-dom";
 import api from "../services/api";
 import styles from "./InvitePage.module.css";
 
@@ -28,7 +27,6 @@ interface AcceptResponse {
 
 export default function InvitePage() {
   const { token } = useParams<{ token: string }>();
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
 
   const [invite, setInvite] = useState<InviteDetails | null>(null);
@@ -40,7 +38,7 @@ export default function InvitePage() {
   const [alreadyAccepted, setAlreadyAccepted] = useState(false);
 
   useEffect(() => {
-    if (!token || !isAuthenticated || authLoading) return;
+    if (!token) return;
 
     const fetchInvite = async () => {
       try {
@@ -65,23 +63,7 @@ export default function InvitePage() {
     };
 
     fetchInvite();
-  }, [token, isAuthenticated, authLoading]);
-
-  if (authLoading) {
-    return (
-      <div className={styles.container}>
-        <div className={styles.loading}>
-          <div className={styles.spinner} />
-          <p>Chargement...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    // Redirect to login, preserving the invite URL to come back after
-    return <Navigate to="/login" replace />;
-  }
+  }, [token]);
 
   const handleAccept = async () => {
     if (!token || status !== "loaded") return; // Prevent double-click
