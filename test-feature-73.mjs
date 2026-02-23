@@ -73,13 +73,13 @@ function verifyContrast(color1, color2, minRatio, description) {
   return ratioPretty;
 }
 
-// Define color palette from spec
+// Define color palette from spec (WCAG AA compliant)
 const colors = {
   // Primary colors
   primary: '#7C3AED',         // Violet doux
   primaryHover: '#6D28D9',    // Darker violet for hover
   secondary: '#EC4899',       // Rose chaleureux
-  accent: '#06B6D4',          // Turquoise
+  accent: '#0891B2',          // Turquoise (darker for accessibility)
 
   // Background colors
   bgPrimary: '#FAFAF9',       // Blanc cassé
@@ -93,13 +93,13 @@ const colors = {
 
   // Status colors
   success: '#10B981',         // Vert
-  successDark: '#16A34A',     // Darker green
-  warning: '#F59E0B',         // Orange
-  error: '#EF4444',           // Rouge
-  errorDark: '#DC2626',       // Darker red
+  successDark: '#047857',     // Darker green for text (WCAG AA)
+  warning: '#D97706',         // Orange (darker for accessibility)
+  error: '#DC2626',           // Rouge (darker for accessibility)
+  errorDark: '#DC2626',       // Same as error (already dark enough)
 
   // Border colors
-  border: '#E7E5E4',
+  border: '#78716C',          // WCAG AA compliant 3:1 (same as textSecondary)
 };
 
 console.log('1. Primary Text Contrast\n');

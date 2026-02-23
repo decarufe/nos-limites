@@ -2,15 +2,19 @@
 /* Design System based on app_spec.txt */
 
 :root {
-  /* Color Palette */
-  --color-primary: #7C3AED;       /* Violet doux - confiance et s\u00E9r\u00E9nit\u00E9 */
+  /* Color Palette - WCAG AA compliant */
+  --color-primary: #7C3AED;       /* Violet doux - confiance et sérénité */
   --color-secondary: #EC4899;     /* Rose chaleureux - bienveillance */
-  --color-accent: #06B6D4;        /* Turquoise - ouverture et communication */
-  --color-background: #FAFAF9;    /* Blanc cass\u00E9 */
-  --color-text: #1C1917;          /* Gris fonc\u00E9 */
+  --color-accent: #0891B2;        /* Turquoise (darker for accessibility) - ouverture et communication */
+  --color-background: #FAFAF9;    /* Blanc cassé */
+  --color-text: #1C1917;          /* Gris foncé */
+  --color-text-secondary: #78716C; /* Gris moyen pour texte secondaire */
+  --color-bg-secondary: #F5F5F4;  /* Fond secondaire */
+  --color-border: #78716C;        /* Bordure (WCAG AA compliant 3:1) */
   --color-success: #10B981;       /* Vert */
-  --color-warning: #F59E0B;       /* Orange */
-  --color-error: #EF4444;         /* Rouge */
+  --color-success-dark: #047857;  /* Vert foncé pour texte (WCAG AA) */
+  --color-warning: #D97706;       /* Orange (darker for accessibility) */
+  --color-error: #DC2626;         /* Rouge (darker for accessibility) */
 
   /* Typography */
   --font-family: 'Nunito', sans-serif;
