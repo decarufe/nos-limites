@@ -1047,6 +1047,12 @@ router.delete(
         .delete(userLimits)
         .where(eq(userLimits.relationshipId, relationshipId));
 
+      // Clear relatedRelationshipId in notifications before deleting relationship
+      await db
+        .update(notifications)
+        .set({ relatedRelationshipId: null })
+        .where(eq(notifications.relatedRelationshipId, relationshipId));
+
       // Delete the relationship
       await db
         .delete(relationships)
@@ -1140,6 +1146,12 @@ router.post(
       await db
         .delete(userLimits)
         .where(eq(userLimits.relationshipId, relationshipId));
+
+      // Clear relatedRelationshipId in notifications before deleting relationship
+      await db
+        .update(notifications)
+        .set({ relatedRelationshipId: null })
+        .where(eq(notifications.relatedRelationshipId, relationshipId));
 
       // Delete the relationship
       await db

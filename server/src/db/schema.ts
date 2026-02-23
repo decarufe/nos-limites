@@ -125,7 +125,8 @@ export const notifications = sqliteTable("notifications", {
   message: text("message").notNull(),
   relatedUserId: text("related_user_id").references(() => users.id),
   relatedRelationshipId: text("related_relationship_id").references(
-    () => relationships.id
+    () => relationships.id,
+    { onDelete: "set null" }
   ),
   isRead: integer("is_read", { mode: "boolean" }).default(false),
   createdAt: text("created_at")
