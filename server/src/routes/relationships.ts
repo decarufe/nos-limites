@@ -258,9 +258,14 @@ router.post(
         });
       }
 
-      // Can't accept if already accepted
+      // If already accepted, return success idempotently (prevent duplicate relationships)
       if (relationship.status === "accepted") {
-        return res.status(400).json({
+        return res.json({
+          success: true,
+          data: {
+            relationshipId: relationship.id,
+            status: "accepted",
+          },
           message: "Cette invitation a déjà été acceptée.",
         });
       }

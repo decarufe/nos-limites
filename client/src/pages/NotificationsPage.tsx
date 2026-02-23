@@ -143,14 +143,31 @@ export default function NotificationsPage() {
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
+    // Very recent: "À l'instant"
     if (diffMins < 1) return "À l'instant";
+
+    // Minutes: "Il y a 5 min"
     if (diffMins < 60) return `Il y a ${diffMins} min`;
+
+    // Hours: "Il y a 2h"
     if (diffHours < 24) return `Il y a ${diffHours}h`;
+
+    // Days (less than a week): "Il y a 3j"
     if (diffDays < 7) return `Il y a ${diffDays}j`;
 
+    // Less than 30 days: "15 févr."
+    if (diffDays < 30) {
+      return date.toLocaleDateString("fr-FR", {
+        day: "numeric",
+        month: "short",
+      });
+    }
+
+    // Older than 30 days: "15/02/2024" (DD/MM/YYYY)
     return date.toLocaleDateString("fr-FR", {
-      day: "numeric",
-      month: "short",
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
     });
   };
 

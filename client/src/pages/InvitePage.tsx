@@ -84,7 +84,7 @@ export default function InvitePage() {
   }
 
   const handleAccept = async () => {
-    if (!token) return;
+    if (!token || status !== "loaded") return; // Prevent double-click
     setStatus("accepting");
 
     try {
@@ -101,7 +101,7 @@ export default function InvitePage() {
   };
 
   const handleDecline = async () => {
-    if (!token) return;
+    if (!token || status !== "loaded") return; // Prevent double-click
     setStatus("declining");
 
     try {
@@ -154,12 +154,17 @@ export default function InvitePage() {
             vous invite à définir vos limites mutuelles.
           </p>
           <div className={styles.actions}>
-            <button className={styles.acceptButton} onClick={handleAccept}>
+            <button
+              className={styles.acceptButton}
+              onClick={handleAccept}
+              disabled={status !== "loaded"}
+            >
               Accepter
             </button>
             <button
               className={styles.declineButton}
               onClick={handleDecline}
+              disabled={status !== "loaded"}
             >
               Refuser
             </button>

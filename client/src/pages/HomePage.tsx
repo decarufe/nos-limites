@@ -107,6 +107,12 @@ export default function HomePage() {
             Affichez un QR code que votre contact peut scanner, ou partagez
             un lien d'invitation pour l'ajouter à vos relations.
           </p>
+          <button
+            className={styles.emptyButton}
+            onClick={() => navigate("/scan")}
+          >
+            Créer une invitation
+          </button>
         </div>
       ) : (
         <div className={styles.relationsList}>
