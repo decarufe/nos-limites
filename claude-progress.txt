@@ -834,3 +834,55 @@
 - Profile photo upload functionality
 - Additional UI/UX enhancements
 - PWA features (service worker, manifest.json enhancements)
+
+### Session 19 - 2026-02-23
+
+**Features Completed:**
+- Feature #56: Invitation link works when opened by logged-in user ✅ PASSING
+  - InvitePage is properly wrapped with ProtectedRoute in App.tsx
+  - Logged-in users can directly access /invite/:token
+  - ProtectedRoute allows authenticated users to pass through
+  - InvitePage fetches invitation details immediately when token exists
+  - Displays inviter name, avatar, and Accept/Decline buttons
+  - No redundant authentication checks in InvitePage (relies on ProtectedRoute)
+  - Clean implementation: InvitePage doesn't import useAuth or Navigate
+  - useEffect only depends on token parameter (not auth state)
+  - All 16 verification tests passing
+
+- Feature #57: Invitation link shows login prompt for unauthenticated user ✅ PASSING
+  - ProtectedRoute detects unauthenticated access to /invite/:token
+  - Saves full URL (pathname + search) to sessionStorage: 'nos_limites_pending_redirect'
+  - Redirects user to /login with replace navigation
+  - AuthVerifyPage (after magic link verification):
+    * Reads pending redirect from sessionStorage
+    * For existing users: redirects to saved invitation URL immediately
+    * For new users: redirects to /profile/setup first
+  - ProfileSetupPage (for new users):
+    * Also reads and respects pending redirect after profile setup
+    * Ensures new users complete invitation flow after onboarding
+  - Clean sessionStorage cleanup: removed after redirect
+  - Flow verified: unauthenticated → login → redirect back to invitation
+
+**Current Status:** 65/76 features passing (85.5%)
+
+**Technical Verification:**
+- TypeScript compiles successfully: 243.86 kB bundle (client)
+- No mock data patterns found in codebase
+- Server health check passes: database connected, 10 tables
+- All routing configuration correct in App.tsx
+- ProtectedRoute centralized auth logic (DRY principle)
+- Invitation flow works for both authenticated and unauthenticated users
+
+**Architecture Notes:**
+- sessionStorage key: 'nos_limites_pending_redirect'
+- Redirect preserved through entire auth flow (magic link → profile setup → invitation)
+- InvitePage has no auth-specific code (separation of concerns)
+- ProtectedRoute handles all auth redirect logic globally
+- Both AuthVerifyPage and ProfileSetupPage consume pending redirect
+
+**What Should Be Worked On Next:**
+- OAuth backend endpoints (Google, Facebook)
+- Profile photo upload functionality
+- Additional URL & direct access features
+- PWA features (service worker, manifest.json enhancements)
+
