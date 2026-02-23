@@ -656,3 +656,52 @@
 - PWA features (service worker, manifest.json enhancements)
 - Additional UI/UX enhancements
 - Remaining default & reset features
+
+### Session 14 - 2026-02-23
+
+**Features Completed:**
+- Feature #45: Double-clicking invitation accept does not create duplicate relationship ✅ PASSING
+  - Backend: Changed accept endpoint from returning 400 to returning 200 (success) when invitation already accepted
+  - This makes the endpoint idempotent - same operation can be performed multiple times with same result
+  - Frontend: Added disabled state to accept/decline buttons (disabled={status !== "loaded"})
+  - Frontend: Updated handleAccept/handleDecline to check status !== "loaded" before processing
+  - CSS: Added :disabled styles with opacity:0.5 and cursor:not-allowed for visual feedback
+  - Test: Created comprehensive database test verifying:
+    * Only one relationship created in database
+    * No duplicate relationships between same users
+    * Backend gracefully handles already-accepted status
+    * Frontend prevents button clicks while processing
+  - All TypeScript builds pass with zero errors
+
+- Feature #68: Rapidly toggling same limit doesn't corrupt data ✅ PASSING
+  - Implemented AbortController pattern to cancel pending requests for same limit
+  - Added useRef<Map<string, AbortController>> to track pending toggles per limitId
+  - When limit toggled: cancel existing request, create new controller, register with map
+  - Store originalChecked state before optimistic update (not current checkedLimits from closure)
+  - On error: revert to originalChecked (fixes race condition bug)
+  - On success or abort: remove from pending map
+  - Handle AbortError/CanceledError gracefully (don't show error for cancelled requests)
+  - Updated ApiService to support signal parameter:
+    * Added signal?: AbortSignal to ApiOptions interface
+    * Pass signal to fetch() call
+    * Updated get/post/put/delete methods to accept optional signal parameter
+  - Test: Verified with rapid toggle simulation:
+    * Only one user_limits record exists (no duplicates)
+    * Final is_accepted state is deterministic
+    * Database constraints prevent corruption
+  - All TypeScript builds pass with zero errors
+
+**Current Status:** 53/76 features passing (69.7%)
+
+**Architecture Notes:**
+- Idempotency pattern: Accept endpoint now supports safe retries
+- Request cancellation pattern: AbortController prevents race conditions in rapid user interactions
+- State management: Always capture original state before optimistic updates for reliable rollback
+- Error handling: Distinguish between user-initiated cancellations (AbortError) and real errors
+
+**What Should Be Worked On Next:**
+- OAuth backend endpoints (Google, Facebook)
+- Profile photo upload
+- Additional double-action protection features
+- PWA features (service worker, manifest.json enhancements)
+
