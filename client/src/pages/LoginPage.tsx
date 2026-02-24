@@ -1,8 +1,27 @@
 import { useState, useEffect } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
 import styles from "./LoginPage.module.css";
+
+/** Map OAuth error codes (from query params) to user-friendly French messages */
+const OAUTH_ERROR_MESSAGES: Record<string, string> = {
+  google_denied: "Connexion annulée. Vous avez refusé l'accès Google.",
+  missing_code: "Erreur de connexion Google. Code d'autorisation manquant.",
+  missing_state: "Erreur de sécurité, veuillez réessayer.",
+  invalid_state: "Erreur de sécurité, veuillez réessayer.",
+  state_expired: "La session a expiré, veuillez réessayer.",
+  token_exchange_failed: "Erreur de connexion Google, veuillez réessayer.",
+  no_id_token: "Erreur de connexion Google, veuillez réessayer.",
+  token_verification_failed: "Erreur de vérification du compte Google, veuillez réessayer.",
+  invalid_token_payload: "Erreur de connexion Google, veuillez réessayer.",
+  invalid_issuer: "Erreur de vérification du compte Google, veuillez réessayer.",
+  invalid_audience: "Erreur de vérification du compte Google, veuillez réessayer.",
+  email_not_verified: "Votre adresse email Google n'est pas vérifiée. Veuillez vérifier votre email Google et réessayer.",
+  missing_user_info: "Impossible de récupérer vos informations Google. Veuillez réessayer.",
+  user_creation_failed: "Erreur lors de la création du compte. Veuillez réessayer.",
+  oauth_error: "Une erreur inattendue est survenue lors de la connexion Google. Veuillez réessayer.",
+};
 
 interface ProvidersResponse {
   providers: {
@@ -14,6 +33,7 @@ interface ProvidersResponse {
 
 export default function LoginPage() {
   const { isAuthenticated, isLoading } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">(
     "idle"
@@ -21,6 +41,21 @@ export default function LoginPage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [devLink, setDevLink] = useState<string | null>(null);
   const [googleAvailable, setGoogleAvailable] = useState(false);
+  const [oauthError, setOauthError] = useState<string | null>(null);
+
+  // Check for OAuth error query parameter on mount
+  useEffect(() => {
+    const errorCode = searchParams.get("error");
+    if (errorCode) {
+      const message =
+        OAUTH_ERROR_MESSAGES[errorCode] ||
+        "Une erreur est survenue lors de la connexion. Veuillez réessayer.";
+      setOauthError(message);
+      // Clean up the URL to remove error param from browser history
+      searchParams.delete("error");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   // Fetch available auth providers on mount
   useEffect(() => {
@@ -126,6 +161,20 @@ export default function LoginPage() {
           Définissez vos limites mutuelles en toute confiance
         </p>
       </div>
+
+      {oauthError && (
+        <div className={styles.oauthErrorBanner} role="alert" aria-live="assertive" data-testid="oauth-error">
+          <p className={styles.oauthErrorText}>{oauthError}</p>
+          <button
+            type="button"
+            className={styles.oauthErrorClose}
+            onClick={() => setOauthError(null)}
+            aria-label="Fermer le message d'erreur"
+          >
+            &times;
+          </button>
+        </div>
+      )}
 
       <div className={styles.form}>
         {status === "sent" ? (

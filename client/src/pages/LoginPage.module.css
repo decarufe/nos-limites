@@ -314,6 +314,66 @@
   flex-shrink: 0;
 }
 
+/* OAuth error banner */
+.oauthErrorBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto var(--spacing-md) auto;
+  padding: var(--spacing-md);
+  background: rgba(229, 62, 62, 0.08);
+  border: 1px solid rgba(229, 62, 62, 0.3);
+  border-radius: var(--radius-md);
+  animation: slideDown 0.3s ease;
+}
+
+.oauthErrorText {
+  flex: 1;
+  font-size: var(--font-size-sm);
+  color: var(--color-error);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.oauthErrorClose {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  font-size: 20px;
+  color: var(--color-error);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: background 0.2s ease;
+}
+
+.oauthErrorClose:hover {
+  background: rgba(229, 62, 62, 0.1);
+}
+
+.oauthErrorClose:focus-visible {
+  outline: 2px solid var(--color-error);
+  outline-offset: 2px;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .spinner {
   width: 40px;
   height: 40px;
