@@ -1,76 +1,5 @@
 # Nos limites
 
-**D\u00E9finissez vos limites mutuelles en toute confiance.**
-
-Nos limites est une application web progressive (PWA) en fran\u00E7ais qui permet \u00E0 deux personnes de d\u00E9finir mutuellement et de fa\u00E7on transparente les limites de leur relation. Chaque participant coche ind\u00E9pendamment les comportements qu'il/elle accepte de l'autre, et seules les limites coch\u00E9es par les deux sont r\u00E9v\u00E9l\u00E9es \u2014 un syst\u00E8me de "match" qui encourage l'ouverture tout en prot\u00E9geant la vuln\u00E9rabilit\u00E9 de chacun.
-
-## Stack Technique
-
-- **Frontend:** React + Vite + TypeScript
-- **Backend:** Node.js + Express + TypeScript
-- **Base de donn\u00E9es:** SQLite (via better-sqlite3 + Drizzle ORM)
-- **Authentification:** Magic link (email) + OAuth social (Google, Facebook)
-- **Temps r\u00E9el:** Server-Sent Events (SSE)
-- **PWA:** Service Worker + manifest.json
-
-## Pr\u00E9requis
-
-- Node.js 18+
-- npm
-
-## Installation et d\u00E9marrage
-
-```bash
-# Rendre le script ex\u00E9cutable (Unix/macOS)
-chmod +x init.sh
-
-# Lancer l'environnement de d\u00E9veloppement
-./init.sh
-```
-
-Ou manuellement :
-
-```bash
-````markdown
-# Nos limites
-
-**Définissez vos limites mutuelles en toute confiance.**
-
-Nos limites est une application web progressive (PWA) en français qui permet à deux personnes de définir mutuellement et de façon transparente les limites de leur relation. Chaque participant coche indépendamment les comportements qu'il/elle accepte de l'autre, et seules les limites cochées par les deux sont révélées — un système de "match" qui encourage l'ouverture tout en protégeant la vulnérabilité de chacun.
-
-## Stack Technique
-
-- **Frontend:** React + Vite + TypeScript
-- **Backend:** Node.js + Express + TypeScript
-- **Base de données:** SQLite (via better-sqlite3 + Drizzle ORM)
-- **Authentification:** Magic link (email) + OAuth social (Google, Facebook)
-- **Temps réel:** Server-Sent Events (SSE)
-- **PWA:** Service Worker + manifest.json
-
-## Prérequis
-
-- Node.js 18+
-- npm
-
-## Installation et démarrage
-
-```bash
-# Rendre le script exécutable (Unix/macOS)
-chmod +x init.sh
-
-# Lancer l'environnement de développement
-./init.sh
-```
-
-Ou manuellement :
-
-```bash
-# Backend
-cd server
-npm install
-````markdown
-# Nos limites
-
 **Définissez vos limites mutuelles en toute confiance.**
 
 Nos limites est une application web progressive (PWA) en français qui permet à deux personnes de définir mutuellement et de façon transparente les limites de leur relation. Chaque participant coche indépendamment les comportements qu'il/elle accepte de l'autre, et seules les limites cochées par les deux sont révélées — un système de "match" qui encourage l'ouverture tout en protégeant la vulnérabilité de chacun.
@@ -121,6 +50,69 @@ npm run dev
 - **Backend API:** http://localhost:3001
 - **Health check:** http://localhost:3001/api/health
 
+## Configuration de l'authentification Google (OAuth)
+
+L'authentification via Google est optionnelle. Si les variables d'environnement ne sont pas renseignées, le bouton "Continuer avec Google" n'apparaît pas dans l'interface.
+
+### 1. Créer un projet Google Cloud
+
+1. Rendez-vous sur [Google Cloud Console](https://console.cloud.google.com/).
+2. Cliquez sur **Nouveau projet**, donnez-lui un nom (ex. `nos-limites`) et créez-le.
+
+### 2. Activer l'API Google Identity
+
+1. Dans le menu de navigation, allez dans **API et services > Bibliothèque**.
+2. Recherchez **Google Identity** (ou **OAuth2 API**) et activez-la.
+
+### 3. Créer des identifiants OAuth 2.0
+
+1. Allez dans **API et services > Identifiants**.
+2. Cliquez sur **+ Créer des identifiants** puis **ID client OAuth**.
+3. Si demandé, configurez l'**écran de consentement OAuth** :
+   - Type d'utilisateur : **Externe**
+   - Remplissez le nom de l'application, l'email d'assistance et l'email du développeur.
+   - Ajoutez les portées : `openid`, `email`, `profile`.
+4. Pour le type d'application, choisissez **Application Web**.
+5. Donnez un nom à vos identifiants.
+6. Dans **URI de redirection autorisés**, ajoutez :
+   - En développement : `http://localhost:3001/api/auth/google/callback`
+   - En production : `https://<votre-domaine>/api/auth/google/callback`
+7. Cliquez sur **Créer** et notez votre **Client ID** et **Client Secret**.
+
+### 4. Configurer les variables d'environnement
+
+Copiez `server/.env.example` vers `server/.env` si ce n'est pas déjà fait, puis renseignez :
+
+```env
+GOOGLE_CLIENT_ID=<votre-client-id>.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=<votre-client-secret>
+GOOGLE_CALLBACK_URL=http://localhost:3001/api/auth/google/callback
+```
+
+> En production, remplacez `http://localhost:3001` par l'URL de votre backend déployé.
+
+### 5. Vérifier la configuration
+
+Démarrez le serveur et appelez l'endpoint suivant :
+
+```bash
+curl http://localhost:3001/api/auth/providers
+```
+
+La réponse doit indiquer `"google": true` :
+
+```json
+{
+  "providers": {
+    "magic_link": true,
+    "google": true,
+    "facebook": false
+  }
+}
+```
+
+Si `google` est `false`, vérifiez que `GOOGLE_CLIENT_ID` et `GOOGLE_CLIENT_SECRET` sont bien définis et non vides.
+
 ## Structure du projet
 
 ```
@@ -161,5 +153,3 @@ L'application couvre un spectre de comportements organisés en 5 catégories :
 - Les limites non-communes sont **invisibles** à l'autre personne
 - Les données sensibles sont chiffrées au repos
 - Conformité RGPD (export et suppression des données)
-
-````
