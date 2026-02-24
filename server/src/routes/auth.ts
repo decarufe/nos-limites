@@ -34,22 +34,65 @@ function getGoogleCallbackUrl(): string {
   );
 }
 
-// In-memory CSRF state store (keyed by state value, with expiry)
-const oauthStateStore = new Map<
-  string,
-  { createdAt: number; redirectUri: string }
->();
+// OAuth state expiry in milliseconds (10 minutes)
+const OAUTH_STATE_EXPIRY_MS = 10 * 60 * 1000;
 
-// Clean up expired states every 5 minutes
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, value] of oauthStateStore) {
-    if (now - value.createdAt > 10 * 60 * 1000) {
-      // 10-minute expiry
-      oauthStateStore.delete(key);
+/**
+ * Generate a stateless CSRF state token for OAuth flows.
+ * The token is a nonce + timestamp signed with HMAC-SHA256 so it can be
+ * verified without server-side storage, making it safe for serverless envs.
+ */
+function generateOAuthState(): string {
+  const nonce = crypto.randomBytes(32).toString("hex");
+  const ts = Date.now().toString();
+  const payload = `${nonce}.${ts}`;
+  const sig = crypto
+    .createHmac("sha256", JWT_SECRET)
+    .update(payload)
+    .digest("hex");
+  return `${payload}.${sig}`;
+}
+
+/**
+ * Validate an OAuth CSRF state token produced by generateOAuthState().
+ * Returns true only when the signature is valid and the token has not expired.
+ *
+ * Note: this stateless approach does not prevent within-window replay of the
+ * state token itself.  That is acceptable because Google's authorization code
+ * (exchanged alongside the state) is single-use; replaying the state without a
+ * valid, unused code gains the attacker nothing.
+ */
+function validateOAuthState(state: string): boolean {
+  const parts = state.split(".");
+  if (parts.length !== 3) return false;
+  const [nonce, ts, sig] = parts;
+  const payload = `${nonce}.${ts}`;
+  const expectedSig = crypto
+    .createHmac("sha256", JWT_SECRET)
+    .update(payload)
+    .digest("hex");
+  // Constant-time comparison to prevent timing attacks.
+  // Buffer.from(hex) throws if the string is not valid hex, which can happen
+  // when the state param is tampered with — catch and reject it.
+  try {
+    if (
+      !crypto.timingSafeEqual(
+        Buffer.from(sig, "hex"),
+        Buffer.from(expectedSig, "hex")
+      )
+    ) {
+      return false;
     }
+  } catch {
+    // Invalid hex in sig (malformed token) — reject it
+    return false;
   }
-}, 5 * 60 * 1000);
+  const createdAt = parseInt(ts, 10);
+  if (isNaN(createdAt) || Date.now() - createdAt > OAUTH_STATE_EXPIRY_MS) {
+    return false;
+  }
+  return true;
+}
 
 // Helper: check if Google OAuth credentials are configured
 // Uses process.env directly to avoid ESM import hoisting issues with dotenv
@@ -93,13 +136,9 @@ router.get("/auth/google", (_req: Request, res: Response) => {
     });
   }
 
-  // Generate CSRF state token
-  const state = crypto.randomBytes(32).toString("hex");
+  // Generate stateless HMAC-signed CSRF state token
+  const state = generateOAuthState();
   const callbackUrl = getGoogleCallbackUrl();
-  oauthStateStore.set(state, {
-    createdAt: Date.now(),
-    redirectUri: callbackUrl,
-  });
 
   const clientId = getGoogleClientId();
   const scope = encodeURIComponent("openid email profile");
@@ -471,25 +510,12 @@ router.get(
       }
 
       // Feature #78: Validate the CSRF state parameter
-      const storedState = oauthStateStore.get(state);
-      if (!storedState) {
+      if (!validateOAuthState(state)) {
         console.error("[Google OAuth] Invalid or expired state parameter");
         return res.redirect(
           `${frontendUrl}/login?error=invalid_state`
         );
       }
-
-      // Check state expiry (10 minutes)
-      if (Date.now() - storedState.createdAt > 10 * 60 * 1000) {
-        oauthStateStore.delete(state);
-        console.error("[Google OAuth] State parameter expired");
-        return res.redirect(
-          `${frontendUrl}/login?error=state_expired`
-        );
-      }
-
-      // Remove used state to prevent replay attacks
-      oauthStateStore.delete(state);
 
       // Feature #78: Exchange authorization code for tokens
       const clientId = getGoogleClientId();
