@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import api from "../services/api";
+import { api } from "../services/api";
 import styles from "./HomePage.module.css";
 
 interface Relationship {

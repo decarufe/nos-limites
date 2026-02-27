@@ -6,7 +6,7 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
-import api, { ApiError } from "../services/api";
+import { api, ApiError } from "../services/api";
 
 interface User {
   id: string;
