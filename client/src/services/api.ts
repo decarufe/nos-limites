@@ -3,6 +3,22 @@
  * All API calls go through this service.
  */
 
+/**
+ * Error class for API responses that preserves the HTTP status code.
+ * This allows callers to distinguish between server-side rejections (e.g. 401)
+ * and transient network/connectivity errors where no status is available.
+ */
+export class ApiError extends Error {
+  status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    // Required for proper instanceof checks when targeting ES5 in TypeScript
+    Object.setPrototypeOf(this, ApiError.prototype);
+  }
+}
+
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
   (import.meta.env.PROD ? "https://nos-limites-api.vercel.app/api" : "/api");
@@ -51,7 +67,7 @@ class ApiService {
       const error = await response.json().catch(() => ({
         message: "Une erreur est survenue",
       }));
-      throw new Error(error.message || `Erreur HTTP ${response.status}`);
+      throw new ApiError(error.message || `Erreur HTTP ${response.status}`, response.status);
     }
 
     return response.json();
