@@ -1725,3 +1725,71 @@ implemented and verified, including the complete Google OAuth integration!
 **Current Status:** 84/84 features passing (100.0%)
 
 ═══════════════════════════════════════════════════════════════════════
+
+### Session 28 - 2026-02-27
+
+**Features Completed:**
+- Feature #85: Using email as index for relations ✅ PASSING
+
+**Bug Report Analysis:**
+- Bug description: "If a user asks for a new magic link he doesn't see any of his past relations"
+- The email address should be used as the index to keep relations linked together
+
+**Investigation Results:**
+After thorough investigation, the backend code already correctly implements this feature:
+
+1. **Magic link verify endpoint** (auth.ts line 281):
+   * `let user = await db.query.users.findFirst({ where: eq(users.email, magicLink.email) })`
+   * The system looks up users by email when verifying a magic link
+   * If user exists, returns the SAME user ID (no duplicate creation)
+   * If user doesn't exist, creates a new account
+
+2. **Users table** has `email` field with UNIQUE constraint:
+   * Prevents duplicate user accounts with the same email
+   * email is the stable identifier across sessions
+
+3. **Relationships** are linked by user ID:
+   * `inviterId` and `inviteeId` reference `users.id`
+   * Since user ID is preserved across magic link re-authentication, all relationships persist
+
+**Verification Steps Completed:**
+
+1. **API-level test:**
+   - Created User A (bugtest_85_a@test.com) and User B (bugtest_85_b@test.com)
+   - Established a relationship between them
+   - Deleted all sessions and devices for User A (simulated lost connection)
+   - User A requested new magic link with same email
+   - Verify response: same user ID (a93157f5...), isNewUser=false
+   - GET /api/relationships with new token: relationship visible (count: 1)
+
+2. **Full end-to-end browser test:**
+   - Created User A (f85_usera@test.com) via UI, set display name "Feature85 UserA"
+   - Created invitation, User B accepted via API
+   - Verified User A sees f85_userb on home page
+   - Closed browser completely (clean localStorage = simulates new device)
+   - Opened fresh browser, entered same email, clicked magic link
+   - Redirected to /home (not /profile/setup → correctly identified as existing user)
+   - User A sees f85_userb as relation ✅
+   - User B API confirms they see "Feature85 UserA" as partner ✅
+
+3. **Screenshot verification:** Home page shows "Mes relations" with f85_userb listed
+
+4. **Mock data detection:** No mock data patterns found in server/src or client/src
+
+5. **Data persistence:** SQLite database confirmed both users and accepted relationship exist
+
+**Verification Checklist:**
+- ✅ Security: Auth required for all relationship endpoints, no cross-user data leaks
+- ✅ Real Data: Created unique test users, verified persistence via direct DB read
+- ✅ Mock Data Grep: Zero hits in src/ directories
+- ✅ Navigation: Login → magic link → verify → home (existing user) works correctly
+- ✅ Integration: Zero JS console errors (excluding React Router deprecation warnings)
+- ✅ All 4 feature verification steps pass:
+  1. User A connect with user B ✅
+  2. User A lost his connection and ask for a magic link ✅
+  3. User A see user B as his relation ✅
+  4. User B see user A as his relation ✅
+
+**Current Status:** 85/85 features passing (100.0%) 🎉
+
+═══════════════════════════════════════════════════════════════════════
