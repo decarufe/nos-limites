@@ -481,7 +481,7 @@ router.post(
 router.get(
   "/auth/google/callback",
   async (req: Request, res: Response) => {
-    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+    const frontendUrl = resolveFrontendBaseUrl(req);
 
     try {
       const { code, state, error: oauthError } = req.query;
