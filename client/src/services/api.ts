@@ -19,8 +19,9 @@ export class ApiError extends Error {
   }
 }
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ||
+
+export const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL |
   (import.meta.env.PROD ? "https://nos-limites-api.vercel.app/api" : "/api");
 
 interface ApiOptions {
