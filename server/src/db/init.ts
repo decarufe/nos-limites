@@ -1,4 +1,5 @@
 import { migrate } from "./migrate";
+import { cleanupDuplicateSeeds } from "./cleanup-duplicates";
 import { seed } from "./seed";
 
 let initialized = false;
@@ -17,6 +18,7 @@ export function ensureDatabaseInitialized(): Promise<void> {
     initPromise = (async () => {
       console.log("Initializing database (migrations + seed)...");
       await migrate();
+      await cleanupDuplicateSeeds();
       await seed();
       initialized = true;
       console.log("Database initialization complete.");
