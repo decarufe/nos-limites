@@ -6,7 +6,7 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
-import api, { ApiError } from "../services/api";
+import api from "../services/api";
 
 interface User {
   id: string;
@@ -41,79 +41,60 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Try to recover session using device token
-  const tryDeviceRecovery = useCallback(async (): Promise<boolean> => {
-    const deviceId = localStorage.getItem(DEVICE_ID_KEY);
-    const deviceToken = localStorage.getItem(DEVICE_TOKEN_KEY);
-
-    if (!deviceId || !deviceToken) return false;
-
-    try {
-      const response = await api.post<{
-        token: string;
-        user: User;
-        deviceId: string;
-        deviceToken: string;
-      }>("/auth/device/refresh", { deviceId, deviceToken });
-
-      // Store rotated tokens
-      localStorage.setItem(TOKEN_KEY, response.token);
-      localStorage.setItem(DEVICE_ID_KEY, response.deviceId);
-      localStorage.setItem(DEVICE_TOKEN_KEY, response.deviceToken);
-      api.setToken(response.token);
-      setToken(response.token);
-      setUser(response.user);
-      return true;
-    } catch (err) {
-      // Only clear device tokens when the server explicitly rejects them (401).
-      // Transient errors (network unavailable, 5xx server errors) should not
-      // invalidate a still-valid device token — otherwise users lose persistent
-      // sessions whenever the server is temporarily unreachable.
-      if (err instanceof ApiError && err.status === 401) {
-        localStorage.removeItem(DEVICE_ID_KEY);
-        localStorage.removeItem(DEVICE_TOKEN_KEY);
-      } else {
-        console.warn("[Auth] Device recovery failed due to a transient error:", err);
-      }
-      return false;
+  /**
+   * Sync the React state with whatever token the api service currently holds.
+   * This is needed because the api service may have refreshed the token
+   * transparently via device token recovery (on 401 auto-retry).
+   */
+  const syncTokenFromStorage = useCallback(() => {
+    const currentToken = localStorage.getItem(TOKEN_KEY);
+    if (currentToken) {
+      api.setToken(currentToken);
+      setToken(currentToken);
     }
   }, []);
 
-  // Initialize from localStorage
+  // Initialize from localStorage on mount
   useEffect(() => {
-    const savedToken = localStorage.getItem(TOKEN_KEY);
-    if (savedToken) {
-      api.setToken(savedToken);
-      setToken(savedToken);
-      // Verify the session is still valid
-      api
-        .get<{ user: User }>("/auth/session")
-        .then((data) => {
+    const initAuth = async () => {
+      const savedToken = localStorage.getItem(TOKEN_KEY);
+      const hasDeviceTokens =
+        !!localStorage.getItem(DEVICE_ID_KEY) &&
+        !!localStorage.getItem(DEVICE_TOKEN_KEY);
+
+      if (savedToken) {
+        api.setToken(savedToken);
+        setToken(savedToken);
+      }
+
+      if (savedToken || hasDeviceTokens) {
+        // If we have a saved JWT, verify it via /auth/session.
+        // The api service now auto-recovers on 401 using device tokens,
+        // so this call will succeed even if the JWT expired — as long as
+        // a valid device token exists in localStorage.
+        //
+        // If there's no saved JWT but there ARE device tokens, we still
+        // attempt /auth/session. The first call will 401 → the api service
+        // will recover → retry with the new JWT → succeed.
+        try {
+          const data = await api.get<{ user: User }>("/auth/session");
+          // After a potential recovery, sync the token state
+          syncTokenFromStorage();
           setUser(data.user);
-        })
-        .catch(async () => {
-          // JWT expired — try device token recovery
+        } catch {
+          // Recovery failed — clear everything
           localStorage.removeItem(TOKEN_KEY);
           api.setToken(null);
           setToken(null);
+          setUser(null);
+        }
+      }
 
-          const recovered = await tryDeviceRecovery();
-          if (!recovered) {
-            // Full logout state
-            setToken(null);
-            setUser(null);
-          }
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
-    } else {
-      // No JWT — try device token recovery (session may have been cleared)
-      tryDeviceRecovery().finally(() => {
-        setIsLoading(false);
-      });
-    }
-  }, [tryDeviceRecovery]);
+      setIsLoading(false);
+    };
+
+    initAuth();
+  }, [syncTokenFromStorage]);
 
   const login = useCallback(
     (
