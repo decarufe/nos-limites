@@ -12,45 +12,52 @@ const router = Router();
  */
 router.get("/limits/categories", async (req, res) => {
   try {
-    console.log("[DB Query] SELECT * FROM limit_categories ORDER BY sort_order ASC");
-    const categories = db
+    console.log(
+      "[DB Query] SELECT * FROM limit_categories ORDER BY sort_order ASC",
+    );
+    const categories = await db
       .select()
       .from(limitCategories)
-      .orderBy(asc(limitCategories.sortOrder))
-      .all();
+      .orderBy(asc(limitCategories.sortOrder));
 
     console.log(`[DB Query] Found ${categories.length} categories`);
 
     // For each category, fetch subcategories and their limits
-    const result = categories.map((category) => {
-      console.log(`[DB Query] SELECT * FROM limit_subcategories WHERE category_id = '${category.id}'`);
-      const subcategories = db
-        .select()
-        .from(limitSubcategories)
-        .where(eq(limitSubcategories.categoryId, category.id))
-        .orderBy(asc(limitSubcategories.sortOrder))
-        .all();
-
-      const subcategoriesWithLimits = subcategories.map((subcategory) => {
-        console.log(`[DB Query] SELECT * FROM limits WHERE subcategory_id = '${subcategory.id}'`);
-        const subcategoryLimits = db
+    const result = await Promise.all(
+      categories.map(async (category) => {
+        console.log(
+          `[DB Query] SELECT * FROM limit_subcategories WHERE category_id = '${category.id}'`,
+        );
+        const subcategories = await db
           .select()
-          .from(limits)
-          .where(eq(limits.subcategoryId, subcategory.id))
-          .orderBy(asc(limits.sortOrder))
-          .all();
+          .from(limitSubcategories)
+          .where(eq(limitSubcategories.categoryId, category.id))
+          .orderBy(asc(limitSubcategories.sortOrder));
+
+        const subcategoriesWithLimits = await Promise.all(
+          subcategories.map(async (subcategory) => {
+            console.log(
+              `[DB Query] SELECT * FROM limits WHERE subcategory_id = '${subcategory.id}'`,
+            );
+            const subcategoryLimits = await db
+              .select()
+              .from(limits)
+              .where(eq(limits.subcategoryId, subcategory.id))
+              .orderBy(asc(limits.sortOrder));
+
+            return {
+              ...subcategory,
+              limits: subcategoryLimits,
+            };
+          }),
+        );
 
         return {
-          ...subcategory,
-          limits: subcategoryLimits,
+          ...category,
+          subcategories: subcategoriesWithLimits,
         };
-      });
-
-      return {
-        ...category,
-        subcategories: subcategoriesWithLimits,
-      };
-    });
+      }),
+    );
 
     res.json({
       success: true,

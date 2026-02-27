@@ -14,7 +14,7 @@ import relationshipsRouter from "./routes/relationships";
 import notificationsRouter from "./routes/notifications";
 import devicesRouter from "./routes/devices";
 
-ensureDatabaseInitialized();
+const initPromise = ensureDatabaseInitialized();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -22,6 +22,12 @@ const PORT = process.env.PORT || 3001;
 // Middleware
 app.use(cors(createCorsOptions()));
 app.use(express.json());
+
+// Wait for DB init before handling requests
+app.use(async (req, res, next) => {
+  await initPromise;
+  next();
+});
 
 // Request logging middleware
 app.use((req, res, next) => {
@@ -39,8 +45,8 @@ app.use("/api", notificationsRouter);
 app.use("/api", devicesRouter);
 
 if (!process.env.VERCEL) {
-  app.listen(PORT, () => {
-    const connected = testConnection();
+  app.listen(PORT, async () => {
+    const connected = await testConnection();
     console.log(`Server running on port ${PORT}`);
     console.log(`Database status: ${connected ? "connected" : "disconnected"}`);
     console.log(`Health check: http://localhost:${PORT}/api/health`);

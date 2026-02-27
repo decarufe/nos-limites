@@ -1,41 +1,29 @@
-import Database, { type Database as DatabaseType } from "better-sqlite3";
-import { drizzle } from "drizzle-orm/better-sqlite3";
+import { createClient, type Client } from "@libsql/client";
+import { drizzle } from "drizzle-orm/libsql";
 import * as schema from "./schema";
-import path from "path";
-import fs from "fs";
 
-function resolveDatabasePath(): string {
-  if (process.env.DATABASE_URL?.trim()) {
-    return process.env.DATABASE_URL.trim();
+function createLibSqlClient(): Client {
+  const url = process.env.TURSO_DATABASE_URL?.trim();
+  const authToken = process.env.TURSO_AUTH_TOKEN?.trim();
+
+  if (url) {
+    console.log(`Connecting to Turso database: ${url}`);
+    return createClient({ url, authToken });
   }
 
-  if (process.env.VERCEL) {
-    return path.join("/tmp", "noslimites.db");
-  }
-
-  const dataDir = path.join(__dirname, "../../data");
-  if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true });
-  }
-
-  return path.join(dataDir, "noslimites.db");
+  // Local development: use a local SQLite file via libSQL
+  const localUrl = "file:./data/noslimites.db";
+  console.log(`Connecting to local database: ${localUrl}`);
+  return createClient({ url: localUrl });
 }
 
-const dbPath = resolveDatabasePath();
+export const client: Client = createLibSqlClient();
 
-console.log(`Connecting to database at: ${dbPath}`);
+export const db = drizzle(client, { schema });
 
-const sqlite: DatabaseType = new Database(dbPath);
-
-// Enable WAL mode for better performance
-sqlite.pragma("journal_mode = WAL");
-sqlite.pragma("foreign_keys = ON");
-
-export const db = drizzle(sqlite, { schema });
-
-export function testConnection(): boolean {
+export async function testConnection(): Promise<boolean> {
   try {
-    sqlite.prepare("SELECT 1").get();
+    await client.execute("SELECT 1");
     console.log("Database connection established successfully.");
     return true;
   } catch (error) {
@@ -43,5 +31,3 @@ export function testConnection(): boolean {
     return false;
   }
 }
-
-export { sqlite };

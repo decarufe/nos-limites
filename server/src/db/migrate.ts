@@ -1,15 +1,16 @@
-import { sqlite } from "./connection";
-import * as schema from "./schema";
+import { client } from "./connection";
 
 /**
  * Apply database migrations - creates all tables from the schema.
  * Uses IF NOT EXISTS to be idempotent.
+ * Uses client.batch() to execute multiple statements in a single round-trip.
  */
-export function migrate() {
+export async function migrate() {
   console.log("Running database migrations...");
 
-  sqlite.exec(`
-    CREATE TABLE IF NOT EXISTS users (
+  await client.batch(
+    [
+      `CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY,
       email TEXT UNIQUE NOT NULL,
       display_name TEXT NOT NULL,
@@ -18,26 +19,26 @@ export function migrate() {
       auth_provider_id TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-    );
+    )`,
 
-    CREATE TABLE IF NOT EXISTS sessions (
+      `CREATE TABLE IF NOT EXISTS sessions (
       id TEXT PRIMARY KEY,
       user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       token TEXT UNIQUE NOT NULL,
       expires_at TEXT NOT NULL,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
-    );
+    )`,
 
-    CREATE TABLE IF NOT EXISTS magic_links (
+      `CREATE TABLE IF NOT EXISTS magic_links (
       id TEXT PRIMARY KEY,
       email TEXT NOT NULL,
       token TEXT UNIQUE NOT NULL,
       expires_at TEXT NOT NULL,
       used INTEGER DEFAULT 0,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
-    );
+    )`,
 
-    CREATE TABLE IF NOT EXISTS relationships (
+      `CREATE TABLE IF NOT EXISTS relationships (
       id TEXT PRIMARY KEY,
       inviter_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       invitee_id TEXT REFERENCES users(id) ON DELETE CASCADE,
@@ -45,34 +46,34 @@ export function migrate() {
       status TEXT NOT NULL DEFAULT 'pending',
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-    );
+    )`,
 
-    CREATE TABLE IF NOT EXISTS limit_categories (
+      `CREATE TABLE IF NOT EXISTS limit_categories (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
       description TEXT,
       icon TEXT,
       image_url TEXT,
       sort_order INTEGER
-    );
+    )`,
 
-    CREATE TABLE IF NOT EXISTS limit_subcategories (
+      `CREATE TABLE IF NOT EXISTS limit_subcategories (
       id TEXT PRIMARY KEY,
       category_id TEXT NOT NULL REFERENCES limit_categories(id) ON DELETE CASCADE,
       name TEXT NOT NULL,
       sort_order INTEGER
-    );
+    )`,
 
-    CREATE TABLE IF NOT EXISTS limits (
+      `CREATE TABLE IF NOT EXISTS limits (
       id TEXT PRIMARY KEY,
       subcategory_id TEXT NOT NULL REFERENCES limit_subcategories(id) ON DELETE CASCADE,
       name TEXT NOT NULL,
       description TEXT,
       image_url TEXT,
       sort_order INTEGER
-    );
+    )`,
 
-    CREATE TABLE IF NOT EXISTS user_limits (
+      `CREATE TABLE IF NOT EXISTS user_limits (
       id TEXT PRIMARY KEY,
       user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       relationship_id TEXT NOT NULL REFERENCES relationships(id) ON DELETE CASCADE,
@@ -82,9 +83,9 @@ export function migrate() {
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now')),
       UNIQUE(user_id, relationship_id, limit_id)
-    );
+    )`,
 
-    CREATE TABLE IF NOT EXISTS notifications (
+      `CREATE TABLE IF NOT EXISTS notifications (
       id TEXT PRIMARY KEY,
       user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       type TEXT NOT NULL,
@@ -94,17 +95,17 @@ export function migrate() {
       related_relationship_id TEXT REFERENCES relationships(id),
       is_read INTEGER DEFAULT 0,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
-    );
+    )`,
 
-    CREATE TABLE IF NOT EXISTS blocked_users (
+      `CREATE TABLE IF NOT EXISTS blocked_users (
       id TEXT PRIMARY KEY,
       blocker_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       blocked_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       UNIQUE(blocker_id, blocked_id)
-    );
+    )`,
 
-    CREATE TABLE IF NOT EXISTS devices (
+      `CREATE TABLE IF NOT EXISTS devices (
       id TEXT PRIMARY KEY,
       user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       device_name TEXT,
@@ -113,32 +114,34 @@ export function migrate() {
       last_seen TEXT NOT NULL DEFAULT (datetime('now')),
       expires_at TEXT NOT NULL,
       revoked INTEGER DEFAULT 0
-    );
+    )`,
 
-    -- Indexes for performance
-    CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
-    CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token);
-    CREATE INDEX IF NOT EXISTS idx_magic_links_token ON magic_links(token);
-    CREATE INDEX IF NOT EXISTS idx_magic_links_email ON magic_links(email);
-    CREATE INDEX IF NOT EXISTS idx_relationships_inviter ON relationships(inviter_id);
-    CREATE INDEX IF NOT EXISTS idx_relationships_invitee ON relationships(invitee_id);
-    CREATE INDEX IF NOT EXISTS idx_relationships_token ON relationships(invitation_token);
-    CREATE INDEX IF NOT EXISTS idx_limit_subcategories_category ON limit_subcategories(category_id);
-    CREATE INDEX IF NOT EXISTS idx_limits_subcategory ON limits(subcategory_id);
-    CREATE INDEX IF NOT EXISTS idx_user_limits_user ON user_limits(user_id);
-    CREATE INDEX IF NOT EXISTS idx_user_limits_relationship ON user_limits(relationship_id);
-    CREATE INDEX IF NOT EXISTS idx_user_limits_limit ON user_limits(limit_id);
-    CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id);
-    CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications(is_read);
-    CREATE INDEX IF NOT EXISTS idx_blocked_users_blocker ON blocked_users(blocker_id);
-    CREATE INDEX IF NOT EXISTS idx_blocked_users_blocked ON blocked_users(blocked_id);
-    CREATE INDEX IF NOT EXISTS idx_devices_user_id ON devices(user_id);
-    CREATE INDEX IF NOT EXISTS idx_devices_refresh_token_hash ON devices(refresh_token_hash);
-  `);
+      // Indexes
+      `CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id)`,
+      `CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token)`,
+      `CREATE INDEX IF NOT EXISTS idx_magic_links_token ON magic_links(token)`,
+      `CREATE INDEX IF NOT EXISTS idx_magic_links_email ON magic_links(email)`,
+      `CREATE INDEX IF NOT EXISTS idx_relationships_inviter ON relationships(inviter_id)`,
+      `CREATE INDEX IF NOT EXISTS idx_relationships_invitee ON relationships(invitee_id)`,
+      `CREATE INDEX IF NOT EXISTS idx_relationships_token ON relationships(invitation_token)`,
+      `CREATE INDEX IF NOT EXISTS idx_limit_subcategories_category ON limit_subcategories(category_id)`,
+      `CREATE INDEX IF NOT EXISTS idx_limits_subcategory ON limits(subcategory_id)`,
+      `CREATE INDEX IF NOT EXISTS idx_user_limits_user ON user_limits(user_id)`,
+      `CREATE INDEX IF NOT EXISTS idx_user_limits_relationship ON user_limits(relationship_id)`,
+      `CREATE INDEX IF NOT EXISTS idx_user_limits_limit ON user_limits(limit_id)`,
+      `CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id)`,
+      `CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications(is_read)`,
+      `CREATE INDEX IF NOT EXISTS idx_blocked_users_blocker ON blocked_users(blocker_id)`,
+      `CREATE INDEX IF NOT EXISTS idx_blocked_users_blocked ON blocked_users(blocked_id)`,
+      `CREATE INDEX IF NOT EXISTS idx_devices_user_id ON devices(user_id)`,
+      `CREATE INDEX IF NOT EXISTS idx_devices_refresh_token_hash ON devices(refresh_token_hash)`,
+    ],
+    "write",
+  );
 
   console.log("Database migrations completed successfully.");
 }
 
 if (require.main === module) {
-  migrate();
+  migrate().catch(console.error);
 }

@@ -1,22 +1,22 @@
 import { Router } from "express";
-import { testConnection, sqlite } from "../db/connection";
+import { testConnection, client } from "../db/connection";
 
 const router = Router();
 
-router.get("/health", (req, res) => {
+router.get("/health", async (req, res) => {
   console.log("[DB Query] SELECT 1 (health check)");
-  const dbConnected = testConnection();
+  const dbConnected = await testConnection();
 
   // Also verify we can count tables to prove real DB access
   let tableCount = 0;
   try {
-    const result = sqlite
-      .prepare(
-        "SELECT COUNT(*) as count FROM sqlite_master WHERE type='table'"
-      )
-      .get() as { count: number };
-    tableCount = result.count;
-    console.log(`[DB Query] SELECT COUNT(*) FROM sqlite_master => ${tableCount} tables`);
+    const result = await client.execute(
+      "SELECT COUNT(*) as count FROM sqlite_master WHERE type='table'",
+    );
+    tableCount = Number(result.rows[0].count);
+    console.log(
+      `[DB Query] SELECT COUNT(*) FROM sqlite_master => ${tableCount} tables`,
+    );
   } catch (error) {
     console.error("[DB Error] Failed to count tables:", error);
   }
