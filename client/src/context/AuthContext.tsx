@@ -6,7 +6,7 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
-import api from "../services/api";
+import api, { ApiError } from "../services/api";
 
 interface User {
   id: string;
@@ -64,10 +64,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setToken(response.token);
       setUser(response.user);
       return true;
-    } catch {
-      // Device token invalid — clear it
-      localStorage.removeItem(DEVICE_ID_KEY);
-      localStorage.removeItem(DEVICE_TOKEN_KEY);
+    } catch (err) {
+      // Only clear device tokens when the server explicitly rejects them (401).
+      // Transient errors (network unavailable, 5xx server errors) should not
+      // invalidate a still-valid device token — otherwise users lose persistent
+      // sessions whenever the server is temporarily unreachable.
+      if (err instanceof ApiError && err.status === 401) {
+        localStorage.removeItem(DEVICE_ID_KEY);
+        localStorage.removeItem(DEVICE_TOKEN_KEY);
+      } else {
+        console.warn("[Auth] Device recovery failed due to a transient error:", err);
+      }
       return false;
     }
   }, []);
