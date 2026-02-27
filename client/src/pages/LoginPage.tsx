@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Navigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import api from "../services/api";
+import api, { API_BASE_URL } from "../services/api";
 import styles from "./LoginPage.module.css";
 
 /** Map OAuth error codes (from query params) to user-friendly French messages */
@@ -276,7 +276,7 @@ export default function LoginPage() {
                     className={styles.googleButton}
                     aria-label="Se connecter avec Google"
                     onClick={() => {
-                      window.location.href = "/api/auth/google";
+                      window.location.href = `${API_BASE_URL}/auth/google`;
                     }}
                   >
                     Continuer avec Google

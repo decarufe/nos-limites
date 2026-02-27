@@ -38,6 +38,7 @@ coverage/
 
 # Vite
 *.local
+tsconfig.tsbuildinfo
 
 # BEGIN NexKit
 .specify/
