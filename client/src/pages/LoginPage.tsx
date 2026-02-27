@@ -13,14 +13,21 @@ const OAUTH_ERROR_MESSAGES: Record<string, string> = {
   state_expired: "La session a expiré, veuillez réessayer.",
   token_exchange_failed: "Erreur de connexion Google, veuillez réessayer.",
   no_id_token: "Erreur de connexion Google, veuillez réessayer.",
-  token_verification_failed: "Erreur de vérification du compte Google, veuillez réessayer.",
+  token_verification_failed:
+    "Erreur de vérification du compte Google, veuillez réessayer.",
   invalid_token_payload: "Erreur de connexion Google, veuillez réessayer.",
-  invalid_issuer: "Erreur de vérification du compte Google, veuillez réessayer.",
-  invalid_audience: "Erreur de vérification du compte Google, veuillez réessayer.",
-  email_not_verified: "Votre adresse email Google n'est pas vérifiée. Veuillez vérifier votre email Google et réessayer.",
-  missing_user_info: "Impossible de récupérer vos informations Google. Veuillez réessayer.",
-  user_creation_failed: "Erreur lors de la création du compte. Veuillez réessayer.",
-  oauth_error: "Une erreur inattendue est survenue lors de la connexion Google. Veuillez réessayer.",
+  invalid_issuer:
+    "Erreur de vérification du compte Google, veuillez réessayer.",
+  invalid_audience:
+    "Erreur de vérification du compte Google, veuillez réessayer.",
+  email_not_verified:
+    "Votre adresse email Google n'est pas vérifiée. Veuillez vérifier votre email Google et réessayer.",
+  missing_user_info:
+    "Impossible de récupérer vos informations Google. Veuillez réessayer.",
+  user_creation_failed:
+    "Erreur lors de la création du compte. Veuillez réessayer.",
+  oauth_error:
+    "Une erreur inattendue est survenue lors de la connexion Google. Veuillez réessayer.",
 };
 
 interface ProvidersResponse {
@@ -36,7 +43,7 @@ export default function LoginPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">(
-    "idle"
+    "idle",
   );
   const [errorMessage, setErrorMessage] = useState("");
   const [devLink, setDevLink] = useState<string | null>(null);
@@ -70,14 +77,25 @@ export default function LoginPage() {
       });
   }, []);
 
-  // If already authenticated, redirect to home
+  // If already authenticated, redirect to pending destination or home
   if (isAuthenticated) {
+    const pendingRedirect = sessionStorage.getItem(
+      "nos_limites_pending_redirect",
+    );
+    if (pendingRedirect) {
+      sessionStorage.removeItem("nos_limites_pending_redirect");
+      return <Navigate to={pendingRedirect} replace />;
+    }
     return <Navigate to="/home" replace />;
   }
 
   if (isLoading) {
     return (
-      <div className={styles.container} role="status" aria-label="Chargement en cours">
+      <div
+        className={styles.container}
+        role="status"
+        aria-label="Chargement en cours"
+      >
         <div className={styles.hero}>
           <div className={styles.spinner} aria-hidden="true" />
           <p>Chargement...</p>
@@ -133,7 +151,7 @@ export default function LoginPage() {
       setErrorMessage(
         err instanceof Error
           ? err.message
-          : "Erreur lors de l'envoi du lien magique."
+          : "Erreur lors de l'envoi du lien magique.",
       );
     }
   };
@@ -156,14 +174,21 @@ export default function LoginPage() {
             <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
           </svg>
         </div>
-        <h1 className={styles.title} id="login-heading">Nos limites</h1>
+        <h1 className={styles.title} id="login-heading">
+          Nos limites
+        </h1>
         <p className={styles.subtitle}>
           Définissez vos limites mutuelles en toute confiance
         </p>
       </div>
 
       {oauthError && (
-        <div className={styles.oauthErrorBanner} role="alert" aria-live="assertive" data-testid="oauth-error">
+        <div
+          className={styles.oauthErrorBanner}
+          role="alert"
+          aria-live="assertive"
+          data-testid="oauth-error"
+        >
           <p className={styles.oauthErrorText}>{oauthError}</p>
           <button
             type="button"
@@ -246,10 +271,19 @@ export default function LoginPage() {
                 autoFocus
                 aria-required="true"
                 aria-invalid={status === "error" ? "true" : undefined}
-                aria-describedby={status === "error" ? "email-error" : undefined}
+                aria-describedby={
+                  status === "error" ? "email-error" : undefined
+                }
               />
               {status === "error" && (
-                <p id="email-error" className={styles.error} role="alert" aria-live="assertive">{errorMessage}</p>
+                <p
+                  id="email-error"
+                  className={styles.error}
+                  role="alert"
+                  aria-live="assertive"
+                >
+                  {errorMessage}
+                </p>
               )}
               <button
                 type="submit"

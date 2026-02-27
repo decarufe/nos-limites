@@ -36,14 +36,24 @@ export default function OAuthCallbackPage() {
         authData.token,
         authData.user,
         authData.deviceId,
-        authData.deviceToken
+        authData.deviceToken,
       );
 
       // Redirect based on whether this is a new user
       if (authData.isNewUser) {
+        // New user - go to profile setup (pending redirect will be consumed after setup)
         navigate("/profile/setup", { replace: true });
       } else {
-        navigate("/home", { replace: true });
+        // Existing user - go to pending redirect or home
+        const pendingRedirect = sessionStorage.getItem(
+          "nos_limites_pending_redirect",
+        );
+        if (pendingRedirect) {
+          sessionStorage.removeItem("nos_limites_pending_redirect");
+          navigate(pendingRedirect, { replace: true });
+        } else {
+          navigate("/home", { replace: true });
+        }
       }
     } catch (err) {
       console.error("Error parsing OAuth callback data:", err);
