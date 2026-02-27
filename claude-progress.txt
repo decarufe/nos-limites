@@ -1684,4 +1684,44 @@ implemented and verified, including the complete Google OAuth integration!
 - Graceful degradation when OAuth not configured ✅
 - French error messages for all failure modes ✅
 
+### Session 27 - 2026-02-27
+
+**Features Completed:**
+- Feature #84: Session expiration on invitation links ✅ PASSING
+
+**Problem:**
+- When navigating to an invitation link, users could get a "session expired" message
+- Sessions should be permanent on the device (using device tokens)
+
+**Root Causes Found & Fixed:**
+
+1. **API_BASE_URL bitwise OR bug** (critical):
+   - `client/src/services/api.ts` line 24 used `|` (bitwise OR) instead of `||` (logical OR)
+   - Fixed: Changed to `||` for proper logical fallback
+
+2. **No automatic 401 retry with device token recovery** (critical):
+   - The API service had no mechanism to recover from expired JWT tokens mid-session
+   - Fixed: Added `tryDeviceRecovery()` to ApiService that:
+     * Detects 401 responses from API calls
+     * Automatically refreshes the session using the device token (365-day validity)
+     * Retries the failed request with the new JWT token
+     * Uses a shared promise to prevent concurrent refresh attempts
+
+3. **AuthContext simplified** to work with new API auto-recovery
+
+4. **Added default export** for api module backward compatibility
+
+**Verification:**
+- Created two test users, established invitation flow ✅
+- Deleted all sessions for User A from DB (simulated expiration) ✅
+- Verified device tokens still existed (not revoked) ✅
+- Navigated to invitation link with expired JWT ✅
+- Auto-recovery kicked in transparently ✅
+- Invitation page showed correctly (no "session expired") ✅
+- Accepted invitation and verified relationship on both sides ✅
+- No mock data patterns in codebase ✅
+- TypeScript builds cleanly: 250.84 kB bundle ✅
+
+**Current Status:** 84/84 features passing (100.0%)
+
 ═══════════════════════════════════════════════════════════════════════
