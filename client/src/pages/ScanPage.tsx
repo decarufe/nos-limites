@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Navigate } from "react-router-dom";
 import { QRCodeSVG } from "qrcode.react";
 import { useAuth } from "../context/AuthContext";
-import api from "../services/api";
+import { api } from "../services/api";
 import styles from "./ScanPage.module.css";
 
 interface InviteResponse {

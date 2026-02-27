@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import api from "../services/api";
+import { api } from "../services/api";
 import styles from "./InvitePage.module.css";
 
 interface InviteDetails {
