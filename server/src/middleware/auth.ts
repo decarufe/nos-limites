@@ -1,8 +1,5 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import { db } from "../db/connection";
-import { sessions } from "../db/schema";
-import { eq } from "drizzle-orm";
 
 export interface AuthRequest extends Request {
   userId?: string;
@@ -10,13 +7,17 @@ export interface AuthRequest extends Request {
 
 /**
  * Authentication middleware - verifies JWT token from Authorization header.
- * Also checks that the session still exists in the database (not logged out).
- * Adds userId to request object if valid.
+ * Uses stateless JWT verification (signature + expiry only).
+ * No database lookup — works reliably in serverless environments where DB
+ * storage may be ephemeral across invocations.
+ *
+ * Session revocation on logout is handled client-side (clearing localStorage).
+ * The 30-day JWT expiry provides the natural session boundary.
  */
 export function requireAuth(
   req: AuthRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) {
   const authHeader = req.headers.authorization;
 
@@ -31,37 +32,11 @@ export function requireAuth(
   try {
     const decoded = jwt.verify(
       token,
-      process.env.JWT_SECRET || "dev-secret-change-in-production"
+      process.env.JWT_SECRET || "dev-secret-change-in-production",
     ) as { userId: string };
 
-    // Check that the session still exists in the database
-    // (it gets deleted on logout)
-    db.query.sessions
-      .findFirst({
-        where: eq(sessions.token, token),
-      })
-      .then((session) => {
-        if (!session) {
-          return res.status(401).json({
-            message: "Session expirée ou invalide. Veuillez vous reconnecter.",
-          });
-        }
-
-        // Check session expiration
-        if (new Date(session.expiresAt) < new Date()) {
-          return res.status(401).json({
-            message: "Session expirée. Veuillez vous reconnecter.",
-          });
-        }
-
-        req.userId = decoded.userId;
-        next();
-      })
-      .catch(() => {
-        return res.status(401).json({
-          message: "Session expirée ou invalide. Veuillez vous reconnecter.",
-        });
-      });
+    req.userId = decoded.userId;
+    next();
   } catch (error) {
     return res.status(401).json({
       message: "Session expirée ou invalide. Veuillez vous reconnecter.",

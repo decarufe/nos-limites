@@ -6,7 +6,7 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
-import api from "../services/api";
+import api, { ApiError } from "../services/api";
 
 interface User {
   id: string;
@@ -81,9 +81,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // After a potential recovery, sync the token state
           syncTokenFromStorage();
           setUser(data.user);
-        } catch {
-          // Recovery failed — clear everything
-          localStorage.removeItem(TOKEN_KEY);
+        } catch (err) {
+          // Only wipe stored tokens on an explicit 401 (auth rejected by server).
+          // For network errors or other failures, preserve tokens so the next
+          // reload can retry — avoids permanently logging out the user due to
+          // a transient server/network issue.
+          if (err instanceof ApiError && err.status === 401) {
+            localStorage.removeItem(TOKEN_KEY);
+            localStorage.removeItem(DEVICE_ID_KEY);
+            localStorage.removeItem(DEVICE_TOKEN_KEY);
+          }
           api.setToken(null);
           setToken(null);
           setUser(null);
