@@ -1,1 +1,24 @@
-{"root":["./src/app.tsx","./src/main.tsx","./src/vite-env.d.ts","./src/components/applayout.tsx","./src/components/bottomnav.tsx","./src/components/protectedroute.tsx","./src/context/authcontext.tsx","./src/context/notificationscontext.tsx","./src/pages/authverifypage.tsx","./src/pages/homepage.tsx","./src/pages/invitepage.tsx","./src/pages/loginpage.tsx","./src/pages/notificationspage.tsx","./src/pages/oauthcallbackpage.tsx","./src/pages/profilepage.tsx","./src/pages/profilesetuppage.tsx","./src/pages/relationshippage.tsx","./src/pages/scanpage.tsx","./src/services/api.ts"],"version":"5.9.3"}
+{
+    "root": [
+        "./src/app.tsx",
+        "./src/main.tsx",
+        "./src/vite-env.d.ts",
+        "./src/components/applayout.tsx",
+        "./src/components/bottomnav.tsx",
+        "./src/components/protectedroute.tsx",
+        "./src/context/authcontext.tsx",
+        "./src/context/notificationscontext.tsx",
+        "./src/pages/authverifypage.tsx",
+        "./src/pages/homepage.tsx",
+        "./src/pages/invitepage.tsx",
+        "./src/pages/loginpage.tsx",
+        "./src/pages/notificationspage.tsx",
+        "./src/pages/oauthcallbackpage.tsx",
+        "./src/pages/profilepage.tsx",
+        "./src/pages/profilesetuppage.tsx",
+        "./src/pages/relationshippage.tsx",
+        "./src/pages/scanpage.tsx",
+        "./src/services/api.ts"
+    ],
+    "version": "5.9.3"
+}

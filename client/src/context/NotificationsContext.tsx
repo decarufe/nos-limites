@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import api from "../services/api";
+import { api } from "../services/api";
 import { useAuth } from "./AuthContext";
 
 interface NotificationsContextType {
