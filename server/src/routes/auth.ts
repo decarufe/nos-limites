@@ -78,7 +78,7 @@ function validateOAuthState(state: string): boolean {
     if (
       !crypto.timingSafeEqual(
         Buffer.from(sig, "hex"),
-        Buffer.from(expectedSig, "hex")
+        Buffer.from(expectedSig, "hex"),
       )
     ) {
       return false;
@@ -306,10 +306,17 @@ router.get("/auth/verify", async (req: Request, res: Response) => {
       });
     }
 
-    // Create JWT token
-    const jwtToken = jwt.sign({ userId: user.id }, JWT_SECRET, {
-      expiresIn: "30d",
-    });
+    // Create JWT token — include user profile so /auth/session is stateless
+    const jwtToken = jwt.sign(
+      {
+        userId: user.id,
+        email: user.email,
+        displayName: user.displayName,
+        avatarUrl: user.avatarUrl ?? null,
+      },
+      JWT_SECRET,
+      { expiresIn: "30d" },
+    );
 
     // Create session
     const sessionId = uuidv4();
@@ -405,29 +412,46 @@ router.post("/auth/device/refresh", async (req: Request, res: Response) => {
 /**
  * GET /api/auth/session
  * Check current session and return user info.
+ * Tries DB first for freshest data; falls back to JWT claims on cold-start
+ * Lambda where the ephemeral SQLite is empty.
  */
 router.get(
   "/auth/session",
   requireAuth,
   async (req: AuthRequest, res: Response) => {
     try {
-      const user = await db.query.users.findFirst({
-        where: eq(users.id, req.userId!),
-      });
+      // Attempt DB lookup for up-to-date profile (name/avatar may have changed)
+      try {
+        const user = await db.query.users.findFirst({
+          where: eq(users.id, req.userId!),
+        });
+        if (user) {
+          return res.json({
+            user: {
+              id: user.id,
+              email: user.email,
+              displayName: user.displayName,
+              avatarUrl: user.avatarUrl,
+            },
+          });
+        }
+      } catch {
+        // DB unavailable — fall through to JWT claims
+      }
 
-      if (!user) {
-        return res.status(404).json({
-          message: "Utilisateur non trouvé.",
+      // Fall back to claims embedded in the JWT (works on ephemeral/cold DBs)
+      if (req.userClaims) {
+        return res.json({
+          user: {
+            id: req.userId!,
+            ...req.userClaims,
+          },
         });
       }
 
-      return res.json({
-        user: {
-          id: user.id,
-          email: user.email,
-          displayName: user.displayName,
-          avatarUrl: user.avatarUrl,
-        },
+      // Neither DB nor claims available — token was issued in old format
+      return res.status(401).json({
+        message: "Session invalide. Veuillez vous reconnecter.",
       });
     } catch (error) {
       console.error("Error checking session:", error);
@@ -478,267 +502,230 @@ router.post(
  * - Verifies the ID token and extracts user profile (Feature #79)
  * - Creates or updates the user account and issues a session
  */
-router.get(
-  "/auth/google/callback",
-  async (req: Request, res: Response) => {
-    const frontendUrl = resolveFrontendBaseUrl(req);
+router.get("/auth/google/callback", async (req: Request, res: Response) => {
+  const frontendUrl = resolveFrontendBaseUrl(req);
 
+  try {
+    const { code, state, error: oauthError } = req.query;
+
+    // Handle OAuth errors from Google (user denied, etc.)
+    if (oauthError) {
+      console.error(`[Google OAuth] Error from Google: ${oauthError}`);
+      return res.redirect(`${frontendUrl}/login?error=google_denied`);
+    }
+
+    // Validate required parameters
+    if (!code || typeof code !== "string") {
+      console.error("[Google OAuth] Missing authorization code");
+      return res.redirect(`${frontendUrl}/login?error=missing_code`);
+    }
+
+    if (!state || typeof state !== "string") {
+      console.error("[Google OAuth] Missing state parameter");
+      return res.redirect(`${frontendUrl}/login?error=missing_state`);
+    }
+
+    // Feature #78: Validate the CSRF state parameter
+    if (!validateOAuthState(state)) {
+      console.error("[Google OAuth] Invalid or expired state parameter");
+      return res.redirect(`${frontendUrl}/login?error=invalid_state`);
+    }
+
+    // Feature #78: Exchange authorization code for tokens
+    const clientId = getGoogleClientId();
+    const clientSecret = getGoogleClientSecret();
+    const callbackUrl = getGoogleCallbackUrl();
+    const oauth2Client = new OAuth2Client(clientId, clientSecret, callbackUrl);
+
+    let tokenResponse;
     try {
-      const { code, state, error: oauthError } = req.query;
-
-      // Handle OAuth errors from Google (user denied, etc.)
-      if (oauthError) {
-        console.error(`[Google OAuth] Error from Google: ${oauthError}`);
-        return res.redirect(
-          `${frontendUrl}/login?error=google_denied`
-        );
-      }
-
-      // Validate required parameters
-      if (!code || typeof code !== "string") {
-        console.error("[Google OAuth] Missing authorization code");
-        return res.redirect(
-          `${frontendUrl}/login?error=missing_code`
-        );
-      }
-
-      if (!state || typeof state !== "string") {
-        console.error("[Google OAuth] Missing state parameter");
-        return res.redirect(
-          `${frontendUrl}/login?error=missing_state`
-        );
-      }
-
-      // Feature #78: Validate the CSRF state parameter
-      if (!validateOAuthState(state)) {
-        console.error("[Google OAuth] Invalid or expired state parameter");
-        return res.redirect(
-          `${frontendUrl}/login?error=invalid_state`
-        );
-      }
-
-      // Feature #78: Exchange authorization code for tokens
-      const clientId = getGoogleClientId();
-      const clientSecret = getGoogleClientSecret();
-      const callbackUrl = getGoogleCallbackUrl();
-      const oauth2Client = new OAuth2Client(
-        clientId,
-        clientSecret,
-        callbackUrl
+      tokenResponse = await oauth2Client.getToken(code);
+    } catch (tokenError: any) {
+      console.error(
+        "[Google OAuth] Token exchange failed:",
+        tokenError?.message || tokenError,
       );
+      return res.redirect(`${frontendUrl}/login?error=token_exchange_failed`);
+    }
 
-      let tokenResponse;
-      try {
-        tokenResponse = await oauth2Client.getToken(code);
-      } catch (tokenError: any) {
-        console.error(
-          "[Google OAuth] Token exchange failed:",
-          tokenError?.message || tokenError
-        );
-        return res.redirect(
-          `${frontendUrl}/login?error=token_exchange_failed`
-        );
-      }
+    const { id_token } = tokenResponse.tokens;
 
-      const { id_token } = tokenResponse.tokens;
+    if (!id_token) {
+      console.error("[Google OAuth] No ID token received from Google");
+      return res.redirect(`${frontendUrl}/login?error=no_id_token`);
+    }
 
-      if (!id_token) {
-        console.error("[Google OAuth] No ID token received from Google");
-        return res.redirect(
-          `${frontendUrl}/login?error=no_id_token`
-        );
-      }
+    console.log(
+      `[Google OAuth] Token exchange successful, verifying ID token...`,
+    );
 
-      console.log(
-        `[Google OAuth] Token exchange successful, verifying ID token...`
-      );
-
-      // Feature #79: Verify the ID token and extract user profile
-      let ticket;
-      try {
-        ticket = await oauth2Client.verifyIdToken({
-          idToken: id_token,
-          audience: clientId,
-        });
-      } catch (verifyError: any) {
-        console.error(
-          "[Google OAuth] ID token verification failed:",
-          verifyError?.message || verifyError
-        );
-        return res.redirect(
-          `${frontendUrl}/login?error=token_verification_failed`
-        );
-      }
-
-      const payload = ticket.getPayload();
-      if (!payload) {
-        console.error("[Google OAuth] No payload in verified ID token");
-        return res.redirect(
-          `${frontendUrl}/login?error=invalid_token_payload`
-        );
-      }
-
-      // Feature #79: Validate issuer
-      const validIssuers = [
-        "accounts.google.com",
-        "https://accounts.google.com",
-      ];
-      if (!payload.iss || !validIssuers.includes(payload.iss)) {
-        console.error(
-          `[Google OAuth] Invalid issuer: ${payload.iss}`
-        );
-        return res.redirect(
-          `${frontendUrl}/login?error=invalid_issuer`
-        );
-      }
-
-      // Feature #79: Validate audience
-      if (payload.aud !== clientId) {
-        console.error(
-          `[Google OAuth] Invalid audience: ${payload.aud}`
-        );
-        return res.redirect(
-          `${frontendUrl}/login?error=invalid_audience`
-        );
-      }
-
-      // Feature #79: Reject unverified emails
-      if (!payload.email_verified) {
-        console.error("[Google OAuth] Email not verified by Google");
-        return res.redirect(
-          `${frontendUrl}/login?error=email_not_verified`
-        );
-      }
-
-      // Feature #79: Extract user profile from verified token
-      const googleSub = payload.sub; // Unique Google user ID
-      const email = payload.email?.toLowerCase().trim();
-      const name =
-        payload.name || payload.given_name || email?.split("@")[0] || "User";
-      const picture = payload.picture || null;
-
-      if (!email || !googleSub) {
-        console.error("[Google OAuth] Missing email or sub in token");
-        return res.redirect(
-          `${frontendUrl}/login?error=missing_user_info`
-        );
-      }
-
-      console.log(
-        `[Google OAuth] Verified user: ${email} (sub: ${googleSub})`
-      );
-
-      // Find or create user in database
-      let user = await db.query.users.findFirst({
-        where: eq(users.email, email),
+    // Feature #79: Verify the ID token and extract user profile
+    let ticket;
+    try {
+      ticket = await oauth2Client.verifyIdToken({
+        idToken: id_token,
+        audience: clientId,
       });
-
-      let isNewUser = false;
-
-      if (!user) {
-        // Create new user from Google profile
-        isNewUser = true;
-        const userId = uuidv4();
-        await db.insert(users).values({
-          id: userId,
-          email,
-          displayName: name,
-          avatarUrl: picture,
-          authProvider: "google",
-          authProviderId: googleSub,
-        });
-
-        user = await db.query.users.findFirst({
-          where: eq(users.id, userId),
-        });
-      } else if (user.authProvider !== "google") {
-        // User exists with different auth provider — update to link Google
-        await db
-          .update(users)
-          .set({
-            authProvider: "google",
-            authProviderId: googleSub,
-            avatarUrl: user.avatarUrl || picture,
-            updatedAt: new Date().toISOString(),
-          })
-          .where(eq(users.id, user.id));
-
-        user = await db.query.users.findFirst({
-          where: eq(users.id, user.id),
-        });
-      } else {
-        // Existing Google user — update avatar and provider ID if changed
-        await db
-          .update(users)
-          .set({
-            authProviderId: googleSub,
-            avatarUrl: picture || user.avatarUrl,
-            updatedAt: new Date().toISOString(),
-          })
-          .where(eq(users.id, user.id));
-      }
-
-      if (!user) {
-        console.error("[Google OAuth] Failed to create/find user");
-        return res.redirect(
-          `${frontendUrl}/login?error=user_creation_failed`
-        );
-      }
-
-      // Create JWT session (same as magic link flow)
-      const jwtToken = jwt.sign({ userId: user.id }, JWT_SECRET, {
-        expiresIn: "30d",
-      });
-
-      const sessionId = uuidv4();
-      const sessionExpiresAt = new Date(
-        Date.now() + 30 * 24 * 60 * 60 * 1000
-      ).toISOString();
-
-      await db.insert(sessions).values({
-        id: sessionId,
-        userId: user.id,
-        token: jwtToken,
-        expiresAt: sessionExpiresAt,
-      });
-
-      // Register device token for persistent sessions
-      const device = await createDeviceToken(
-        user.id,
-        req.headers["user-agent"]?.substring(0, 120) || "Google OAuth"
+    } catch (verifyError: any) {
+      console.error(
+        "[Google OAuth] ID token verification failed:",
+        verifyError?.message || verifyError,
       );
-
-      console.log(
-        `[Google OAuth] Session created for user ${user.email} (isNew: ${isNewUser})`
-      );
-
-      // Redirect to frontend with auth data as URL parameter
-      // The frontend OAuthCallbackPage will read these and store them
-      const authData = encodeURIComponent(
-        JSON.stringify({
-          token: jwtToken,
-          user: {
-            id: user.id,
-            email: user.email,
-            displayName: user.displayName,
-            avatarUrl: user.avatarUrl,
-          },
-          isNewUser,
-          deviceId: device.deviceId,
-          deviceToken: device.deviceToken,
-        })
-      );
-
       return res.redirect(
-        `${frontendUrl}/auth/oauth-callback?data=${authData}`
-      );
-    } catch (error) {
-      console.error("[Google OAuth] Unexpected error in callback:", error);
-      return res.redirect(
-        `${frontendUrl}/login?error=oauth_error`
+        `${frontendUrl}/login?error=token_verification_failed`,
       );
     }
+
+    const payload = ticket.getPayload();
+    if (!payload) {
+      console.error("[Google OAuth] No payload in verified ID token");
+      return res.redirect(`${frontendUrl}/login?error=invalid_token_payload`);
+    }
+
+    // Feature #79: Validate issuer
+    const validIssuers = ["accounts.google.com", "https://accounts.google.com"];
+    if (!payload.iss || !validIssuers.includes(payload.iss)) {
+      console.error(`[Google OAuth] Invalid issuer: ${payload.iss}`);
+      return res.redirect(`${frontendUrl}/login?error=invalid_issuer`);
+    }
+
+    // Feature #79: Validate audience
+    if (payload.aud !== clientId) {
+      console.error(`[Google OAuth] Invalid audience: ${payload.aud}`);
+      return res.redirect(`${frontendUrl}/login?error=invalid_audience`);
+    }
+
+    // Feature #79: Reject unverified emails
+    if (!payload.email_verified) {
+      console.error("[Google OAuth] Email not verified by Google");
+      return res.redirect(`${frontendUrl}/login?error=email_not_verified`);
+    }
+
+    // Feature #79: Extract user profile from verified token
+    const googleSub = payload.sub; // Unique Google user ID
+    const email = payload.email?.toLowerCase().trim();
+    const name =
+      payload.name || payload.given_name || email?.split("@")[0] || "User";
+    const picture = payload.picture || null;
+
+    if (!email || !googleSub) {
+      console.error("[Google OAuth] Missing email or sub in token");
+      return res.redirect(`${frontendUrl}/login?error=missing_user_info`);
+    }
+
+    console.log(`[Google OAuth] Verified user: ${email} (sub: ${googleSub})`);
+
+    // Find or create user in database
+    let user = await db.query.users.findFirst({
+      where: eq(users.email, email),
+    });
+
+    let isNewUser = false;
+
+    if (!user) {
+      // Create new user from Google profile
+      isNewUser = true;
+      const userId = uuidv4();
+      await db.insert(users).values({
+        id: userId,
+        email,
+        displayName: name,
+        avatarUrl: picture,
+        authProvider: "google",
+        authProviderId: googleSub,
+      });
+
+      user = await db.query.users.findFirst({
+        where: eq(users.id, userId),
+      });
+    } else if (user.authProvider !== "google") {
+      // User exists with different auth provider — update to link Google
+      await db
+        .update(users)
+        .set({
+          authProvider: "google",
+          authProviderId: googleSub,
+          avatarUrl: user.avatarUrl || picture,
+          updatedAt: new Date().toISOString(),
+        })
+        .where(eq(users.id, user.id));
+
+      user = await db.query.users.findFirst({
+        where: eq(users.id, user.id),
+      });
+    } else {
+      // Existing Google user — update avatar and provider ID if changed
+      await db
+        .update(users)
+        .set({
+          authProviderId: googleSub,
+          avatarUrl: picture || user.avatarUrl,
+          updatedAt: new Date().toISOString(),
+        })
+        .where(eq(users.id, user.id));
+    }
+
+    if (!user) {
+      console.error("[Google OAuth] Failed to create/find user");
+      return res.redirect(`${frontendUrl}/login?error=user_creation_failed`);
+    }
+
+    // Create JWT session — include user profile so /auth/session is stateless
+    const jwtToken = jwt.sign(
+      {
+        userId: user.id,
+        email: user.email,
+        displayName: user.displayName,
+        avatarUrl: user.avatarUrl ?? null,
+      },
+      JWT_SECRET,
+      { expiresIn: "30d" },
+    );
+
+    const sessionId = uuidv4();
+    const sessionExpiresAt = new Date(
+      Date.now() + 30 * 24 * 60 * 60 * 1000,
+    ).toISOString();
+
+    await db.insert(sessions).values({
+      id: sessionId,
+      userId: user.id,
+      token: jwtToken,
+      expiresAt: sessionExpiresAt,
+    });
+
+    // Register device token for persistent sessions
+    const device = await createDeviceToken(
+      user.id,
+      req.headers["user-agent"]?.substring(0, 120) || "Google OAuth",
+    );
+
+    console.log(
+      `[Google OAuth] Session created for user ${user.email} (isNew: ${isNewUser})`,
+    );
+
+    // Redirect to frontend with auth data as URL parameter
+    // The frontend OAuthCallbackPage will read these and store them
+    const authData = encodeURIComponent(
+      JSON.stringify({
+        token: jwtToken,
+        user: {
+          id: user.id,
+          email: user.email,
+          displayName: user.displayName,
+          avatarUrl: user.avatarUrl,
+        },
+        isNewUser,
+        deviceId: device.deviceId,
+        deviceToken: device.deviceToken,
+      }),
+    );
+
+    return res.redirect(`${frontendUrl}/auth/oauth-callback?data=${authData}`);
+  } catch (error) {
+    console.error("[Google OAuth] Unexpected error in callback:", error);
+    return res.redirect(`${frontendUrl}/login?error=oauth_error`);
   }
-);
+});
 
 export default router;

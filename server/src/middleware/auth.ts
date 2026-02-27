@@ -1,8 +1,15 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
+export interface UserClaims {
+  email: string;
+  displayName: string;
+  avatarUrl: string | null;
+}
+
 export interface AuthRequest extends Request {
   userId?: string;
+  userClaims?: UserClaims;
 }
 
 /**
@@ -33,9 +40,22 @@ export function requireAuth(
     const decoded = jwt.verify(
       token,
       process.env.JWT_SECRET || "dev-secret-change-in-production",
-    ) as { userId: string };
+    ) as {
+      userId: string;
+      email?: string;
+      displayName?: string;
+      avatarUrl?: string | null;
+    };
 
     req.userId = decoded.userId;
+    // Attach profile claims if present (tokens issued after the v2 format)
+    if (decoded.email) {
+      req.userClaims = {
+        email: decoded.email,
+        displayName: decoded.displayName ?? decoded.email.split("@")[0],
+        avatarUrl: decoded.avatarUrl ?? null,
+      };
+    }
     next();
   } catch (error) {
     return res.status(401).json({
