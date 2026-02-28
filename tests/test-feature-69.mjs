@@ -41,7 +41,7 @@ function generateId() {
 async function testNewRelationshipLimits() {
     console.log("\n=== Feature #69: New relationship starts with zero limits ===\n");
 
-    const db = new Database(join(__dirname, 'server', 'data', 'noslimites.db'));
+    const db = new Database(join(__dirname, '..', 'server', 'data', 'noslimites.db'));
     const testEmailA = `test-a-${Date.now()}@example.com`;
     const testEmailB = `test-b-${Date.now()}@example.com`;
 

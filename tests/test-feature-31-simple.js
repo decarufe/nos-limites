@@ -3,13 +3,13 @@
  * Creates users/relationship via DB, then calls the API to update limits
  */
 
-const Database = require("./server/node_modules/better-sqlite3");
+const Database = require("better-sqlite3");
 const path = require("path");
-const { v4: uuidv4 } = require("./server/node_modules/uuid");
-const jwt = require("./server/node_modules/jsonwebtoken");
+const { v4: uuidv4 } = require("uuid");
+const jwt = require("jsonwebtoken");
 // Node.js 18+ has built-in fetch
 
-const dbPath = path.join(__dirname, "server", "data", "noslimites.db");
+const dbPath = path.join(__dirname, "..", "server", "data", "noslimites.db");
 const db = new Database(dbPath);
 const API_URL = "http://localhost:3001/api";
 const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-in-production";

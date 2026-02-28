@@ -1,5 +1,11 @@
 {
+  "scripts": {
+    "test": "node -e \"const {execSync}=require('child_process'),fs=require('fs');fs.readdirSync('tests').filter(f=>f.match(/^test-.*\\.m?js$/)).forEach(f=>{console.log('\\nRunning: '+f);execSync('node tests/'+f,{stdio:'inherit'})})\""
+  },
   "devDependencies": {
-    "prettier": "^3.8.1"
+    "better-sqlite3": "^12.6.2",
+    "jsonwebtoken": "^9.0.3",
+    "prettier": "^3.8.1",
+    "uuid": "^13.0.0"
   }
 }

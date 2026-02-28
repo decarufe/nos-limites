@@ -3,11 +3,11 @@
  * Tests that when one user unchecks a previously common limit, the other user is notified.
  */
 
-const Database = require("./server/node_modules/better-sqlite3");
+const Database = require("better-sqlite3");
 const path = require("path");
-const { v4: uuidv4 } = require("./server/node_modules/uuid");
+const { v4: uuidv4 } = require("uuid");
 
-const dbPath = path.join(__dirname, "server", "data", "noslimites.db");
+const dbPath = path.join(__dirname, "..", "server", "data", "noslimites.db");
 const db = new Database(dbPath);
 
 console.log("🧪 Testing Feature #31: Notification appears when common limit is removed\n");

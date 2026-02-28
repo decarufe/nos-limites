@@ -3,11 +3,11 @@
  * Tests the complete note functionality: add, edit, delete
  */
 
-const Database = require("./server/node_modules/better-sqlite3");
+const Database = require("better-sqlite3");
+const { v4: uuidv4 } = require("uuid");
 const path = require("path");
-const { v4: uuidv4 } = require("./server/node_modules/uuid");
 
-const dbPath = path.join(__dirname, "server", "data", "noslimites.db");
+const dbPath = path.join(__dirname, "..", "server", "data", "noslimites.db");
 const db = new Database(dbPath);
 
 console.log("🧪 Testing Feature #27: User can add a note to a limit\n");

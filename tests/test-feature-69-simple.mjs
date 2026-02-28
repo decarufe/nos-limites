@@ -22,7 +22,7 @@ async function testNewRelationshipLimits() {
     try {
         // Step 1: Verify backend implementation
         console.log("1. Verifying backend implementation...");
-        const relationshipsPath = join(__dirname, 'server', 'src', 'routes', 'relationships.ts');
+        const relationshipsPath = join(__dirname, '..', 'server', 'src', 'routes', 'relationships.ts');
         const relationshipsCode = readFileSync(relationshipsPath, 'utf-8');
 
         // Check GET /relationships/:id/limits endpoint
@@ -42,7 +42,7 @@ async function testNewRelationshipLimits() {
 
         // Check the frontend RelationshipPage.tsx
         console.log("\n2. Verifying frontend implementation...");
-        const relationshipPagePath = join(__dirname, 'client', 'src', 'pages', 'RelationshipPage.tsx');
+        const relationshipPagePath = join(__dirname, '..', 'client', 'src', 'pages', 'RelationshipPage.tsx');
         const relationshipPageCode = readFileSync(relationshipPagePath, 'utf-8');
 
         const fetchesLimits = relationshipPageCode.includes('api.get<UserLimitsResponse>(`/relationships/${id}/limits`)');
