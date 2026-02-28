@@ -11,7 +11,7 @@ const APP_URL = 'https://nos-limites-app.vercel.app/';
 ---
 
 <PageLayout
-  title="Nos limites — Explore your boundaries with confidence"
+  title="Nos limites — Mutual consent in your relationships"
   description={t('hero.subtitle')}
 >
   <Hero
@@ -22,6 +22,31 @@ const APP_URL = 'https://nos-limites-app.vercel.app/';
     secondaryCta={t('hero.cta.secondary')}
     secondaryHref="/en/features"
   />
+
+  <!-- Consent section -->
+  <section class="section section-consent">
+    <div class="container">
+      <h2 class="section-title">{t('consent.title')}</h2>
+      <p class="section-subtitle">{t('consent.subtitle')}</p>
+      <div class="consent-grid">
+        <div class="consent-block">
+          <div class="consent-icon">💬</div>
+          <h3>{t('consent.block1.title')}</h3>
+          <p>{t('consent.block1.text')}</p>
+        </div>
+        <div class="consent-block">
+          <div class="consent-icon">🤝</div>
+          <h3>{t('consent.block2.title')}</h3>
+          <p>{t('consent.block2.text')}</p>
+        </div>
+        <div class="consent-block">
+          <div class="consent-icon">💡</div>
+          <h3>{t('consent.block3.title')}</h3>
+          <p>{t('consent.block3.text')}</p>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <!-- Features highlights -->
   <section class="section">
@@ -85,14 +110,15 @@ const APP_URL = 'https://nos-limites-app.vercel.app/';
   <section class="section">
     <div class="container trust-section">
       <div class="trust-content">
-        <h2>A safe space to explore your relationship</h2>
+        <h2>Mutual consent at the heart of every interaction</h2>
         <p>
-          Nos limites was designed with a fundamental principle: <strong>your vulnerability is always protected</strong>.
-          The matching system encourages you to be honest in your choices, because only mutual limits are revealed.
+          Nos limites was designed with a fundamental principle: <strong>consent must be free, informed, and mutual</strong>.
+          The matching system encourages you to be honest in your choices, because only mutual limits are revealed — your vulnerability is always protected.
         </p>
         <p>
-          Whether for a professional, friendly, or intimate relationship, Nos limites helps you open dialogue
-          without risk of judgment. It's a first step toward more open and healthier communication.
+          In any relationship — professional, friendly, or intimate — respecting each other's boundaries is essential.
+          Nos limites gives you a safe space to express what you accept, without pressure or judgment.
+          It's a first step toward a more open and healthier culture of consent.
         </p>
         <div class="trust-badges">
           <div class="badge">
@@ -121,6 +147,54 @@ const APP_URL = 'https://nos-limites-app.vercel.app/';
 </PageLayout>
 
 <style>
+  .section-consent {
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.06) 0%, rgba(236, 72, 153, 0.04) 100%);
+  }
+
+  .consent-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--spacing-xl);
+    margin-top: var(--spacing-xl);
+  }
+
+  @media (min-width: 768px) {
+    .consent-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  .consent-block {
+    text-align: center;
+    padding: var(--spacing-xl);
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .consent-block:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .consent-icon {
+    font-size: 2.5rem;
+    margin-bottom: var(--spacing-md);
+  }
+
+  .consent-block h3 {
+    font-size: var(--font-size-lg);
+    margin-bottom: var(--spacing-sm);
+    color: var(--color-primary);
+  }
+
+  .consent-block p {
+    font-size: var(--font-size-base);
+    line-height: 1.7;
+    color: var(--color-text-light);
+  }
+
   .features-grid {
     display: grid;
     grid-template-columns: 1fr;

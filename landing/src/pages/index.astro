@@ -11,7 +11,7 @@ const APP_URL = 'https://nos-limites-app.vercel.app/';
 ---
 
 <PageLayout
-  title="Nos limites — Explore tes limites en toute confiance"
+  title="Nos limites — Le consentement mutuel dans tes relations"
   description={t('hero.subtitle')}
 >
   <Hero
@@ -22,6 +22,31 @@ const APP_URL = 'https://nos-limites-app.vercel.app/';
     secondaryCta={t('hero.cta.secondary')}
     secondaryHref="/fonctionnalites"
   />
+
+  <!-- Consent section -->
+  <section class="section section-consent">
+    <div class="container">
+      <h2 class="section-title">{t('consent.title')}</h2>
+      <p class="section-subtitle">{t('consent.subtitle')}</p>
+      <div class="consent-grid">
+        <div class="consent-block">
+          <div class="consent-icon">💬</div>
+          <h3>{t('consent.block1.title')}</h3>
+          <p>{t('consent.block1.text')}</p>
+        </div>
+        <div class="consent-block">
+          <div class="consent-icon">🤝</div>
+          <h3>{t('consent.block2.title')}</h3>
+          <p>{t('consent.block2.text')}</p>
+        </div>
+        <div class="consent-block">
+          <div class="consent-icon">💡</div>
+          <h3>{t('consent.block3.title')}</h3>
+          <p>{t('consent.block3.text')}</p>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <!-- Features highlights -->
   <section class="section">
@@ -85,14 +110,15 @@ const APP_URL = 'https://nos-limites-app.vercel.app/';
   <section class="section">
     <div class="container trust-section">
       <div class="trust-content">
-        <h2>Un espace sûr pour explorer ta relation</h2>
+        <h2>Le consentement mutuel au cœur de chaque interaction</h2>
         <p>
-          Nos limites a été conçu avec un principe fondamental : <strong>ta vulnérabilité est toujours protégée</strong>.
-          Le système de match t'encourage à être honnête dans tes choix, car seules les limites mutuelles sont révélées.
+          Nos limites a été conçu avec un principe fondamental : <strong>le consentement doit être libre, éclairé et réciproque</strong>.
+          Le système de match t'encourage à être honnête dans tes choix, car seules les limites mutuelles sont révélées — ta vulnérabilité est toujours protégée.
         </p>
         <p>
-          Que ce soit pour une relation professionelle, amicale ou intime, Nos limites t'aide à ouvrir le dialogue
-          sans risque de jugement. C'est un premier pas vers une communication plus ouverte et plus saine.
+          Dans toute relation — professionnelle, amicale ou intime — le respect des limites de l'autre est essentiel.
+          Nos limites t'offre un espace sûr pour exprimer ce que tu acceptes, sans pression ni jugement.
+          C'est un premier pas vers une culture du consentement plus ouverte et plus saine.
         </p>
         <div class="trust-badges">
           <div class="badge">
@@ -121,6 +147,54 @@ const APP_URL = 'https://nos-limites-app.vercel.app/';
 </PageLayout>
 
 <style>
+  .section-consent {
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.06) 0%, rgba(236, 72, 153, 0.04) 100%);
+  }
+
+  .consent-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--spacing-xl);
+    margin-top: var(--spacing-xl);
+  }
+
+  @media (min-width: 768px) {
+    .consent-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  .consent-block {
+    text-align: center;
+    padding: var(--spacing-xl);
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .consent-block:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .consent-icon {
+    font-size: 2.5rem;
+    margin-bottom: var(--spacing-md);
+  }
+
+  .consent-block h3 {
+    font-size: var(--font-size-lg);
+    margin-bottom: var(--spacing-sm);
+    color: var(--color-primary);
+  }
+
+  .consent-block p {
+    font-size: var(--font-size-base);
+    line-height: 1.7;
+    color: var(--color-text-light);
+  }
+
   .features-grid {
     display: grid;
     grid-template-columns: 1fr;
