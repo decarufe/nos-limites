@@ -5,6 +5,11 @@
         "type": "command",
         "command": "node .github/hooks/format-file.mjs",
         "timeout": 15
+      },
+      {
+        "type": "command",
+        "command": "node .github/hooks/post-edit-test.mjs",
+        "timeout": 60
       }
     ]
   }
