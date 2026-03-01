@@ -44,3 +44,7 @@ tsconfig.tsbuildinfo
 .nexkit/
 # END NexKit
 server/database.db
+
+# Nexkit smart test runner
+.nexkit/.test-cache.json
+.nexkit/.test-runner.log

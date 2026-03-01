@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "test": "node -e \"const {execSync}=require('child_process'),fs=require('fs');fs.readdirSync('tests').filter(f=>f.match(/^test-.*\\.m?js$/)).forEach(f=>{console.log('\\nRunning: '+f);execSync('node tests/'+f,{stdio:'inherit'})})\""
+    "test": "node tests/run-tests.js"
   },
   "devDependencies": {
     "better-sqlite3": "^12.6.2",
