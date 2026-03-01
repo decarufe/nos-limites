@@ -841,6 +841,7 @@ router.get(
           relationshipId,
           commonLimits: commonLimitDetails,
           count: commonLimitDetails.length,
+          myLimitsCount: myLimits.length,
         },
       });
     } catch (error) {
