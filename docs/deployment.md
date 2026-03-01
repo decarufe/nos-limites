@@ -60,7 +60,7 @@ The client reads the API base URL at build time. Set the following in the Vercel
 
 | Variable | Example |
 |----------|---------|
-| `VITE_API_URL` | `https://nos-limites-api.vercel.app` |
+| `VITE_API_URL` | `https://api.nos-limites.com` |
 
 ---
 
@@ -127,7 +127,7 @@ Set these in the **Vercel Dashboard** → Project → **Settings** → **Environ
 |----------|-------------|
 | `GOOGLE_CLIENT_ID` | Google OAuth client ID |
 | `GOOGLE_CLIENT_SECRET` | Google OAuth client secret |
-| `GOOGLE_CALLBACK_URL` | `https://nos-limites-api.vercel.app/api/auth/google/callback` |
+| `GOOGLE_CALLBACK_URL` | `https://api.nos-limites.com/api/auth/google/callback` |
 | `FACEBOOK_APP_ID` | Facebook App ID (stub — not fully implemented) |
 | `FACEBOOK_APP_SECRET` | Facebook App Secret |
 
@@ -186,7 +186,7 @@ Before going live, verify the following:
 - [ ] `EMAIL_PROVIDER=resend` and `RESEND_API_KEY` is valid
 - [ ] `EMAIL_FROM` uses a domain verified in the Resend dashboard
 - [ ] Google OAuth redirect URI in Google Cloud Console matches `GOOGLE_CALLBACK_URL`
-- [ ] Health check returns `200`: `curl https://nos-limites-api.vercel.app/api/health`
+- [ ] Health check returns `200`: `curl https://api.nos-limites.com/api/health`
 
 ---
 
@@ -194,10 +194,10 @@ Before going live, verify the following:
 
 ```bash
 # Health check
-curl https://nos-limites-api.vercel.app/api/health
+curl https://api.nos-limites.com/api/health
 # Expected: {"status":"ok","database":"connected","tables":11,...}
 
 # Auth providers
-curl https://nos-limites-api.vercel.app/api/auth/providers
+curl https://api.nos-limites.com/api/auth/providers
 # Expected: {"providers":["magic_link","google"]}
 ```

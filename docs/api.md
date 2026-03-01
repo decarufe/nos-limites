@@ -5,7 +5,7 @@
 | Environment | Base URL |
 |-------------|----------|
 | Development | `http://localhost:3001` |
-| Production | `https://nos-limites-api.vercel.app` |
+| Production | `https://api.nos-limites.com` |
 
 ## Authentication
 

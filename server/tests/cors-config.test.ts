@@ -11,7 +11,7 @@ type OriginHandler = (
 test("getAllowedOrigins includes production and localhost defaults", () => {
   const origins = getAllowedOrigins(undefined);
 
-  assert.equal(origins.includes("https://nos-limites-app.vercel.app"), true);
+  assert.equal(origins.includes("https://app.nos-limites.com"), true);
   assert.equal(origins.includes("http://localhost:5173"), true);
 });
 

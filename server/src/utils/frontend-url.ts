@@ -1,7 +1,7 @@
 import type { Request } from "express";
 
 const DEFAULT_LOCAL_FRONTEND_URL = "http://localhost:5173";
-const DEFAULT_PRODUCTION_FRONTEND_URL = "https://nos-limites-app.vercel.app";
+const DEFAULT_PRODUCTION_FRONTEND_URL = "https://app.nos-limites.com";
 
 interface ResolveFrontendUrlOptions {
   preferredBaseUrl?: string;

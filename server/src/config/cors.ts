@@ -2,7 +2,7 @@ import type { CorsOptions } from "cors";
 
 const DEFAULT_FRONTEND_ORIGINS = [
   "http://localhost:5173",
-  "https://nos-limites-app.vercel.app",
+  "https://app.nos-limites.com",
 ];
 
 function normalizeOrigin(origin: string): string {

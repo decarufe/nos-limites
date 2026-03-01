@@ -62,7 +62,7 @@ Push your code or trigger a redeploy. The server will automatically:
 ### 4. Verify
 
 ```bash
-curl https://nos-limites-api.vercel.app/api/health
+curl https://api.nos-limites.com/api/health
 # Should return: {"status":"ok","database":"connected","tables":11,...}
 ```
 

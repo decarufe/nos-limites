@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://nos-limites.vercel.app/sitemap-index.xml
+Sitemap: https://nos-limites.com/sitemap-index.xml

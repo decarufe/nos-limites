@@ -24,10 +24,9 @@ export class ApiError extends Error {
   }
 }
 
-
 export const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
-  (import.meta.env.PROD ? "https://nos-limites-api.vercel.app/api" : "/api");
+  (import.meta.env.PROD ? "https://api.nos-limites.com/api" : "/api");
 
 const TOKEN_KEY = "nos_limites_token";
 const DEVICE_ID_KEY = "nos_limites_device_id";
@@ -134,7 +133,11 @@ class ApiService {
 
     if (!response.ok) {
       // On 401 (session expired), try to recover using device token and retry once
-      if (response.status === 401 && !isRetry && !endpoint.includes("/auth/device/refresh")) {
+      if (
+        response.status === 401 &&
+        !isRetry &&
+        !endpoint.includes("/auth/device/refresh")
+      ) {
         const recovered = await this.tryDeviceRecovery();
         if (recovered) {
           // Retry the original request with the new token
@@ -145,7 +148,10 @@ class ApiService {
       const error = await response.json().catch(() => ({
         message: "Une erreur est survenue",
       }));
-      throw new ApiError(error.message || `Erreur HTTP ${response.status}`, response.status);
+      throw new ApiError(
+        error.message || `Erreur HTTP ${response.status}`,
+        response.status,
+      );
     }
 
     return response.json();
@@ -155,11 +161,19 @@ class ApiService {
     return this.request<T>(endpoint, options);
   }
 
-  post<T>(endpoint: string, body?: unknown, options?: { signal?: AbortSignal }): Promise<T> {
+  post<T>(
+    endpoint: string,
+    body?: unknown,
+    options?: { signal?: AbortSignal },
+  ): Promise<T> {
     return this.request<T>(endpoint, { method: "POST", body, ...options });
   }
 
-  put<T>(endpoint: string, body?: unknown, options?: { signal?: AbortSignal }): Promise<T> {
+  put<T>(
+    endpoint: string,
+    body?: unknown,
+    options?: { signal?: AbortSignal },
+  ): Promise<T> {
     return this.request<T>(endpoint, { method: "PUT", body, ...options });
   }
 

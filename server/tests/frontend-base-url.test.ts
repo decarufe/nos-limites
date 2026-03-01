@@ -49,7 +49,7 @@ test("resolveFrontendBaseUrl uses production default instead of localhost in pro
     nodeEnv: "production",
   });
 
-  assert.equal(result, "https://nos-limites-app.vercel.app");
+  assert.equal(result, "https://app.nos-limites.com");
 });
 
 test("resolveFrontendBaseUrl keeps localhost fallback in development", () => {

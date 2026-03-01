@@ -11,16 +11,22 @@
  * Screenshots are saved to public/images/screenshots/
  */
 
-import { chromium } from 'playwright';
-import { mkdirSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { chromium } from "playwright";
+import { mkdirSync } from "fs";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const SCREENSHOTS_DIR = join(__dirname, '..', 'public', 'images', 'screenshots');
+const SCREENSHOTS_DIR = join(
+  __dirname,
+  "..",
+  "public",
+  "images",
+  "screenshots",
+);
 
 // Target the live app or local dev
-const APP_URL = process.env.APP_URL || 'https://nos-limites-app.vercel.app';
+const APP_URL = process.env.APP_URL || "https://app.nos-limites.com";
 
 const VIEWPORT = { width: 390, height: 844 }; // iPhone 14 viewport
 
@@ -28,47 +34,47 @@ interface Screenshot {
   name: string;
   path: string;
   /** Setup function to navigate and prepare the page state */
-  setup: (page: import('playwright').Page) => Promise<void>;
+  setup: (page: import("playwright").Page) => Promise<void>;
 }
 
 const screenshots: Screenshot[] = [
   {
-    name: 'login',
-    path: 'login.png',
+    name: "login",
+    path: "login.png",
     setup: async (page) => {
-      await page.goto(`${APP_URL}/login`, { waitUntil: 'networkidle' });
+      await page.goto(`${APP_URL}/login`, { waitUntil: "networkidle" });
       await page.waitForTimeout(1000);
     },
   },
   {
-    name: 'home',
-    path: 'home.png',
+    name: "home",
+    path: "home.png",
     setup: async (page) => {
-      await page.goto(`${APP_URL}/`, { waitUntil: 'networkidle' });
+      await page.goto(`${APP_URL}/`, { waitUntil: "networkidle" });
       await page.waitForTimeout(1000);
     },
   },
   {
-    name: 'profile',
-    path: 'profile.png',
+    name: "profile",
+    path: "profile.png",
     setup: async (page) => {
-      await page.goto(`${APP_URL}/profile`, { waitUntil: 'networkidle' });
+      await page.goto(`${APP_URL}/profile`, { waitUntil: "networkidle" });
       await page.waitForTimeout(1000);
     },
   },
   {
-    name: 'scan',
-    path: 'scan.png',
+    name: "scan",
+    path: "scan.png",
     setup: async (page) => {
-      await page.goto(`${APP_URL}/scan`, { waitUntil: 'networkidle' });
+      await page.goto(`${APP_URL}/scan`, { waitUntil: "networkidle" });
       await page.waitForTimeout(1000);
     },
   },
   {
-    name: 'notifications',
-    path: 'notifications.png',
+    name: "notifications",
+    path: "notifications.png",
     setup: async (page) => {
-      await page.goto(`${APP_URL}/notifications`, { waitUntil: 'networkidle' });
+      await page.goto(`${APP_URL}/notifications`, { waitUntil: "networkidle" });
       await page.waitForTimeout(1000);
     },
   },
@@ -82,12 +88,14 @@ async function captureScreenshots() {
   const context = await browser.newContext({
     viewport: VIEWPORT,
     deviceScaleFactor: 2, // Retina
-    locale: 'fr-FR',
+    locale: "fr-FR",
   });
 
   const page = await context.newPage();
 
-  console.log(`📸 Capturing ${screenshots.length} screenshots from ${APP_URL}...`);
+  console.log(
+    `📸 Capturing ${screenshots.length} screenshots from ${APP_URL}...`,
+  );
 
   for (const shot of screenshots) {
     try {
@@ -102,7 +110,7 @@ async function captureScreenshots() {
   }
 
   await browser.close();
-  console.log('✅ Done!');
+  console.log("✅ Done!");
 }
 
 captureScreenshots();

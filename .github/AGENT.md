@@ -115,4 +115,4 @@ npm --prefix server run db:seed
 - REST API, all routes prefixed `/api/`.
 - SSE for real-time notifications.
 - The Vite dev server proxies `/api` → `localhost:3001` — no `VITE_API_BASE_URL` needed locally.
-- Production URLs: frontend `https://nos-limites-app.vercel.app`, API `https://nos-limites-api.vercel.app`.
+- Production URLs: frontend `https://app.nos-limites.com`, API `https://api.nos-limites.com`.
