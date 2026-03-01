@@ -46,9 +46,9 @@ npm run dev
 
 ## URLs
 
-- **Frontend:** http://localhost:5173
-- **Backend API:** http://localhost:3001
-- **Health check:** http://localhost:3001/api/health
+- **Frontend:** <http://localhost:5173>
+- **Backend API:** <http://localhost:3001>
+- **Health check:** <http://localhost:3001/api/health>
 
 ## Configuration de l'authentification Google (OAuth)
 
@@ -112,6 +112,80 @@ La réponse doit indiquer `"google": true` :
 ```
 
 Si `google` est `false`, vérifiez que `GOOGLE_CLIENT_ID` et `GOOGLE_CLIENT_SECRET` sont bien définis et non vides.
+
+## Configuration de l'authentification Facebook (OAuth)
+
+L'authentification via Facebook est optionnelle. Si les variables d'environnement ne sont pas renseignées, le bouton "Continuer avec Facebook" n'apparaît pas dans l'interface.
+
+### 1. Créer une application Facebook
+
+1. Rendez-vous sur [Facebook for Developers](https://developers.facebook.com/).
+2. Cliquez sur **Mes applications** puis **Créer une application**.
+3. Choisissez le type **Consommateur** (ou **Aucun** selon votre cas d'usage).
+4. Donnez un nom à votre application (ex. `Nos limites`) et créez-la.
+
+### 2. Ajouter le produit Facebook Login
+
+1. Dans le tableau de bord de votre application, cliquez sur **Ajouter un produit**.
+2. Sélectionnez **Facebook Login** et cliquez sur **Configurer**.
+3. Choisissez la plateforme **Web**.
+4. Renseignez l'URL de votre site (ex. `http://localhost:5173` en développement).
+
+### 3. Configurer les URI de redirection
+
+1. Dans le menu de gauche, allez dans **Facebook Login > Paramètres**.
+2. Dans le champ **URI de redirection OAuth valides**, ajoutez :
+   - En développement : `http://localhost:3001/api/auth/facebook/callback`
+   - En production : `https://<votre-domaine>/api/auth/facebook/callback`
+3. Cliquez sur **Enregistrer les modifications**.
+
+### 4. Récupérer les identifiants
+
+1. Allez dans **Paramètres > Général**.
+2. Notez votre **Identifiant de l'application** (App ID) et votre **Clé secrète** (App Secret).
+
+> **Note :** La clé secrète est masquée par défaut — cliquez sur **Afficher** et confirmez votre mot de passe pour la voir.
+
+### 5. Configurer les variables d'environnement
+
+Ajoutez les variables suivantes dans `server/.env` :
+
+```env
+FACEBOOK_APP_ID=<votre-app-id>
+FACEBOOK_APP_SECRET=<votre-app-secret>
+FACEBOOK_CALLBACK_URL=http://localhost:3001/api/auth/facebook/callback
+```
+
+> En production, remplacez `http://localhost:3001` par l'URL de votre backend déployé.
+
+### 6. Passer l'application en mode Live
+
+Tant que votre application Facebook est en mode **Développement**, seuls les administrateurs et testeurs déclarés peuvent se connecter. Pour permettre à tous les utilisateurs de se connecter :
+
+1. Dans le tableau de bord, basculez le commutateur **Mode développement → Live**.
+2. Assurez-vous d'avoir renseigné une **URL de politique de confidentialité** (obligatoire pour le mode Live).
+
+### 7. Vérifier la configuration
+
+Démarrez le serveur et appelez l'endpoint suivant :
+
+```bash
+curl http://localhost:3001/api/auth/providers
+```
+
+La réponse doit indiquer `"facebook": true` :
+
+```json
+{
+  "providers": {
+    "magic_link": true,
+    "google": true,
+    "facebook": true
+  }
+}
+```
+
+Si `facebook` est `false`, vérifiez que `FACEBOOK_APP_ID` et `FACEBOOK_APP_SECRET` sont bien définis et non vides.
 
 ## Structure du projet
 

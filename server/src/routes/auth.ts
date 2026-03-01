@@ -107,6 +107,31 @@ function isGoogleOAuthConfigured(): boolean {
   );
 }
 
+// Facebook OAuth configuration
+function getFacebookAppId(): string {
+  return process.env.FACEBOOK_APP_ID || "";
+}
+function getFacebookAppSecret(): string {
+  return process.env.FACEBOOK_APP_SECRET || "";
+}
+function getFacebookCallbackUrl(): string {
+  return (
+    process.env.FACEBOOK_CALLBACK_URL ||
+    "http://localhost:3001/api/auth/facebook/callback"
+  );
+}
+
+function isFacebookOAuthConfigured(): boolean {
+  const appId = process.env.FACEBOOK_APP_ID || "";
+  const appSecret = process.env.FACEBOOK_APP_SECRET || "";
+  return !!(
+    appId &&
+    appId.trim() !== "" &&
+    appSecret &&
+    appSecret.trim() !== ""
+  );
+}
+
 /**
  * GET /api/auth/providers
  * Returns which authentication providers are available.
@@ -117,7 +142,7 @@ router.get("/auth/providers", (_req: Request, res: Response) => {
     providers: {
       magic_link: true,
       google: isGoogleOAuthConfigured(),
-      facebook: false, // Not yet implemented
+      facebook: isFacebookOAuthConfigured(),
     },
   });
 });
@@ -146,6 +171,242 @@ router.get("/auth/google", (_req: Request, res: Response) => {
   const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&access_type=offline&prompt=consent&state=${state}`;
 
   return res.redirect(googleAuthUrl);
+});
+
+/**
+ * GET /api/auth/facebook
+ * Initiates Facebook OAuth flow.
+ * Returns 501 if Facebook OAuth is not configured.
+ */
+router.get("/auth/facebook", (_req: Request, res: Response) => {
+  if (!isFacebookOAuthConfigured()) {
+    return res.status(501).json({
+      message:
+        "L'authentification Facebook n'est pas configurée. Veuillez définir FACEBOOK_APP_ID et FACEBOOK_APP_SECRET.",
+      error: "facebook_oauth_not_configured",
+    });
+  }
+
+  const state = generateOAuthState();
+  const appId = getFacebookAppId();
+  const callbackUrl = getFacebookCallbackUrl();
+  const redirectUri = encodeURIComponent(callbackUrl);
+  const scope = encodeURIComponent("email,public_profile");
+  const fbAuthUrl = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${appId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&state=${state}`;
+
+  return res.redirect(fbAuthUrl);
+});
+
+// ============================================================
+// Facebook OAuth Callback
+// ============================================================
+
+/**
+ * GET /api/auth/facebook/callback
+ * Handles the OAuth callback from Facebook.
+ * - Validates the CSRF state parameter
+ * - Exchanges the authorization code for an access token
+ * - Fetches user profile from the Graph API
+ * - Creates or updates the user account and issues a session
+ */
+router.get("/auth/facebook/callback", async (req: Request, res: Response) => {
+  const frontendUrl = resolveFrontendBaseUrl(req);
+
+  try {
+    const { code, state, error: oauthError } = req.query;
+
+    // Handle OAuth errors from Facebook (user denied, etc.)
+    if (oauthError) {
+      console.error(`[Facebook OAuth] Error from Facebook: ${oauthError}`);
+      return res.redirect(`${frontendUrl}/login?error=facebook_denied`);
+    }
+
+    if (!code || typeof code !== "string") {
+      console.error("[Facebook OAuth] Missing authorization code");
+      return res.redirect(`${frontendUrl}/login?error=missing_code`);
+    }
+
+    if (!state || typeof state !== "string") {
+      console.error("[Facebook OAuth] Missing state parameter");
+      return res.redirect(`${frontendUrl}/login?error=missing_state`);
+    }
+
+    // Validate CSRF state
+    if (!validateOAuthState(state)) {
+      console.error("[Facebook OAuth] Invalid or expired state parameter");
+      return res.redirect(`${frontendUrl}/login?error=invalid_state`);
+    }
+
+    // Exchange authorization code for an access token
+    const appId = getFacebookAppId();
+    const appSecret = getFacebookAppSecret();
+    const callbackUrl = getFacebookCallbackUrl();
+
+    const tokenUrl = new URL(
+      "https://graph.facebook.com/v19.0/oauth/access_token",
+    );
+    tokenUrl.searchParams.set("client_id", appId);
+    tokenUrl.searchParams.set("client_secret", appSecret);
+    tokenUrl.searchParams.set("redirect_uri", callbackUrl);
+    tokenUrl.searchParams.set("code", code);
+
+    let accessToken: string;
+    try {
+      const tokenRes = await fetch(tokenUrl.toString());
+      const tokenData = (await tokenRes.json()) as {
+        access_token?: string;
+        error?: { message: string };
+      };
+      if (!tokenRes.ok || !tokenData.access_token) {
+        throw new Error(tokenData.error?.message || "Token exchange failed");
+      }
+      accessToken = tokenData.access_token;
+    } catch (err: any) {
+      console.error(
+        "[Facebook OAuth] Token exchange failed:",
+        err?.message || err,
+      );
+      return res.redirect(`${frontendUrl}/login?error=token_exchange_failed`);
+    }
+
+    // Fetch user profile from Graph API
+    const profileUrl = new URL("https://graph.facebook.com/v19.0/me");
+    profileUrl.searchParams.set("fields", "id,name,email,picture.type(large)");
+    profileUrl.searchParams.set("access_token", accessToken);
+
+    let fbId: string;
+    let fbName: string;
+    let fbEmail: string | null;
+    let fbPicture: string | null;
+    try {
+      const profileRes = await fetch(profileUrl.toString());
+      const profileData = (await profileRes.json()) as {
+        id?: string;
+        name?: string;
+        email?: string;
+        picture?: { data?: { url?: string } };
+        error?: { message: string };
+      };
+      if (!profileRes.ok || !profileData.id) {
+        throw new Error(
+          profileData.error?.message || "Failed to fetch profile",
+        );
+      }
+      fbId = profileData.id;
+      fbName = profileData.name || "Utilisateur Facebook";
+      fbEmail = profileData.email?.toLowerCase().trim() || null;
+      fbPicture = profileData.picture?.data?.url || null;
+    } catch (err: any) {
+      console.error(
+        "[Facebook OAuth] Profile fetch failed:",
+        err?.message || err,
+      );
+      return res.redirect(`${frontendUrl}/login?error=missing_user_info`);
+    }
+
+    console.log(
+      `[Facebook OAuth] Verified user: ${fbEmail || fbId} (id: ${fbId})`,
+    );
+
+    // Find or create user — match on email if available, else on authProviderId
+    let user = fbEmail
+      ? await db.query.users.findFirst({ where: eq(users.email, fbEmail) })
+      : await db.query.users.findFirst({
+          where: eq(users.authProviderId, fbId),
+        });
+
+    let isNewUser = false;
+
+    if (!user) {
+      isNewUser = true;
+      const userId = uuidv4();
+      // Facebook may not provide email — use a placeholder so the NOT NULL constraint is satisfied
+      const email = fbEmail || `fb_${fbId}@facebook.invalid`;
+      await db.insert(users).values({
+        id: userId,
+        email,
+        displayName: fbName,
+        avatarUrl: fbPicture,
+        authProvider: "facebook",
+        authProviderId: fbId,
+      });
+      user = await db.query.users.findFirst({ where: eq(users.id, userId) });
+    } else if (user.authProvider !== "facebook") {
+      await db
+        .update(users)
+        .set({
+          authProvider: "facebook",
+          authProviderId: fbId,
+          avatarUrl: user.avatarUrl || fbPicture,
+          updatedAt: new Date().toISOString(),
+        })
+        .where(eq(users.id, user.id));
+      user = await db.query.users.findFirst({ where: eq(users.id, user.id) });
+    } else {
+      await db
+        .update(users)
+        .set({
+          authProviderId: fbId,
+          avatarUrl: fbPicture || user.avatarUrl,
+          updatedAt: new Date().toISOString(),
+        })
+        .where(eq(users.id, user.id));
+    }
+
+    if (!user) {
+      console.error("[Facebook OAuth] Failed to create/find user");
+      return res.redirect(`${frontendUrl}/login?error=user_creation_failed`);
+    }
+
+    // Create JWT session
+    const jwtToken = jwt.sign(
+      {
+        userId: user.id,
+        email: user.email,
+        displayName: user.displayName,
+        avatarUrl: user.avatarUrl ?? null,
+      },
+      JWT_SECRET,
+      { expiresIn: "30d" },
+    );
+
+    const sessionId = uuidv4();
+    const sessionExpiresAt = new Date(
+      Date.now() + 30 * 24 * 60 * 60 * 1000,
+    ).toISOString();
+
+    await db.insert(sessions).values({
+      id: sessionId,
+      userId: user.id,
+      token: jwtToken,
+      expiresAt: sessionExpiresAt,
+    });
+
+    const device = await createDeviceToken(
+      user.id,
+      req.headers["user-agent"]?.substring(0, 120) || "Facebook OAuth",
+    );
+
+    const authData = encodeURIComponent(
+      JSON.stringify({
+        token: jwtToken,
+        user: {
+          id: user.id,
+          email: user.email,
+          displayName: user.displayName,
+          avatarUrl: user.avatarUrl,
+        },
+        isNewUser,
+        deviceId: device.deviceId,
+        deviceToken: device.deviceToken,
+      }),
+    );
+
+    return res.redirect(`${frontendUrl}/auth/oauth-callback?data=${authData}`);
+  } catch (error) {
+    console.error("[Facebook OAuth] Unexpected error in callback:", error);
+    return res.redirect(`${frontendUrl}/login?error=oauth_error`);
+  }
 });
 
 /**

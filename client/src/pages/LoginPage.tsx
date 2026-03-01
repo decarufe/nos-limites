@@ -7,6 +7,7 @@ import styles from "./LoginPage.module.css";
 /** Map OAuth error codes (from query params) to user-friendly French messages */
 const OAUTH_ERROR_MESSAGES: Record<string, string> = {
   google_denied: "Connexion annulée. Vous avez refusé l'accès Google.",
+  facebook_denied: "Connexion annulée. Vous avez refusé l'accès Facebook.",
   missing_code: "Erreur de connexion Google. Code d'autorisation manquant.",
   missing_state: "Erreur de sécurité, veuillez réessayer.",
   invalid_state: "Erreur de sécurité, veuillez réessayer.",
@@ -48,6 +49,7 @@ export default function LoginPage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [devLink, setDevLink] = useState<string | null>(null);
   const [googleAvailable, setGoogleAvailable] = useState(false);
+  const [facebookAvailable, setFacebookAvailable] = useState(false);
   const [oauthError, setOauthError] = useState<string | null>(null);
 
   // Check for OAuth error query parameter on mount
@@ -70,10 +72,12 @@ export default function LoginPage() {
       .get<ProvidersResponse>("/auth/providers")
       .then((data) => {
         setGoogleAvailable(data.providers.google);
+        setFacebookAvailable(data.providers.facebook);
       })
       .catch(() => {
         // If providers endpoint fails, hide social buttons
         setGoogleAvailable(false);
+        setFacebookAvailable(false);
       });
   }, []);
 
@@ -296,7 +300,7 @@ export default function LoginPage() {
               </button>
             </form>
 
-            {googleAvailable && (
+            {(googleAvailable || facebookAvailable) && (
               <>
                 <div className={styles.divider}>
                   <span className={styles.dividerLine} />
@@ -305,16 +309,30 @@ export default function LoginPage() {
                 </div>
 
                 <div className={styles.socialButtons}>
-                  <button
-                    type="button"
-                    className={styles.googleButton}
-                    aria-label="Se connecter avec Google"
-                    onClick={() => {
-                      window.location.href = `${API_BASE_URL}/auth/google`;
-                    }}
-                  >
-                    Continuer avec Google
-                  </button>
+                  {googleAvailable && (
+                    <button
+                      type="button"
+                      className={styles.googleButton}
+                      aria-label="Se connecter avec Google"
+                      onClick={() => {
+                        window.location.href = `${API_BASE_URL}/auth/google`;
+                      }}
+                    >
+                      Continuer avec Google
+                    </button>
+                  )}
+                  {facebookAvailable && (
+                    <button
+                      type="button"
+                      className={styles.facebookButton}
+                      aria-label="Se connecter avec Facebook"
+                      onClick={() => {
+                        window.location.href = `${API_BASE_URL}/auth/facebook`;
+                      }}
+                    >
+                      Continuer avec Facebook
+                    </button>
+                  )}
                 </div>
               </>
             )}
