@@ -905,6 +905,170 @@
   line-height: 1.4;
 }
 
+/* Active categories badges in profile section */
+.activeCategoriesBadges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  margin-top: 6px;
+}
+
+.activeCategoryBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text, #1c1917);
+  background: var(--color-bg-secondary, #f5f5f4);
+  border: 1px solid var(--color-border, #e7e5e4);
+  border-radius: 16px;
+}
+
+/* Category change request banner */
+.categoryRequestBanner {
+  margin: 8px 0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.categoryRequestWaiting {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  border-radius: 12px;
+}
+
+.categoryRequestIcon {
+  flex-shrink: 0;
+  color: #d97706;
+  margin-top: 2px;
+}
+
+.categoryRequestIncoming {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 16px;
+  background: rgba(99, 102, 241, 0.06);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  border-radius: 12px;
+}
+
+.categoryRequestInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.categoryRequestTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text, #1c1917);
+  margin: 0;
+}
+
+.categoryRequestText {
+  font-size: 13px;
+  color: var(--color-text-secondary, #78716c);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.categoryRequestProposed {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 6px;
+}
+
+.categoryRequestActions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.categoryRequestAcceptButton {
+  padding: 8px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  background: var(--color-primary, #6366f1);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.categoryRequestAcceptButton:hover:not(:disabled) {
+  background: #4f46e5;
+}
+
+.categoryRequestAcceptButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.categoryRequestDeclineButton {
+  padding: 8px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text, #1c1917);
+  background: var(--color-bg-secondary, #f5f5f4);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.categoryRequestDeclineButton:hover:not(:disabled) {
+  background: var(--color-border, #e7e5e4);
+}
+
+.categoryRequestDeclineButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Category check list in modal */
+.categoryCheckList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.categoryCheckItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.categoryCheckItem:hover {
+  background: var(--color-bg-secondary, #f5f5f4);
+}
+
+.categoryCheckIcon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.categoryCheckName {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--color-text, #1c1917);
+}
+
 /* Mobile optimizations for small screens (375px and below) */
 @media (max-width: 400px) {
   /* Ensure container doesn't overflow */

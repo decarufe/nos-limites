@@ -153,6 +153,28 @@ export const devices = sqliteTable("devices", {
   revoked: integer("revoked", { mode: "boolean" }).default(false),
 });
 
+// Relationship category change requests table
+export const relationshipCategoryRequests = sqliteTable(
+  "relationship_category_requests",
+  {
+    id: text("id").primaryKey(),
+    relationshipId: text("relationship_id")
+      .notNull()
+      .references(() => relationships.id, { onDelete: "cascade" }),
+    requesterId: text("requester_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    proposedCategories: text("proposed_categories").notNull(), // JSON array of category names
+    status: text("status").notNull().default("pending"), // 'pending', 'accepted', 'declined'
+    createdAt: text("created_at")
+      .notNull()
+      .$defaultFn(() => new Date().toISOString()),
+    updatedAt: text("updated_at")
+      .notNull()
+      .$defaultFn(() => new Date().toISOString()),
+  },
+);
+
 // Blocked users table
 export const blockedUsers = sqliteTable("blocked_users", {
   id: text("id").primaryKey(),
