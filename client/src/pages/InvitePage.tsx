@@ -9,6 +9,7 @@ interface InviteDetails {
   inviterAvatarUrl: string | null;
   status: string;
   createdAt: string;
+  activeCategories: string[] | null;
 }
 
 interface InviteResponse {
@@ -24,6 +25,16 @@ interface AcceptResponse {
   };
   message: string;
 }
+
+const CATEGORY_ICONS: Record<string, string> = {
+  "Contact professionnel": "🤝",
+  "Contact amical": "😊",
+  "Flirt et séduction": "💬",
+  "Contact rapproché": "🤗",
+  "Intimité": "💕",
+};
+
+const DEFAULT_CATEGORY_ICON = "📌";
 
 export default function InvitePage() {
   const { token } = useParams<{ token: string }>();
@@ -135,6 +146,21 @@ export default function InvitePage() {
           <p className={styles.text}>
             vous invite à définir vos limites mutuelles.
           </p>
+          {invite.activeCategories && invite.activeCategories.length > 0 && (
+            <div className={styles.categoriesSection}>
+              <p className={styles.categoriesTitle}>
+                Sections activées pour cette relation :
+              </p>
+              <div className={styles.categoriesList}>
+                {invite.activeCategories.map((cat) => (
+                  <span key={cat} className={styles.categoryBadge}>
+                    <span>{CATEGORY_ICONS[cat] ?? DEFAULT_CATEGORY_ICON}</span>
+                    <span>{cat}</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
           <div className={styles.actions}>
             <button
               className={styles.acceptButton}

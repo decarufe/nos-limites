@@ -140,11 +140,25 @@ router.post(
       const invitationToken = uuidv4();
       const relationshipId = uuidv4();
 
+      // Validate activeCategories if provided
+      const { activeCategories } = req.body as { activeCategories?: string[] };
+      let activeCategoriesJson: string | null = null;
+      if (Array.isArray(activeCategories) && activeCategories.length > 0) {
+        const valid = activeCategories.every((c) => typeof c === "string");
+        if (!valid) {
+          return res.status(400).json({
+            message: "Format de catégories invalide.",
+          });
+        }
+        activeCategoriesJson = JSON.stringify(activeCategories);
+      }
+
       await db.insert(relationships).values({
         id: relationshipId,
         inviterId: userId,
         invitationToken,
         status: "pending",
+        activeCategories: activeCategoriesJson,
       });
 
       return res.status(201).json({
@@ -237,6 +251,15 @@ router.get(
           inviterAvatarUrl: inviter?.avatarUrl || null,
           status: relationship.status,
           createdAt: relationship.createdAt,
+          activeCategories: relationship.activeCategories
+            ? (() => {
+                try {
+                  return JSON.parse(relationship.activeCategories);
+                } catch {
+                  return null;
+                }
+              })()
+            : null,
         },
       });
     } catch (error) {

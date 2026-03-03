@@ -52,6 +52,7 @@ export const relationships = sqliteTable("relationships", {
   }),
   invitationToken: text("invitation_token").unique().notNull(),
   status: text("status").notNull().default("pending"), // 'pending', 'accepted', 'declined', 'blocked'
+  activeCategories: text("active_categories"), // JSON array of enabled category names
   createdAt: text("created_at")
     .notNull()
     .$defaultFn(() => new Date().toISOString()),

@@ -202,3 +202,35 @@
   margin: 0;
   font-style: italic;
 }
+
+/* Active categories display on invite page */
+.categoriesSection {
+  width: 100%;
+  max-width: 320px;
+  background: rgba(124, 58, 237, 0.04);
+  border: 1px solid rgba(124, 58, 237, 0.2);
+  border-radius: 12px;
+  padding: 12px 16px;
+  text-align: left;
+}
+
+.categoriesTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text, #1c1917);
+  margin: 0 0 10px;
+}
+
+.categoriesList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.categoryBadge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--color-text, #1c1917);
+}
