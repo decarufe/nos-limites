@@ -261,3 +261,76 @@
 .copyButton:active {
   transform: scale(0.98);
 }
+
+/* Category configuration step */
+.configuringContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--spacing-md) 0;
+  width: 100%;
+}
+
+.configuringTitle {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: var(--spacing-sm);
+  text-align: center;
+}
+
+.configuringText {
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  opacity: 0.6;
+  max-width: 320px;
+  line-height: 1.5;
+  margin-bottom: var(--spacing-lg);
+  text-align: center;
+}
+
+.categoriesList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  width: 100%;
+  max-width: 320px;
+  margin-bottom: var(--spacing-lg);
+}
+
+.categoryItem {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.categoryItem:has(.categoryCheckbox:checked) {
+  border-color: var(--color-primary);
+  background: rgba(124, 58, 237, 0.05);
+}
+
+.categoryCheckbox {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.categoryIcon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.categoryLabel {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text);
+  line-height: 1.3;
+}

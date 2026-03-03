@@ -44,6 +44,7 @@ export async function migrate() {
       invitee_id TEXT REFERENCES users(id) ON DELETE CASCADE,
       invitation_token TEXT UNIQUE NOT NULL,
       status TEXT NOT NULL DEFAULT 'pending',
+      active_categories TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     )`,
@@ -138,6 +139,17 @@ export async function migrate() {
     ],
     "write",
   );
+
+  // Add active_categories column to relationships table if it doesn't exist
+  // (migration for existing databases)
+  try {
+    await client.execute(
+      "ALTER TABLE relationships ADD COLUMN active_categories TEXT",
+    );
+    console.log("Added active_categories column to relationships table.");
+  } catch {
+    // Column already exists — safe to ignore
+  }
 
   console.log("Database migrations completed successfully.");
 }

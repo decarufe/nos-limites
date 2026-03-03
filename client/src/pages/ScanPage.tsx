@@ -15,15 +15,31 @@ interface InviteResponse {
   message: string;
 }
 
+const RELATIONSHIP_CATEGORIES = [
+  { id: "Contact professionnel", label: "Contact professionnel", icon: "🤝" },
+  { id: "Contact amical", label: "Contact amical", icon: "😊" },
+  { id: "Flirt et séduction", label: "Flirt et séduction", icon: "💬" },
+  { id: "Contact rapproché", label: "Contact rapproché", icon: "🤗" },
+  { id: "Intimité", label: "Intimité", icon: "💕" },
+];
+
+const DEFAULT_SELECTED_CATEGORIES = [
+  "Contact professionnel",
+  "Contact amical",
+];
+
 export default function ScanPage() {
   const { isAuthenticated, isLoading } = useAuth();
   const [inviteUrl, setInviteUrl] = useState<string | null>(null);
   const [inviteToken, setInviteToken] = useState<string | null>(null);
   const [status, setStatus] = useState<
-    "idle" | "generating" | "generated" | "error"
+    "idle" | "configuring" | "generating" | "generated" | "error"
   >("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const [copied, setCopied] = useState(false);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(
+    DEFAULT_SELECTED_CATEGORIES
+  );
 
   if (isLoading) {
     return (
@@ -47,7 +63,8 @@ export default function ScanPage() {
 
     try {
       const response = await api.post<InviteResponse>(
-        "/relationships/invite"
+        "/relationships/invite",
+        { activeCategories: selectedCategories }
       );
 
       setInviteUrl(response.data.inviteUrl);
@@ -61,6 +78,14 @@ export default function ScanPage() {
           : "Erreur lors de la creation de l'invitation."
       );
     }
+  };
+
+  const handleToggleCategory = (categoryId: string) => {
+    setSelectedCategories((prev) =>
+      prev.includes(categoryId)
+        ? prev.filter((c) => c !== categoryId)
+        : [...prev, categoryId]
+    );
   };
 
   const handleCopyLink = async () => {
@@ -125,9 +150,46 @@ export default function ScanPage() {
           </p>
           <button
             className={styles.primaryButton}
-            onClick={handleGenerateInvitation}
+            onClick={() => setStatus("configuring")}
           >
             Generer une invitation
+          </button>
+        </div>
+      )}
+
+      {status === "configuring" && (
+        <div className={styles.configuringContent}>
+          <h2 className={styles.configuringTitle}>Profil de relation</h2>
+          <p className={styles.configuringText}>
+            Sélectionnez les sections que vous souhaitez activer pour cette relation.
+            Ces choix seront visibles par la personne que vous invitez.
+          </p>
+          <div className={styles.categoriesList}>
+            {RELATIONSHIP_CATEGORIES.map((cat) => (
+              <label key={cat.id} className={styles.categoryItem}>
+                <input
+                  type="checkbox"
+                  className={styles.categoryCheckbox}
+                  checked={selectedCategories.includes(cat.id)}
+                  onChange={() => handleToggleCategory(cat.id)}
+                />
+                <span className={styles.categoryIcon}>{cat.icon}</span>
+                <span className={styles.categoryLabel}>{cat.label}</span>
+              </label>
+            ))}
+          </div>
+          <button
+            className={styles.primaryButton}
+            onClick={handleGenerateInvitation}
+            disabled={selectedCategories.length === 0}
+          >
+            Créer l'invitation
+          </button>
+          <button
+            className={styles.secondaryButton}
+            onClick={() => setStatus("idle")}
+          >
+            Annuler
           </button>
         </div>
       )}
