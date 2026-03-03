@@ -13,6 +13,7 @@ import NotificationsPage from "./pages/NotificationsPage";
 import ProfilePage from "./pages/ProfilePage";
 import InvitePage from "./pages/InvitePage";
 import RelationshipPage from "./pages/RelationshipPage";
+import AboutPage from "./pages/AboutPage";
 
 function App() {
   return (
@@ -76,6 +77,7 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              <Route path="/about" element={<AboutPage />} />
             </Route>
 
             {/* Default redirect */}

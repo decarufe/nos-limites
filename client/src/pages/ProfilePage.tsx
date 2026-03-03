@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../services/api";
 import styles from "./ProfilePage.module.css";
@@ -346,6 +346,26 @@ export default function ProfilePage() {
               </ul>
             )}
           </div>
+
+          {/* About link */}
+          <Link to="/about" className={styles.aboutLink}>
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="16" x2="12" y2="12" />
+              <line x1="12" y1="8" x2="12.01" y2="8" />
+            </svg>
+            À propos
+          </Link>
 
           {/* Logout button */}
           <button
