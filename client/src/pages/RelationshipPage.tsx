@@ -86,6 +86,7 @@ interface CommonLimitsResponse {
     commonLimits: CommonLimit[];
     count: number;
     myLimitsCount: number;
+    myUnmatchedLimits: CommonLimit[];
   };
 }
 
@@ -125,6 +126,7 @@ export default function RelationshipPage() {
   // Common limits
   const [commonLimits, setCommonLimits] = useState<CommonLimit[]>([]);
   const [myLimitsCount, setMyLimitsCount] = useState(0);
+  const [myUnmatchedLimits, setMyUnmatchedLimits] = useState<CommonLimit[]>([]);
   const [commonLoading, setCommonLoading] = useState(false);
 
   // Delete relationship
@@ -203,6 +205,7 @@ export default function RelationshipPage() {
       );
       setCommonLimits(res.data.commonLimits);
       setMyLimitsCount(res.data.myLimitsCount ?? 0);
+      setMyUnmatchedLimits(res.data.myUnmatchedLimits ?? []);
     } catch {
       // Silently fail
     } finally {
@@ -975,6 +978,51 @@ export default function RelationshipPage() {
                       )}
                     </div>
                   ))}
+                </div>
+              )}
+
+              {/* My unmatched limits — limits I selected that my partner hasn't matched yet */}
+              {myUnmatchedLimits.length > 0 && (
+                <div className={styles.unmatchedSection}>
+                  <p className={styles.unmatchedTitle}>
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className={styles.unmatchedTitleIcon}
+                    >
+                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                    </svg>
+                    Mes limites à respecter ({myUnmatchedLimits.length})
+                  </p>
+                  <p className={styles.unmatchedHint}>
+                    Ces limites que vous avez choisies ne sont pas encore en commun avec {relationship.partnerName || "votre partenaire"}. Ce sont des limites que vous souhaitez que votre partenaire respecte.
+                  </p>
+                  <div className={styles.unmatchedList}>
+                    {myUnmatchedLimits.map((limit) => (
+                      <div key={limit.id} className={styles.unmatchedItem}>
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className={styles.unmatchedItemIcon}
+                        >
+                          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                        </svg>
+                        <span className={styles.unmatchedName}>{limit.name}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </>

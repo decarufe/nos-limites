@@ -584,6 +584,62 @@
   line-height: 1.5;
 }
 
+/* My unmatched limits section */
+.unmatchedSection {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border, #e7e5e4);
+}
+
+.unmatchedTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text, #1c1917);
+  margin: 0 0 6px;
+}
+
+.unmatchedTitleIcon {
+  flex-shrink: 0;
+  color: #e11d48;
+}
+
+.unmatchedHint {
+  font-size: 13px;
+  color: var(--color-text-secondary, #78716c);
+  line-height: 1.5;
+  margin: 0 0 12px;
+}
+
+.unmatchedList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.unmatchedItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: rgba(225, 29, 72, 0.04);
+  border: 1px solid rgba(225, 29, 72, 0.15);
+  border-radius: 10px;
+}
+
+.unmatchedItemIcon {
+  flex-shrink: 0;
+  color: #e11d48;
+}
+
+.unmatchedName {
+  font-size: 15px;
+  color: var(--color-text, #1c1917);
+  font-weight: 500;
+}
+
 /* Delete modal */
 .modalOverlay {
   position: fixed;

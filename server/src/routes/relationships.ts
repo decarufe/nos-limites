@@ -835,6 +835,19 @@ router.get(
         }));
       }
 
+      // Get limits I selected but that are NOT matched by my partner
+      const commonLimitIdSet = new Set(commonLimitIds);
+      const myUnmatchedLimitIds = myLimits
+        .map((l) => l.limitId)
+        .filter((limitId) => !commonLimitIdSet.has(limitId));
+
+      let myUnmatchedLimitDetails: any[] = [];
+      if (myUnmatchedLimitIds.length > 0) {
+        myUnmatchedLimitDetails = await db.query.limits.findMany({
+          where: inArray(limits.id, myUnmatchedLimitIds),
+        });
+      }
+
       return res.json({
         success: true,
         data: {
@@ -842,6 +855,7 @@ router.get(
           commonLimits: commonLimitDetails,
           count: commonLimitDetails.length,
           myLimitsCount: myLimits.length,
+          myUnmatchedLimits: myUnmatchedLimitDetails,
         },
       });
     } catch (error) {
