@@ -7,6 +7,7 @@ import {
   users,
   notifications,
   blockedUsers,
+  relationshipCategoryRequests,
 } from "../db/schema";
 import { eq, or, and, inArray } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
@@ -14,6 +15,14 @@ import { requireAuth, AuthRequest } from "../middleware/auth";
 import { resolveFrontendBaseUrl } from "../utils/frontend-url";
 
 const router = Router();
+
+const VALID_CATEGORY_NAMES = [
+  "Contact professionnel",
+  "Contact amical",
+  "Flirt et séduction",
+  "Contact rapproché",
+  "Intimité",
+];
 
 /**
  * GET /api/relationships
@@ -100,16 +109,56 @@ router.get(
         commonLimitsCounts.set(rel.id, commonCount);
       }
 
+      // Batch fetch pending category requests for all relationships
+      const pendingRequests = relationshipIds.length > 0
+        ? await db.query.relationshipCategoryRequests.findMany({
+            where: and(
+              inArray(relationshipCategoryRequests.relationshipId, relationshipIds),
+              eq(relationshipCategoryRequests.status, "pending"),
+            ),
+          })
+        : [];
+
+      // Map: relationshipId -> pending request
+      const pendingRequestMap = new Map(
+        pendingRequests.map((r) => [r.relationshipId, r])
+      );
+
       // Enrich relationships with partner data and common limits count
       const enriched = userRelationships.map((rel) => {
         const partnerId =
           rel.inviterId === userId ? rel.inviteeId : rel.inviterId;
         const partnerData = partnerId ? partnerMap.get(partnerId) : null;
+        const pendingRequest = pendingRequestMap.get(rel.id) || null;
+        let parsedActiveCategories: string[] | null = null;
+        if (rel.activeCategories) {
+          try {
+            parsedActiveCategories = JSON.parse(rel.activeCategories);
+          } catch {
+            parsedActiveCategories = null;
+          }
+        }
         return {
           ...rel,
           partnerName: partnerData?.name || null,
           partnerAvatarUrl: partnerData?.avatarUrl || null,
           commonLimitsCount: commonLimitsCounts.get(rel.id) || 0,
+          activeCategories: parsedActiveCategories,
+          pendingCategoryRequest: pendingRequest
+            ? {
+                id: pendingRequest.id,
+                requesterId: pendingRequest.requesterId,
+                proposedCategories: (() => {
+                  try {
+                    return JSON.parse(pendingRequest.proposedCategories);
+                  } catch {
+                    return [];
+                  }
+                })(),
+                status: pendingRequest.status,
+                createdAt: pendingRequest.createdAt,
+              }
+            : null,
         };
       });
 
@@ -1249,4 +1298,345 @@ router.post(
   },
 );
 
+/**
+ * POST /api/relationships/:id/category-request
+ * Request a change to the active categories of a relationship.
+ * The other party must accept or decline.
+ * Body: { proposedCategories: string[] } — array of category names to activate.
+ *   Pass an empty array to remove all category restrictions (activate all).
+ */
+router.post(
+  "/relationships/:id/category-request",
+  requireAuth,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const userId = req.userId!;
+      const relationshipId = req.params.id;
+
+      // Verify the user is part of this accepted relationship
+      const relationship = await db.query.relationships.findFirst({
+        where: and(
+          eq(relationships.id, relationshipId),
+          or(
+            eq(relationships.inviterId, userId),
+            eq(relationships.inviteeId, userId),
+          ),
+          eq(relationships.status, "accepted"),
+        ),
+      });
+
+      if (!relationship) {
+        return res.status(404).json({
+          message: "Relation non trouvée.",
+        });
+      }
+
+      const { proposedCategories } = req.body as {
+        proposedCategories?: unknown;
+      };
+
+      // Validate proposedCategories
+      if (!Array.isArray(proposedCategories)) {
+        return res.status(400).json({
+          message: "Format invalide. 'proposedCategories' doit être un tableau.",
+        });
+      }
+
+      if (
+        proposedCategories.length > 0 &&
+        !proposedCategories.every(
+          (c) =>
+            typeof c === "string" && VALID_CATEGORY_NAMES.includes(c),
+        )
+      ) {
+        return res.status(400).json({
+          message: "Certaines catégories proposées sont invalides.",
+        });
+      }
+
+      // Check there's no already pending request for this relationship
+      const existingPending =
+        await db.query.relationshipCategoryRequests.findFirst({
+          where: and(
+            eq(
+              relationshipCategoryRequests.relationshipId,
+              relationshipId,
+            ),
+            eq(relationshipCategoryRequests.status, "pending"),
+          ),
+        });
+
+      if (existingPending) {
+        return res.status(409).json({
+          message:
+            "Une demande de modification est déjà en attente pour cette relation.",
+        });
+      }
+
+      const otherUserId =
+        relationship.inviterId === userId
+          ? relationship.inviteeId
+          : relationship.inviterId;
+
+      if (!otherUserId) {
+        return res.status(400).json({
+          message: "Impossible d'envoyer une demande sans partenaire.",
+        });
+      }
+
+      const requestId = uuidv4();
+      await db.insert(relationshipCategoryRequests).values({
+        id: requestId,
+        relationshipId,
+        requesterId: userId,
+        proposedCategories: JSON.stringify(proposedCategories),
+        status: "pending",
+      });
+
+      // Get requester info for the notification message
+      const requester = await db.query.users.findFirst({
+        where: eq(users.id, userId),
+      });
+
+      // Notify the other user
+      await db.insert(notifications).values({
+        id: uuidv4(),
+        userId: otherUserId,
+        type: "category_change_request",
+        title: "Demande de modification de relation",
+        message: `${requester?.displayName || "Un utilisateur"} souhaite modifier les sections actives de votre relation.`,
+        relatedUserId: userId,
+        relatedRelationshipId: relationshipId,
+        isRead: false,
+      });
+
+      return res.status(201).json({
+        success: true,
+        data: { id: requestId },
+        message: "Demande de modification envoyée.",
+      });
+    } catch (error) {
+      console.error("Error creating category request:", error);
+      return res.status(500).json({
+        message: "Erreur lors de la création de la demande.",
+      });
+    }
+  },
+);
+
+/**
+ * POST /api/relationships/:id/category-request/:requestId/accept
+ * Accept a pending category change request.
+ * Only the user who is NOT the requester may accept.
+ */
+router.post(
+  "/relationships/:id/category-request/:requestId/accept",
+  requireAuth,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const userId = req.userId!;
+      const relationshipId = req.params.id;
+      const requestId = req.params.requestId;
+
+      // Verify the user is part of this relationship
+      const relationship = await db.query.relationships.findFirst({
+        where: and(
+          eq(relationships.id, relationshipId),
+          or(
+            eq(relationships.inviterId, userId),
+            eq(relationships.inviteeId, userId),
+          ),
+          eq(relationships.status, "accepted"),
+        ),
+      });
+
+      if (!relationship) {
+        return res.status(404).json({
+          message: "Relation non trouvée.",
+        });
+      }
+
+      // Find the pending request
+      const categoryRequest =
+        await db.query.relationshipCategoryRequests.findFirst({
+          where: and(
+            eq(relationshipCategoryRequests.id, requestId),
+            eq(
+              relationshipCategoryRequests.relationshipId,
+              relationshipId,
+            ),
+            eq(relationshipCategoryRequests.status, "pending"),
+          ),
+        });
+
+      if (!categoryRequest) {
+        return res.status(404).json({
+          message: "Demande non trouvée ou déjà traitée.",
+        });
+      }
+
+      // Only the non-requester can accept
+      if (categoryRequest.requesterId === userId) {
+        return res.status(403).json({
+          message: "Vous ne pouvez pas accepter votre propre demande.",
+        });
+      }
+
+      // Parse proposed categories
+      let proposedCategories: string[];
+      try {
+        proposedCategories = JSON.parse(categoryRequest.proposedCategories);
+      } catch {
+        proposedCategories = [];
+      }
+
+      // Update the relationship's activeCategories
+      const newActiveCategories =
+        proposedCategories.length > 0
+          ? JSON.stringify(proposedCategories)
+          : null;
+
+      await db
+        .update(relationships)
+        .set({
+          activeCategories: newActiveCategories,
+          updatedAt: new Date().toISOString(),
+        })
+        .where(eq(relationships.id, relationshipId));
+
+      // Mark the request as accepted
+      await db
+        .update(relationshipCategoryRequests)
+        .set({
+          status: "accepted",
+          updatedAt: new Date().toISOString(),
+        })
+        .where(eq(relationshipCategoryRequests.id, requestId));
+
+      // Notify the requester
+      const acceptingUser = await db.query.users.findFirst({
+        where: eq(users.id, userId),
+      });
+
+      await db.insert(notifications).values({
+        id: uuidv4(),
+        userId: categoryRequest.requesterId,
+        type: "category_change_accepted",
+        title: "Demande acceptée",
+        message: `${acceptingUser?.displayName || "Un utilisateur"} a accepté votre demande de modification des sections.`,
+        relatedUserId: userId,
+        relatedRelationshipId: relationshipId,
+        isRead: false,
+      });
+
+      return res.json({
+        success: true,
+        message: "Demande acceptée. Les sections ont été mises à jour.",
+      });
+    } catch (error) {
+      console.error("Error accepting category request:", error);
+      return res.status(500).json({
+        message: "Erreur lors de l'acceptation de la demande.",
+      });
+    }
+  },
+);
+
+/**
+ * POST /api/relationships/:id/category-request/:requestId/decline
+ * Decline a pending category change request.
+ * Only the user who is NOT the requester may decline.
+ */
+router.post(
+  "/relationships/:id/category-request/:requestId/decline",
+  requireAuth,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const userId = req.userId!;
+      const relationshipId = req.params.id;
+      const requestId = req.params.requestId;
+
+      // Verify the user is part of this relationship
+      const relationship = await db.query.relationships.findFirst({
+        where: and(
+          eq(relationships.id, relationshipId),
+          or(
+            eq(relationships.inviterId, userId),
+            eq(relationships.inviteeId, userId),
+          ),
+          eq(relationships.status, "accepted"),
+        ),
+      });
+
+      if (!relationship) {
+        return res.status(404).json({
+          message: "Relation non trouvée.",
+        });
+      }
+
+      // Find the pending request
+      const categoryRequest =
+        await db.query.relationshipCategoryRequests.findFirst({
+          where: and(
+            eq(relationshipCategoryRequests.id, requestId),
+            eq(
+              relationshipCategoryRequests.relationshipId,
+              relationshipId,
+            ),
+            eq(relationshipCategoryRequests.status, "pending"),
+          ),
+        });
+
+      if (!categoryRequest) {
+        return res.status(404).json({
+          message: "Demande non trouvée ou déjà traitée.",
+        });
+      }
+
+      // Only the non-requester can decline
+      if (categoryRequest.requesterId === userId) {
+        return res.status(403).json({
+          message: "Vous ne pouvez pas refuser votre propre demande.",
+        });
+      }
+
+      // Mark the request as declined
+      await db
+        .update(relationshipCategoryRequests)
+        .set({
+          status: "declined",
+          updatedAt: new Date().toISOString(),
+        })
+        .where(eq(relationshipCategoryRequests.id, requestId));
+
+      // Notify the requester
+      const decliningUser = await db.query.users.findFirst({
+        where: eq(users.id, userId),
+      });
+
+      await db.insert(notifications).values({
+        id: uuidv4(),
+        userId: categoryRequest.requesterId,
+        type: "category_change_declined",
+        title: "Demande refusée",
+        message: `${decliningUser?.displayName || "Un utilisateur"} a refusé votre demande de modification des sections.`,
+        relatedUserId: userId,
+        relatedRelationshipId: relationshipId,
+        isRead: false,
+      });
+
+      return res.json({
+        success: true,
+        message: "Demande refusée.",
+      });
+    } catch (error) {
+      console.error("Error declining category request:", error);
+      return res.status(500).json({
+        message: "Erreur lors du refus de la demande.",
+      });
+    }
+  },
+);
+
 export default router;
+

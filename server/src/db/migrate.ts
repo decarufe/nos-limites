@@ -117,6 +117,16 @@ export async function migrate() {
       revoked INTEGER DEFAULT 0
     )`,
 
+      `CREATE TABLE IF NOT EXISTS relationship_category_requests (
+      id TEXT PRIMARY KEY,
+      relationship_id TEXT NOT NULL REFERENCES relationships(id) ON DELETE CASCADE,
+      requester_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      proposed_categories TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending',
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )`,
+
       // Indexes
       `CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id)`,
       `CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token)`,
@@ -136,6 +146,8 @@ export async function migrate() {
       `CREATE INDEX IF NOT EXISTS idx_blocked_users_blocked ON blocked_users(blocked_id)`,
       `CREATE INDEX IF NOT EXISTS idx_devices_user_id ON devices(user_id)`,
       `CREATE INDEX IF NOT EXISTS idx_devices_refresh_token_hash ON devices(refresh_token_hash)`,
+      `CREATE INDEX IF NOT EXISTS idx_category_requests_relationship ON relationship_category_requests(relationship_id)`,
+      `CREATE INDEX IF NOT EXISTS idx_category_requests_requester ON relationship_category_requests(requester_id)`,
     ],
     "write",
   );
