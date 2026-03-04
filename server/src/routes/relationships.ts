@@ -909,10 +909,18 @@ router.get(
             .map((ul) => [ul.limitId, ul.note])
         );
 
-        // Enrich common limits with notes from the current user
+        // Create a map of partner's notes for these limits
+        const partnerNotesMap = new Map(
+          otherLimits
+            .filter((ul) => ul.note)
+            .map((ul) => [ul.limitId, ul.note])
+        );
+
+        // Enrich common limits with notes from both users
         commonLimitDetails = commonLimitDetails.map((limit) => ({
           ...limit,
           note: myNotesMap.get(limit.id) || null,
+          partnerNote: partnerNotesMap.get(limit.id) || null,
         }));
       }
 
