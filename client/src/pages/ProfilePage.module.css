@@ -462,3 +462,163 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* Notification settings section */
+.notifSection {
+  width: 100%;
+  text-align: left;
+  margin-bottom: var(--spacing-md);
+}
+
+.notifSectionTitle {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: var(--spacing-sm);
+}
+
+.notifToggleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--color-border, #e5e5e5);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface, #fff);
+  margin-bottom: var(--spacing-sm);
+}
+
+.notifToggleLabel {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.toggle {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+
+.toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggleSlider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: #ccc;
+  border-radius: 24px;
+  transition: background-color 0.2s ease;
+}
+
+.toggleSlider::before {
+  content: "";
+  position: absolute;
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+}
+
+.toggle input:checked + .toggleSlider {
+  background-color: var(--color-primary);
+}
+
+.toggle input:checked + .toggleSlider::before {
+  transform: translateX(20px);
+}
+
+.notifFields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.notifField {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.notifFieldLabel {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text);
+  opacity: 0.8;
+}
+
+.notifSelect,
+.notifInput {
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--color-border, #e5e5e5);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  background-color: var(--color-surface, #fff);
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.notifSelect:focus,
+.notifInput:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+.notifWeekDays {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+}
+
+.dayButton {
+  padding: 6px 10px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border, #e5e5e5);
+  background-color: var(--color-surface, #fff);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  opacity: 0.7;
+}
+
+.dayButton.active {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+  color: white;
+  opacity: 1;
+}
+
+.notifSaveButton {
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: var(--spacing-xs);
+}
+
+.notifSaveButton:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.notifSaveButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

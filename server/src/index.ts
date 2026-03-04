@@ -13,6 +13,7 @@ import profileRouter from "./routes/profile";
 import relationshipsRouter from "./routes/relationships";
 import notificationsRouter from "./routes/notifications";
 import devicesRouter from "./routes/devices";
+import { startNotificationScheduler } from "./services/notificationScheduler";
 
 const initPromise = ensureDatabaseInitialized();
 
@@ -56,6 +57,8 @@ if (!process.env.VERCEL) {
     console.log(
       `Google OAuth: ${process.env.GOOGLE_CLIENT_ID ? "configured" : "not configured"}`,
     );
+    await initPromise;
+    startNotificationScheduler();
   });
 }
 
