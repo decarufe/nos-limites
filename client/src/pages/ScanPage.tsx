@@ -74,6 +74,7 @@ export default function ScanPage() {
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [checkedLimits, setCheckedLimits] = useState<Set<string>>(new Set());
+  const [checkedSections, setCheckedSections] = useState<Set<string>>(new Set());
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const [categoriesLoading, setCategoriesLoading] = useState(false);
   const [categoriesError, setCategoriesError] = useState(false);
@@ -124,6 +125,18 @@ export default function ScanPage() {
     });
   };
 
+  const handleToggleSection = (categoryId: string) => {
+    setCheckedSections((prev) => {
+      const next = new Set(prev);
+      if (next.has(categoryId)) {
+        next.delete(categoryId);
+      } else {
+        next.add(categoryId);
+      }
+      return next;
+    });
+  };
+
   const handleToggleCategoryAll = (category: Category, checkAll: boolean) => {
     setCheckedLimits((prev) => {
       const next = new Set(prev);
@@ -138,6 +151,15 @@ export default function ScanPage() {
       }
       return next;
     });
+    if (checkAll) {
+      setCheckedSections((prev) => new Set([...prev, category.id]));
+    } else {
+      setCheckedSections((prev) => {
+        const next = new Set(prev);
+        next.delete(category.id);
+        return next;
+      });
+    }
   };
 
   const handleToggleExpanded = (categoryId: string) => {
@@ -156,12 +178,13 @@ export default function ScanPage() {
     () =>
       categories
         .filter((cat) =>
+          checkedSections.has(cat.id) ||
           cat.subcategories.some((sub) =>
             sub.limits.some((l) => checkedLimits.has(l.id))
           )
         )
         .map((cat) => cat.name),
-    [categories, checkedLimits]
+    [categories, checkedLimits, checkedSections]
   );
 
   const handleGenerateInvitation = async () => {
@@ -220,6 +243,7 @@ export default function ScanPage() {
     setErrorMessage("");
     setCopied(false);
     setCheckedLimits(new Set());
+    setCheckedSections(new Set());
     setExpandedCategories(new Set());
     setCategoriesError(false);
   };
@@ -299,31 +323,41 @@ export default function ScanPage() {
                 const totalCount = countLimitsInCategory(category);
                 return (
                   <div key={category.id} className={styles.categoryCard}>
-                    <button
-                      className={styles.categoryHeader}
-                      onClick={() => handleToggleExpanded(category.id)}
-                    >
-                      <span className={styles.categoryIcon}>
-                        {category.icon || "📋"}
-                      </span>
-                      <span className={styles.categoryName}>{category.name}</span>
-                      <span className={styles.categoryCount}>
-                        {checkedCount}/{totalCount}
-                      </span>
-                      <svg
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className={`${styles.chevronIcon} ${isExpanded ? styles.chevronExpanded : ""}`}
+                    <div className={styles.categoryHeader}>
+                      <label className={styles.sectionCheckboxLabel}>
+                        <input
+                          type="checkbox"
+                          className={styles.checkbox}
+                          checked={checkedSections.has(category.id)}
+                          onChange={() => handleToggleSection(category.id)}
+                        />
+                      </label>
+                      <button
+                        className={styles.categoryHeaderButton}
+                        onClick={() => handleToggleExpanded(category.id)}
                       >
-                        <polyline points="6 9 12 15 18 9" />
-                      </svg>
-                    </button>
+                        <span className={styles.categoryIcon}>
+                          {category.icon || "📋"}
+                        </span>
+                        <span className={styles.categoryName}>{category.name}</span>
+                        <span className={styles.categoryCount}>
+                          {checkedCount}/{totalCount}
+                        </span>
+                        <svg
+                          width="20"
+                          height="20"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className={`${styles.chevronIcon} ${isExpanded ? styles.chevronExpanded : ""}`}
+                        >
+                          <polyline points="6 9 12 15 18 9" />
+                        </svg>
+                      </button>
+                    </div>
                     {isExpanded && (
                       <div className={styles.categoryBody}>
                         <div className={styles.categoryActions}>

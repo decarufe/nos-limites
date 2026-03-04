@@ -320,17 +320,35 @@
 .categoryHeader {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 4px;
   width: 100%;
   padding: 14px 16px;
+}
+
+.sectionCheckboxLabel {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+.categoryHeaderButton {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
   background: none;
   border: none;
   cursor: pointer;
   text-align: left;
   font-family: inherit;
+  min-width: 0;
+  border-radius: 8px;
+  padding: 2px 4px;
 }
 
-.categoryHeader:hover {
+.categoryHeaderButton:hover {
   background: var(--color-bg-secondary, #f5f5f4);
 }
 
