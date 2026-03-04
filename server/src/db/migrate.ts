@@ -127,6 +127,19 @@ export async function migrate() {
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     )`,
 
+      `CREATE TABLE IF NOT EXISTS notification_email_settings (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      enabled INTEGER DEFAULT 1,
+      frequency TEXT NOT NULL DEFAULT 'daily',
+      delay_hours INTEGER DEFAULT 1,
+      daily_time TEXT DEFAULT '08:00',
+      weekly_days TEXT,
+      last_email_sent_at TEXT,
+      updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+      UNIQUE(user_id)
+    )`,
+
       // Indexes
       `CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id)`,
       `CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token)`,
@@ -148,6 +161,7 @@ export async function migrate() {
       `CREATE INDEX IF NOT EXISTS idx_devices_refresh_token_hash ON devices(refresh_token_hash)`,
       `CREATE INDEX IF NOT EXISTS idx_category_requests_relationship ON relationship_category_requests(relationship_id)`,
       `CREATE INDEX IF NOT EXISTS idx_category_requests_requester ON relationship_category_requests(requester_id)`,
+      `CREATE INDEX IF NOT EXISTS idx_notification_email_settings_user ON notification_email_settings(user_id)`,
     ],
     "write",
   );

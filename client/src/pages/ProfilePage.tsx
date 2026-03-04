@@ -24,6 +24,18 @@ interface DeviceInfo {
   revoked: boolean;
 }
 
+type NotificationFrequency = "immediately" | "delayed" | "daily" | "weekly";
+
+interface NotificationSettings {
+  enabled: boolean;
+  frequency: NotificationFrequency;
+  delayHours: number;
+  dailyTime: string;
+  weeklyDays: number[];
+}
+
+const DAY_LABELS = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
+
 export default function ProfilePage() {
   const { user, isAuthenticated, isLoading, logout, updateUser } = useAuth();
   const navigate = useNavigate();
@@ -45,6 +57,19 @@ export default function ProfilePage() {
   const [devicesList, setDevicesList] = useState<DeviceInfo[]>([]);
   const [devicesLoading, setDevicesLoading] = useState(false);
 
+  // Notification settings state
+  const [notifSettings, setNotifSettings] = useState<NotificationSettings>({
+    enabled: true,
+    frequency: "daily",
+    delayHours: 1,
+    dailyTime: "08:00",
+    weeklyDays: [0, 1, 2, 3, 4, 5, 6],
+  });
+  const [notifLoading, setNotifLoading] = useState(false);
+  const [notifSaving, setNotifSaving] = useState(false);
+  const [notifSuccess, setNotifSuccess] = useState<string | null>(null);
+  const [notifError, setNotifError] = useState<string | null>(null);
+
   useEffect(() => {
     if (isAuthenticated) {
       setDevicesLoading(true);
@@ -53,6 +78,13 @@ export default function ProfilePage() {
         .then((data) => setDevicesList(data.devices.filter((d) => !d.revoked)))
         .catch(() => { })
         .finally(() => setDevicesLoading(false));
+
+      setNotifLoading(true);
+      api
+        .get<{ settings: NotificationSettings }>("/profile/notification-settings")
+        .then((data) => setNotifSettings(data.settings))
+        .catch(() => { })
+        .finally(() => setNotifLoading(false));
     }
   }, [isAuthenticated]);
 
@@ -63,6 +95,38 @@ export default function ProfilePage() {
     } catch {
       // silently fail
     }
+  };
+
+  const handleSaveNotifSettings = async () => {
+    setNotifSaving(true);
+    setNotifError(null);
+    setNotifSuccess(null);
+    try {
+      const response = await api.put<{ settings: NotificationSettings }>(
+        "/profile/notification-settings",
+        notifSettings,
+      );
+      setNotifSettings(response.settings);
+      setNotifSuccess("Paramètres de notification enregistrés.");
+      setTimeout(() => setNotifSuccess(null), 3000);
+    } catch (err) {
+      setNotifError(
+        err instanceof Error
+          ? err.message
+          : "Erreur lors de la sauvegarde des paramètres.",
+      );
+    } finally {
+      setNotifSaving(false);
+    }
+  };
+
+  const toggleWeekDay = (day: number) => {
+    setNotifSettings((prev) => {
+      const days = prev.weeklyDays.includes(day)
+        ? prev.weeklyDays.filter((d) => d !== day)
+        : [...prev.weeklyDays, day].sort((a, b) => a - b);
+      return { ...prev, weeklyDays: days };
+    });
   };
 
   const handleLogout = async () => {
@@ -344,6 +408,139 @@ export default function ProfilePage() {
                   </li>
                 ))}
               </ul>
+            )}
+          </div>
+
+          {/* Notification settings section */}
+          <div className={styles.notifSection}>
+            <h3 className={styles.notifSectionTitle}>Notifications par email</h3>
+            {notifLoading ? (
+              <p className={styles.text}>Chargement...</p>
+            ) : (
+              <>
+                <div className={styles.notifToggleRow}>
+                  <span className={styles.notifToggleLabel}>
+                    Recevoir des emails de rappel
+                  </span>
+                  <label className={styles.toggle}>
+                    <input
+                      type="checkbox"
+                      checked={notifSettings.enabled}
+                      onChange={(e) =>
+                        setNotifSettings((prev) => ({
+                          ...prev,
+                          enabled: e.target.checked,
+                        }))
+                      }
+                    />
+                    <span className={styles.toggleSlider} />
+                  </label>
+                </div>
+
+                {notifSettings.enabled && (
+                  <div className={styles.notifFields}>
+                    <div className={styles.notifField}>
+                      <label className={styles.notifFieldLabel}>
+                        Fréquence
+                      </label>
+                      <select
+                        className={styles.notifSelect}
+                        value={notifSettings.frequency}
+                        onChange={(e) =>
+                          setNotifSettings((prev) => ({
+                            ...prev,
+                            frequency: e.target.value as NotificationFrequency,
+                          }))
+                        }
+                      >
+                        <option value="immediately">Immédiatement</option>
+                        <option value="delayed">Après un délai</option>
+                        <option value="daily">À une heure fixe</option>
+                        <option value="weekly">Certains jours de la semaine</option>
+                      </select>
+                    </div>
+
+                    {notifSettings.frequency === "delayed" && (
+                      <div className={styles.notifField}>
+                        <label className={styles.notifFieldLabel}>
+                          Délai (en heures)
+                        </label>
+                        <input
+                          type="number"
+                          className={styles.notifInput}
+                          min={1}
+                          max={168}
+                          value={notifSettings.delayHours}
+                          onChange={(e) =>
+                            setNotifSettings((prev) => ({
+                              ...prev,
+                              delayHours: Math.max(
+                                1,
+                                Math.min(168, parseInt(e.target.value) || 1),
+                              ),
+                            }))
+                          }
+                        />
+                      </div>
+                    )}
+
+                    {(notifSettings.frequency === "daily" ||
+                      notifSettings.frequency === "weekly") && (
+                      <div className={styles.notifField}>
+                        <label className={styles.notifFieldLabel}>
+                          Heure d&apos;envoi
+                        </label>
+                        <input
+                          type="time"
+                          className={styles.notifInput}
+                          value={notifSettings.dailyTime}
+                          onChange={(e) =>
+                            setNotifSettings((prev) => ({
+                              ...prev,
+                              dailyTime: e.target.value,
+                            }))
+                          }
+                        />
+                      </div>
+                    )}
+
+                    {notifSettings.frequency === "weekly" && (
+                      <div className={styles.notifField}>
+                        <label className={styles.notifFieldLabel}>
+                          Jours de la semaine
+                        </label>
+                        <div className={styles.notifWeekDays}>
+                          {DAY_LABELS.map((label, idx) => (
+                            <button
+                              key={idx}
+                              type="button"
+                              className={`${styles.dayButton}${notifSettings.weeklyDays.includes(idx) ? ` ${styles.active}` : ""}`}
+                              onClick={() => toggleWeekDay(idx)}
+                            >
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {notifSuccess && (
+                  <p className={styles.successText}>{notifSuccess}</p>
+                )}
+                {notifError && (
+                  <p className={styles.errorText}>{notifError}</p>
+                )}
+
+                <button
+                  className={styles.notifSaveButton}
+                  onClick={handleSaveNotifSettings}
+                  disabled={notifSaving}
+                >
+                  {notifSaving ? "Enregistrement..." : "Enregistrer les préférences"}
+                </button>
+              </>
             )}
           </div>
 

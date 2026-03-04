@@ -176,6 +176,27 @@ export const relationshipCategoryRequests = sqliteTable(
   },
 );
 
+// Notification email settings table
+export const notificationEmailSettings = sqliteTable(
+  "notification_email_settings",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" })
+      .unique(),
+    enabled: integer("enabled", { mode: "boolean" }).default(true),
+    frequency: text("frequency").notNull().default("daily"), // 'immediately', 'delayed', 'daily', 'weekly'
+    delayHours: integer("delay_hours").default(1), // for 'delayed' frequency
+    dailyTime: text("daily_time").default("08:00"), // HH:MM for 'daily' and 'weekly'
+    weeklyDays: text("weekly_days"), // JSON array of day numbers 0-6 for 'weekly'
+    lastEmailSentAt: text("last_email_sent_at"),
+    updatedAt: text("updated_at")
+      .notNull()
+      .$defaultFn(() => new Date().toISOString()),
+  },
+);
+
 // Blocked users table
 export const blockedUsers = sqliteTable("blocked_users", {
   id: text("id").primaryKey(),

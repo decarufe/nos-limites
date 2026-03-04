@@ -10,9 +10,11 @@ import {
   magicLinks,
   limits,
   devices,
+  notificationEmailSettings,
 } from "../db/schema";
 import { eq, or } from "drizzle-orm";
 import { requireAuth, AuthRequest } from "../middleware/auth";
+import { v4 as uuidv4 } from "uuid";
 
 const router = Router();
 
@@ -344,6 +346,141 @@ router.get(
       console.error("Error exporting user data:", error);
       return res.status(500).json({
         message: "Erreur lors de l'export des données.",
+      });
+    }
+  },
+);
+
+/**
+ * GET /api/profile/notification-settings
+ * Get the current user's notification email settings.
+ */
+router.get(
+  "/profile/notification-settings",
+  requireAuth,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const userId = req.userId!;
+
+      const settings = await db.query.notificationEmailSettings.findFirst({
+        where: eq(notificationEmailSettings.userId, userId),
+      });
+
+      return res.json({
+        settings: {
+          enabled: settings?.enabled ?? true,
+          frequency: settings?.frequency ?? "daily",
+          delayHours: settings?.delayHours ?? 1,
+          dailyTime: settings?.dailyTime ?? "08:00",
+          weeklyDays: settings?.weeklyDays
+            ? JSON.parse(settings.weeklyDays)
+            : [0, 1, 2, 3, 4, 5, 6],
+        },
+      });
+    } catch (error) {
+      console.error("Error getting notification settings:", error);
+      return res.status(500).json({
+        message: "Erreur lors de la récupération des paramètres de notification.",
+      });
+    }
+  },
+);
+
+/**
+ * PUT /api/profile/notification-settings
+ * Update the current user's notification email settings.
+ */
+router.put(
+  "/profile/notification-settings",
+  requireAuth,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const userId = req.userId!;
+      const { enabled, frequency, delayHours, dailyTime, weeklyDays } = req.body;
+
+      const validFrequencies = ["immediately", "delayed", "daily", "weekly"];
+      if (frequency !== undefined && !validFrequencies.includes(frequency)) {
+        return res.status(400).json({
+          message: "Fréquence invalide. Valeurs acceptées : immediately, delayed, daily, weekly.",
+        });
+      }
+
+      if (
+        delayHours !== undefined &&
+        (typeof delayHours !== "number" || delayHours < 1 || delayHours > 168)
+      ) {
+        return res.status(400).json({
+          message: "Le délai doit être compris entre 1 et 168 heures.",
+        });
+      }
+
+      if (dailyTime !== undefined && !/^\d{2}:\d{2}$/.test(dailyTime)) {
+        return res.status(400).json({
+          message: "L'heure doit être au format HH:MM.",
+        });
+      }
+
+      if (
+        weeklyDays !== undefined &&
+        (!Array.isArray(weeklyDays) ||
+          weeklyDays.some((d: unknown) => typeof d !== "number" || d < 0 || d > 6))
+      ) {
+        return res.status(400).json({
+          message: "Les jours de la semaine doivent être un tableau de nombres entre 0 et 6.",
+        });
+      }
+
+      const nowStr = new Date().toISOString();
+      const existing = await db.query.notificationEmailSettings.findFirst({
+        where: eq(notificationEmailSettings.userId, userId),
+      });
+
+      if (existing) {
+        await db
+          .update(notificationEmailSettings)
+          .set({
+            ...(enabled !== undefined && { enabled }),
+            ...(frequency !== undefined && { frequency }),
+            ...(delayHours !== undefined && { delayHours }),
+            ...(dailyTime !== undefined && { dailyTime }),
+            ...(weeklyDays !== undefined && {
+              weeklyDays: JSON.stringify(weeklyDays),
+            }),
+            updatedAt: nowStr,
+          })
+          .where(eq(notificationEmailSettings.userId, userId));
+      } else {
+        await db.insert(notificationEmailSettings).values({
+          id: uuidv4(),
+          userId,
+          enabled: enabled ?? true,
+          frequency: frequency ?? "daily",
+          delayHours: delayHours ?? 1,
+          dailyTime: dailyTime ?? "08:00",
+          weeklyDays: weeklyDays ? JSON.stringify(weeklyDays) : JSON.stringify([0, 1, 2, 3, 4, 5, 6]),
+          updatedAt: nowStr,
+        });
+      }
+
+      const updated = await db.query.notificationEmailSettings.findFirst({
+        where: eq(notificationEmailSettings.userId, userId),
+      });
+
+      return res.json({
+        settings: {
+          enabled: updated?.enabled ?? true,
+          frequency: updated?.frequency ?? "daily",
+          delayHours: updated?.delayHours ?? 1,
+          dailyTime: updated?.dailyTime ?? "08:00",
+          weeklyDays: updated?.weeklyDays
+            ? JSON.parse(updated.weeklyDays)
+            : [0, 1, 2, 3, 4, 5, 6],
+        },
+      });
+    } catch (error) {
+      console.error("Error updating notification settings:", error);
+      return res.status(500).json({
+        message: "Erreur lors de la mise à jour des paramètres de notification.",
       });
     }
   },
