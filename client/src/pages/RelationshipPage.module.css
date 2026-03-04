@@ -510,6 +510,16 @@
   line-height: 1.5;
 }
 
+.commonNotePartner {
+  border-left-color: rgba(234, 88, 12, 0.35);
+  background: rgba(255, 237, 213, 0.3);
+}
+
+.commonNoteAuthor {
+  font-weight: 600;
+  color: var(--color-text, #1c1917);
+}
+
 /* My limits vs common summary */
 .limitsSummary {
   display: flex;
