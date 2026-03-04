@@ -207,7 +207,7 @@ router.post(
       const relationshipId = uuidv4();
 
       // Validate activeCategories if provided
-      const { activeCategories, name } = req.body as { activeCategories?: string[]; name?: string };
+      const { activeCategories, name, selectedLimits } = req.body as { activeCategories?: string[]; name?: string; selectedLimits?: string[] };
       let activeCategoriesJson: string | null = null;
       if (Array.isArray(activeCategories) && activeCategories.length > 0) {
         const valid = activeCategories.every((c) => typeof c === "string");
@@ -229,6 +229,32 @@ router.post(
         name: invitationName,
         activeCategories: activeCategoriesJson,
       });
+
+      // Save the inviter's pre-selected limits for this relationship
+      if (Array.isArray(selectedLimits) && selectedLimits.length > 0) {
+        const candidateIds = selectedLimits.filter((id) => typeof id === "string" && id.trim());
+        if (candidateIds.length > 0) {
+          // Validate that all provided limit IDs actually exist in the database
+          const existingLimits = await db
+            .select({ id: limits.id })
+            .from(limits)
+            .where(inArray(limits.id, candidateIds));
+          const existingLimitIds = new Set(existingLimits.map((l) => l.id));
+          const verifiedLimitIds = candidateIds.filter((id) => existingLimitIds.has(id));
+
+          if (verifiedLimitIds.length > 0) {
+            await db.insert(userLimits).values(
+              verifiedLimitIds.map((limitId) => ({
+                id: uuidv4(),
+                userId,
+                relationshipId,
+                limitId,
+                isAccepted: true,
+              }))
+            );
+          }
+        }
+      }
 
       return res.status(201).json({
         success: true,
