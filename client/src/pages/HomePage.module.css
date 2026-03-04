@@ -317,6 +317,8 @@
   padding: var(--spacing-lg, 24px) var(--spacing-md, 16px) calc(var(--spacing-lg, 24px) + env(safe-area-inset-bottom));
   width: 100%;
   max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
