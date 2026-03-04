@@ -66,6 +66,17 @@ export default function HomePage() {
   const [categoriesSaveError, setCategoriesSaveError] = useState(false);
 
   useEffect(() => {
+    if (shareModalRel) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [shareModalRel]);
+
+  useEffect(() => {
     if (!isAuthenticated || authLoading) return;
 
     const fetchRelationships = async () => {
