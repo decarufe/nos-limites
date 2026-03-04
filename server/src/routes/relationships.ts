@@ -36,12 +36,18 @@ router.get(
       const userId = req.userId!;
 
       const userRelationships = await db.query.relationships.findMany({
-        where: and(
-          or(
-            eq(relationships.inviterId, userId),
-            eq(relationships.inviteeId, userId),
+        where: or(
+          and(
+            or(
+              eq(relationships.inviterId, userId),
+              eq(relationships.inviteeId, userId),
+            ),
+            eq(relationships.status, "accepted"),
           ),
-          eq(relationships.status, "accepted"),
+          and(
+            eq(relationships.inviterId, userId),
+            eq(relationships.status, "pending"),
+          ),
         ),
       });
 
@@ -190,7 +196,7 @@ router.post(
       const relationshipId = uuidv4();
 
       // Validate activeCategories if provided
-      const { activeCategories } = req.body as { activeCategories?: string[] };
+      const { activeCategories, name } = req.body as { activeCategories?: string[]; name?: string };
       let activeCategoriesJson: string | null = null;
       if (Array.isArray(activeCategories) && activeCategories.length > 0) {
         const valid = activeCategories.every((c) => typeof c === "string");
@@ -202,11 +208,14 @@ router.post(
         activeCategoriesJson = JSON.stringify(activeCategories);
       }
 
+      const invitationName = typeof name === "string" && name.trim() ? name.trim() : null;
+
       await db.insert(relationships).values({
         id: relationshipId,
         inviterId: userId,
         invitationToken,
         status: "pending",
+        name: invitationName,
         activeCategories: activeCategoriesJson,
       });
 
@@ -1633,6 +1642,101 @@ router.post(
       console.error("Error declining category request:", error);
       return res.status(500).json({
         message: "Erreur lors du refus de la demande.",
+      });
+    }
+  },
+);
+
+/**
+ * PATCH /api/relationships/:id/name
+ * Rename a pending invitation (inviter only).
+ * Body: { name: string }
+ */
+router.patch(
+  "/relationships/:id/name",
+  requireAuth,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const userId = req.userId!;
+      const relationshipId = req.params.id;
+
+      const relationship = await db.query.relationships.findFirst({
+        where: and(
+          eq(relationships.id, relationshipId),
+          eq(relationships.inviterId, userId),
+          eq(relationships.status, "pending"),
+        ),
+      });
+
+      if (!relationship) {
+        return res.status(404).json({
+          message: "Invitation non trouvée ou vous n'êtes pas l'invitant.",
+        });
+      }
+
+      const { name } = req.body as { name?: string };
+      const trimmedName = typeof name === "string" ? name.trim() : null;
+
+      await db
+        .update(relationships)
+        .set({
+          name: trimmedName || null,
+          updatedAt: new Date().toISOString(),
+        })
+        .where(eq(relationships.id, relationshipId));
+
+      return res.json({
+        success: true,
+        message: "Invitation renommée avec succès.",
+      });
+    } catch (error) {
+      console.error("Error renaming invitation:", error);
+      return res.status(500).json({
+        message: "Erreur lors du renommage de l'invitation.",
+      });
+    }
+  },
+);
+
+/**
+ * DELETE /api/relationships/:id
+ * Delete a pending invitation (inviter only).
+ */
+router.delete(
+  "/relationships/:id",
+  requireAuth,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const userId = req.userId!;
+      const relationshipId = req.params.id;
+
+      const relationship = await db.query.relationships.findFirst({
+        where: and(
+          eq(relationships.id, relationshipId),
+          eq(relationships.inviterId, userId),
+          eq(relationships.status, "pending"),
+        ),
+      });
+
+      if (!relationship) {
+        return res.status(404).json({
+          message:
+            "Invitation non trouvée ou vous n'êtes pas autorisé à la supprimer.",
+        });
+      }
+
+      await db
+        .delete(relationships)
+        .where(eq(relationships.id, relationshipId));
+
+      return res.json({
+        success: true,
+        message: "Invitation supprimée avec succès.",
+      });
+    } catch (error) {
+      console.error("Error deleting invitation:", error);
+      return res.status(500).json({
+        message: "Erreur lors de la suppression de l'invitation.",
       });
     }
   },

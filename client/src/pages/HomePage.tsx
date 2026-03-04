@@ -9,6 +9,7 @@ interface Relationship {
   inviterId: string;
   inviteeId: string | null;
   status: string;
+  name: string | null;
   partnerName: string | null;
   partnerAvatarUrl: string | null;
   commonLimitsCount: number;
@@ -22,11 +23,23 @@ interface RelationshipsResponse {
   count: number;
 }
 
+function formatDate(isoString: string): string {
+  const date = new Date(isoString);
+  return date.toLocaleDateString("fr-FR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
 export default function HomePage() {
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { isAuthenticated, isLoading: authLoading, user } = useAuth();
   const navigate = useNavigate();
   const [relationships, setRelationships] = useState<Relationship[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editingNameId, setEditingNameId] = useState<string | null>(null);
+  const [nameInput, setNameInput] = useState("");
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated || authLoading) return;
@@ -44,6 +57,38 @@ export default function HomePage() {
 
     fetchRelationships();
   }, [isAuthenticated, authLoading]);
+
+  const handleDeleteInvitation = async (id: string) => {
+    setDeletingId(id);
+    try {
+      await api.delete(`/relationships/${id}`);
+      setRelationships((prev) => prev.filter((r) => r.id !== id));
+    } catch {
+      // Silently fail
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const handleStartRename = (rel: Relationship) => {
+    setEditingNameId(rel.id);
+    setNameInput(rel.name || "");
+  };
+
+  const handleSaveName = async (id: string) => {
+    try {
+      await api.patch(`/relationships/${id}/name`, { name: nameInput });
+      setRelationships((prev) =>
+        prev.map((r) =>
+          r.id === id ? { ...r, name: nameInput.trim() || null } : r
+        )
+      );
+    } catch {
+      // Silently fail
+    } finally {
+      setEditingNameId(null);
+    }
+  };
 
   if (authLoading) {
     return (
@@ -66,7 +111,7 @@ export default function HomePage() {
     (r) => r.status === "accepted"
   );
   const pendingRelationships = relationships.filter(
-    (r) => r.status === "pending"
+    (r) => r.status === "pending" && r.inviterId === user?.id
   );
 
   return (
@@ -162,19 +207,94 @@ export default function HomePage() {
               </svg>
             </button>
           ))}
-          {pendingRelationships.map((rel) => (
-            <div key={rel.id} className={styles.relationCard}>
-              <div className={styles.relationAvatar}>
-                <div className={styles.avatarPlaceholderPending}>?</div>
-              </div>
-              <div className={styles.relationInfo}>
-                <span className={styles.relationName}>Invitation envoyée</span>
-                <span className={styles.relationStatusPending}>
-                  En attente de réponse
-                </span>
-              </div>
+          {pendingRelationships.length > 0 && (
+            <div className={styles.pendingSection}>
+              <h2 className={styles.pendingSectionTitle}>
+                Invitations en attente
+              </h2>
+              {pendingRelationships.map((rel) => (
+                <div key={rel.id} className={styles.pendingCard}>
+                  <div className={styles.pendingCardTop}>
+                    <div className={styles.relationAvatar}>
+                      <div className={styles.avatarPlaceholderPending}>?</div>
+                    </div>
+                    <div className={styles.relationInfo}>
+                      {editingNameId === rel.id ? (
+                        <input
+                          className={styles.nameInput}
+                          value={nameInput}
+                          autoFocus
+                          onChange={(e) => setNameInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") handleSaveName(rel.id);
+                            if (e.key === "Escape") setEditingNameId(null);
+                          }}
+                          onBlur={() => handleSaveName(rel.id)}
+                          placeholder="Nommer cette invitation…"
+                          maxLength={60}
+                        />
+                      ) : (
+                        <button
+                          className={styles.relationNameButton}
+                          onClick={() => handleStartRename(rel)}
+                          title="Cliquer pour nommer cette invitation"
+                        >
+                          <span className={styles.relationName}>
+                            {rel.name || "Invitation envoyée"}
+                          </span>
+                          <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className={styles.editIcon}
+                          >
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                          </svg>
+                        </button>
+                      )}
+                      <span className={styles.relationStatusPending}>
+                        En attente · {formatDate(rel.createdAt)}
+                      </span>
+                    </div>
+                    <button
+                      className={styles.deleteButton}
+                      onClick={() => handleDeleteInvitation(rel.id)}
+                      disabled={deletingId === rel.id}
+                      title="Supprimer cette invitation"
+                      aria-label="Supprimer cette invitation"
+                    >
+                      {deletingId === rel.id ? (
+                        <span className={styles.deletingSpinner} />
+                      ) : (
+                        <svg
+                          width="18"
+                          height="18"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <polyline points="3 6 5 6 21 6" />
+                          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                          <path d="M10 11v6" />
+                          <path d="M14 11v6" />
+                          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
+          )}
         </div>
       )}
     </div>

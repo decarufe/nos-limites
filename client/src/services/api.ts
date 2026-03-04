@@ -177,6 +177,14 @@ class ApiService {
     return this.request<T>(endpoint, { method: "PUT", body, ...options });
   }
 
+  patch<T>(
+    endpoint: string,
+    body?: unknown,
+    options?: { signal?: AbortSignal },
+  ): Promise<T> {
+    return this.request<T>(endpoint, { method: "PATCH", body, ...options });
+  }
+
   delete<T>(endpoint: string, options?: { signal?: AbortSignal }): Promise<T> {
     return this.request<T>(endpoint, { method: "DELETE", ...options });
   }
