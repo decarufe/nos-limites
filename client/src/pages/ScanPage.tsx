@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Navigate } from "react-router-dom";
 import { QRCodeSVG } from "qrcode.react";
 import { useAuth } from "../context/AuthContext";
@@ -15,18 +15,52 @@ interface InviteResponse {
   message: string;
 }
 
-const RELATIONSHIP_CATEGORIES = [
-  { id: "Contact professionnel", label: "Contact professionnel", icon: "🤝" },
-  { id: "Contact amical", label: "Contact amical", icon: "😊" },
-  { id: "Flirt et séduction", label: "Flirt et séduction", icon: "💬" },
-  { id: "Contact rapproché", label: "Contact rapproché", icon: "🤗" },
-  { id: "Intimité", label: "Intimité", icon: "💕" },
-];
+interface Limit {
+  id: string;
+  name: string;
+  description: string | null;
+  sortOrder: number;
+}
 
-const DEFAULT_SELECTED_CATEGORIES = [
-  "Contact professionnel",
-  "Contact amical",
-];
+interface Subcategory {
+  id: string;
+  name: string;
+  sortOrder: number;
+  limits: Limit[];
+}
+
+interface Category {
+  id: string;
+  name: string;
+  description: string | null;
+  icon: string | null;
+  sortOrder: number;
+  subcategories: Subcategory[];
+}
+
+interface CategoriesResponse {
+  success: boolean;
+  data: Category[];
+  count: number;
+}
+
+function countLimitsInCategory(category: Category): number {
+  return category.subcategories.reduce(
+    (sum, sub) => sum + sub.limits.length,
+    0
+  );
+}
+
+function countCheckedInCategory(
+  category: Category,
+  checked: Set<string>
+): number {
+  return category.subcategories.reduce(
+    (sum, sub) =>
+      sum + sub.limits.filter((l) => checked.has(l.id)).length,
+    0
+  );
+}
 
 export default function ScanPage() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -37,9 +71,31 @@ export default function ScanPage() {
   >("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const [copied, setCopied] = useState(false);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>(
-    DEFAULT_SELECTED_CATEGORIES
-  );
+
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [checkedLimits, setCheckedLimits] = useState<Set<string>>(new Set());
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+  const [categoriesLoading, setCategoriesLoading] = useState(false);
+  const [categoriesError, setCategoriesError] = useState(false);
+
+  const fetchCategories = async () => {
+    setCategoriesLoading(true);
+    setCategoriesError(false);
+    try {
+      const response = await api.get<CategoriesResponse>("/limits/categories");
+      setCategories(response.data);
+    } catch {
+      setCategoriesError(true);
+    } finally {
+      setCategoriesLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (status !== "configuring" || categories.length > 0 || categoriesLoading || categoriesError) return;
+    fetchCategories();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, categories.length, categoriesLoading, categoriesError]);
 
   if (isLoading) {
     return (
@@ -56,6 +112,58 @@ export default function ScanPage() {
     return <Navigate to="/login" replace />;
   }
 
+  const handleToggleLimit = (limitId: string) => {
+    setCheckedLimits((prev) => {
+      const next = new Set(prev);
+      if (next.has(limitId)) {
+        next.delete(limitId);
+      } else {
+        next.add(limitId);
+      }
+      return next;
+    });
+  };
+
+  const handleToggleCategoryAll = (category: Category, checkAll: boolean) => {
+    setCheckedLimits((prev) => {
+      const next = new Set(prev);
+      for (const sub of category.subcategories) {
+        for (const limit of sub.limits) {
+          if (checkAll) {
+            next.add(limit.id);
+          } else {
+            next.delete(limit.id);
+          }
+        }
+      }
+      return next;
+    });
+  };
+
+  const handleToggleExpanded = (categoryId: string) => {
+    setExpandedCategories((prev) => {
+      const next = new Set(prev);
+      if (next.has(categoryId)) {
+        next.delete(categoryId);
+      } else {
+        next.add(categoryId);
+      }
+      return next;
+    });
+  };
+
+  const activeCategories = useMemo(
+    () =>
+      categories
+        .filter((cat) =>
+          cat.subcategories.some((sub) =>
+            sub.limits.some((l) => checkedLimits.has(l.id))
+          )
+        )
+        .map((cat) => cat.name),
+    [categories, checkedLimits]
+  );
+
   const handleGenerateInvitation = async () => {
     setStatus("generating");
     setErrorMessage("");
@@ -64,7 +172,10 @@ export default function ScanPage() {
     try {
       const response = await api.post<InviteResponse>(
         "/relationships/invite",
-        { activeCategories: selectedCategories }
+        {
+          activeCategories,
+          selectedLimits: Array.from(checkedLimits),
+        }
       );
 
       setInviteUrl(response.data.inviteUrl);
@@ -78,14 +189,6 @@ export default function ScanPage() {
           : "Erreur lors de la creation de l'invitation."
       );
     }
-  };
-
-  const handleToggleCategory = (categoryId: string) => {
-    setSelectedCategories((prev) =>
-      prev.includes(categoryId)
-        ? prev.filter((c) => c !== categoryId)
-        : [...prev, categoryId]
-    );
   };
 
   const handleCopyLink = async () => {
@@ -116,6 +219,9 @@ export default function ScanPage() {
     setStatus("idle");
     setErrorMessage("");
     setCopied(false);
+    setCheckedLimits(new Set());
+    setExpandedCategories(new Set());
+    setCategoriesError(false);
   };
 
   return (
@@ -159,29 +265,114 @@ export default function ScanPage() {
 
       {status === "configuring" && (
         <div className={styles.configuringContent}>
-          <h2 className={styles.configuringTitle}>Profil de relation</h2>
+          <h2 className={styles.configuringTitle}>Mes limites</h2>
           <p className={styles.configuringText}>
-            Sélectionnez les sections que vous souhaitez activer pour cette relation.
-            Ces choix seront visibles par la personne que vous invitez.
+            Sélectionnez vos limites pour cette relation. Elles seront
+            enregistrées dès la création de l'invitation.
           </p>
-          <div className={styles.categoriesList}>
-            {RELATIONSHIP_CATEGORIES.map((cat) => (
-              <label key={cat.id} className={styles.categoryItem}>
-                <input
-                  type="checkbox"
-                  className={styles.categoryCheckbox}
-                  checked={selectedCategories.includes(cat.id)}
-                  onChange={() => handleToggleCategory(cat.id)}
-                />
-                <span className={styles.categoryIcon}>{cat.icon}</span>
-                <span className={styles.categoryLabel}>{cat.label}</span>
-              </label>
-            ))}
-          </div>
+          {categoriesLoading ? (
+            <div className={styles.loadingSmall}>
+              <div className={styles.spinner} />
+              <p>Chargement des limites...</p>
+            </div>
+          ) : categoriesError ? (
+            <div className={styles.categoriesErrorState}>
+              <p className={styles.categoriesErrorText}>
+                Impossible de charger les limites. Veuillez réessayer.
+              </p>
+              <button
+                className={styles.retryButton}
+                onClick={fetchCategories}
+              >
+                Réessayer
+              </button>
+            </div>
+          ) : categories.length === 0 ? (
+            <p className={styles.configuringText}>
+              Aucune catégorie de limites disponible.
+            </p>
+          ) : (
+            <div className={styles.limitsTree}>
+              {categories.map((category) => {
+                const isExpanded = expandedCategories.has(category.id);
+                const checkedCount = countCheckedInCategory(category, checkedLimits);
+                const totalCount = countLimitsInCategory(category);
+                return (
+                  <div key={category.id} className={styles.categoryCard}>
+                    <button
+                      className={styles.categoryHeader}
+                      onClick={() => handleToggleExpanded(category.id)}
+                    >
+                      <span className={styles.categoryIcon}>
+                        {category.icon || "📋"}
+                      </span>
+                      <span className={styles.categoryName}>{category.name}</span>
+                      <span className={styles.categoryCount}>
+                        {checkedCount}/{totalCount}
+                      </span>
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className={`${styles.chevronIcon} ${isExpanded ? styles.chevronExpanded : ""}`}
+                      >
+                        <polyline points="6 9 12 15 18 9" />
+                      </svg>
+                    </button>
+                    {isExpanded && (
+                      <div className={styles.categoryBody}>
+                        <div className={styles.categoryActions}>
+                          <button
+                            className={styles.categoryActionButton}
+                            onClick={() => handleToggleCategoryAll(category, true)}
+                          >
+                            Tout cocher
+                          </button>
+                          <button
+                            className={styles.categoryActionButton}
+                            onClick={() => handleToggleCategoryAll(category, false)}
+                          >
+                            Tout décocher
+                          </button>
+                        </div>
+                        {category.subcategories.map((subcategory) => (
+                          <div key={subcategory.id} className={styles.subcategory}>
+                            <h4 className={styles.subcategoryName}>
+                              {subcategory.name}
+                            </h4>
+                            <div className={styles.limitsList}>
+                              {subcategory.limits.map((limit) => (
+                                <label key={limit.id} className={styles.limitItem}>
+                                  <input
+                                    type="checkbox"
+                                    className={styles.checkbox}
+                                    checked={checkedLimits.has(limit.id)}
+                                    onChange={() => handleToggleLimit(limit.id)}
+                                  />
+                                  <span className={styles.limitName}>
+                                    {limit.name}
+                                  </span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
           <button
             className={styles.primaryButton}
             onClick={handleGenerateInvitation}
-            disabled={selectedCategories.length === 0}
+            disabled={categoriesLoading}
           >
             Créer l'invitation
           </button>
