@@ -414,12 +414,23 @@ router.post(
         });
       }
 
+      // Determine final activeCategories: use invitee's selection if provided
+      const { selectedCategories } = req.body as { selectedCategories?: string[] };
+      let finalActiveCategories: string | null = relationship.activeCategories;
+      if (Array.isArray(selectedCategories)) {
+        const valid = selectedCategories.every((c) => typeof c === "string");
+        if (valid) {
+          finalActiveCategories = selectedCategories.length > 0 ? JSON.stringify(selectedCategories) : null;
+        }
+      }
+
       // Accept the invitation
       await db
         .update(relationships)
         .set({
           inviteeId: userId,
           status: "accepted",
+          activeCategories: finalActiveCategories,
           updatedAt: new Date().toISOString(),
         })
         .where(eq(relationships.id, relationship.id));
