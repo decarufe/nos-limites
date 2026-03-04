@@ -46,7 +46,10 @@ router.get(
           ),
           and(
             eq(relationships.inviterId, userId),
-            eq(relationships.status, "pending"),
+            or(
+              eq(relationships.status, "pending"),
+              eq(relationships.status, "declined"),
+            ),
           ),
         ),
       });
@@ -144,8 +147,16 @@ router.get(
             parsedActiveCategories = null;
           }
         }
+        // Only expose the invitationToken to the inviter for pending/declined invitations
+        const invitationToken =
+          rel.inviterId === userId &&
+          (rel.status === "pending" || rel.status === "declined")
+            ? rel.invitationToken
+            : undefined;
+
         return {
           ...rel,
+          invitationToken,
           partnerName: partnerData?.name || null,
           partnerAvatarUrl: partnerData?.avatarUrl || null,
           commonLimitsCount: commonLimitsCounts.get(rel.id) || 0,
@@ -1693,6 +1704,78 @@ router.patch(
       console.error("Error renaming invitation:", error);
       return res.status(500).json({
         message: "Erreur lors du renommage de l'invitation.",
+      });
+    }
+  },
+);
+
+/**
+ * PATCH /api/relationships/:id/categories
+ * Update active categories of a pending invitation (inviter only).
+ * Body: { activeCategories: string[] }
+ */
+router.patch(
+  "/relationships/:id/categories",
+  requireAuth,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const userId = req.userId!;
+      const relationshipId = req.params.id;
+
+      const relationship = await db.query.relationships.findFirst({
+        where: and(
+          eq(relationships.id, relationshipId),
+          eq(relationships.inviterId, userId),
+          eq(relationships.status, "pending"),
+        ),
+      });
+
+      if (!relationship) {
+        return res.status(404).json({
+          message: "Invitation non trouvée ou vous n'êtes pas l'invitant.",
+        });
+      }
+
+      const { activeCategories } = req.body as { activeCategories?: unknown };
+
+      if (!Array.isArray(activeCategories)) {
+        return res.status(400).json({
+          message: "Format invalide. 'activeCategories' doit être un tableau.",
+        });
+      }
+
+      if (activeCategories.length === 0) {
+        return res.status(400).json({
+          message: "Vous devez sélectionner au moins une catégorie.",
+        });
+      }
+
+      if (
+        !activeCategories.every(
+          (c) => typeof c === "string" && VALID_CATEGORY_NAMES.includes(c),
+        )
+      ) {
+        return res.status(400).json({
+          message: "Certaines catégories sont invalides.",
+        });
+      }
+
+      await db
+        .update(relationships)
+        .set({
+          activeCategories: JSON.stringify(activeCategories),
+          updatedAt: new Date().toISOString(),
+        })
+        .where(eq(relationships.id, relationshipId));
+
+      return res.json({
+        success: true,
+        message: "Catégories de l'invitation mises à jour.",
+      });
+    } catch (error) {
+      console.error("Error updating invitation categories:", error);
+      return res.status(500).json({
+        message: "Erreur lors de la mise à jour des catégories.",
       });
     }
   },
