@@ -164,3 +164,104 @@
   flex-shrink: 0;
   color: var(--color-text-secondary, #78716c);
 }
+
+/* Pending invitations section */
+.pendingSection {
+  margin-top: var(--spacing-md, 16px);
+}
+
+.pendingSectionTitle {
+  font-size: var(--font-size-sm, 13px);
+  font-weight: 600;
+  color: var(--color-text-secondary, #78716c);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--spacing-sm, 8px);
+}
+
+.pendingCard {
+  background: white;
+  border: 1px solid var(--color-border, #e7e5e4);
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 8px;
+}
+
+.pendingCardTop {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.relationNameButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+}
+
+.editIcon {
+  flex-shrink: 0;
+  color: var(--color-text-secondary, #78716c);
+  opacity: 0.5;
+}
+
+.nameInput {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text, #1c1917);
+  border: none;
+  border-bottom: 1.5px solid var(--color-primary, #6366f1);
+  outline: none;
+  background: transparent;
+  width: 100%;
+  font-family: inherit;
+  padding: 2px 0;
+}
+
+.deleteButton {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: none;
+  color: var(--color-text-secondary, #78716c);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  margin-left: auto;
+}
+
+.deleteButton:hover {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.deleteButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.deletingSpinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

@@ -163,6 +163,17 @@ export async function migrate() {
     // Column already exists — safe to ignore
   }
 
+  // Add name column to relationships table if it doesn't exist
+  // (migration for existing databases)
+  try {
+    await client.execute(
+      "ALTER TABLE relationships ADD COLUMN name TEXT",
+    );
+    console.log("Added name column to relationships table.");
+  } catch {
+    // Column already exists — safe to ignore
+  }
+
   console.log("Database migrations completed successfully.");
 }
 
