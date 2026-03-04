@@ -27,6 +27,18 @@
   gap: 16px;
 }
 
+/* Loaded state uses flex-start to allow scrolling for long content */
+.contentLoaded {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: center;
+  padding: 16px 0 24px;
+  gap: 16px;
+}
+
 .loading {
   flex: 1;
   display: flex;
@@ -89,13 +101,196 @@
   line-height: 1.5;
 }
 
+/* Website link */
+.websiteLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--color-primary, #6366f1);
+  text-decoration: none;
+  padding: 6px 12px;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 20px;
+  transition: background 0.2s;
+}
+
+.websiteLink:hover {
+  background: rgba(99, 102, 241, 0.06);
+}
+
+/* Category selection section */
+.categoriesSelectionSection {
+  width: 100%;
+  max-width: 400px;
+  text-align: left;
+}
+
+.categoriesGroupTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary, #78716c);
+  margin: 12px 0 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.categoriesGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--color-bg-secondary, #f5f5f4);
+  border: 1px solid var(--color-border, #e7e5e4);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.categoryRow {
+  border-bottom: 1px solid var(--color-border, #e7e5e4);
+  background: white;
+}
+
+.categoryRow:last-child {
+  border-bottom: none;
+}
+
+.categoryRowHeader {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  gap: 8px;
+}
+
+.categoryLabel {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.categoryCheckbox {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-primary, #6366f1);
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.categoryIcon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.categoryName {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--color-text, #1c1917);
+  flex: 1;
+  min-width: 0;
+}
+
+.invitedBadge {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-primary, #6366f1);
+  background: rgba(99, 102, 241, 0.1);
+  border-radius: 10px;
+  padding: 2px 7px;
+  flex-shrink: 0;
+}
+
+.expandButton {
+  background: none;
+  border: none;
+  padding: 4px 6px;
+  cursor: pointer;
+  color: var(--color-text-secondary, #78716c);
+  border-radius: 6px;
+  transition: background 0.15s;
+  flex-shrink: 0;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.expandButton:hover {
+  background: var(--color-bg-secondary, #f5f5f4);
+}
+
+.expandIcon {
+  display: inline-block;
+  transition: transform 0.2s;
+}
+
+.expandIconOpen {
+  display: inline-block;
+  transform: rotate(180deg);
+  transition: transform 0.2s;
+}
+
+/* Limits panel */
+.limitsPanel {
+  padding: 4px 12px 12px 38px;
+  text-align: left;
+}
+
+.subcategoryBlock {
+  margin-bottom: 10px;
+}
+
+.subcategoryBlock:last-child {
+  margin-bottom: 0;
+}
+
+.subcategoryName {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary, #78716c);
+  margin: 0 0 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.limitsList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.limitItem {
+  font-size: 13px;
+  color: var(--color-text, #1c1917);
+  line-height: 1.4;
+}
+
+.limitItem::before {
+  content: "• ";
+  color: var(--color-text-secondary, #78716c);
+}
+
+.limitDescription {
+  color: var(--color-text-secondary, #78716c);
+  font-size: 12px;
+}
+
+.noLimitsText {
+  font-size: 13px;
+  color: var(--color-text-secondary, #78716c);
+  margin: 0;
+  font-style: italic;
+}
+
 .actions {
   display: flex;
   flex-direction: column;
   gap: 12px;
   width: 100%;
-  max-width: 320px;
-  margin-top: 16px;
+  max-width: 400px;
+  margin-top: 8px;
 }
 
 .acceptButton {
@@ -203,7 +398,7 @@
   font-style: italic;
 }
 
-/* Active categories display on invite page */
+/* Legacy styles kept for backward compatibility */
 .categoriesSection {
   width: 100%;
   max-width: 320px;
