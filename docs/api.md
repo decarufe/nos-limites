@@ -2,10 +2,10 @@
 
 ## Base URL
 
-| Environment | Base URL |
-|-------------|----------|
-| Development | `http://localhost:3001` |
-| Production | `https://api.nos-limites.com` |
+| Environment | Base URL                      |
+| ----------- | ----------------------------- |
+| Development | `http://localhost:3001`       |
+| Production  | `https://api.nos-limites.com` |
 
 ## Authentication
 
@@ -45,11 +45,11 @@ Request a magic link email. The server sends a time-limited sign-in link to the 
 
 **Responses**
 
-| Status | Meaning |
-|--------|---------|
-| `200` | Email sent (or queued). Body: `{ "message": "Magic link sent" }` |
-| `400` | Missing or invalid email |
-| `429` | Rate limited |
+| Status | Meaning                                                          |
+| ------ | ---------------------------------------------------------------- |
+| `200`  | Email sent (or queued). Body: `{ "message": "Magic link sent" }` |
+| `400`  | Missing or invalid email                                         |
+| `429`  | Rate limited                                                     |
 
 > **Development tip**: Set `EMAIL_PROVIDER=console` to print the magic link to the server console instead of sending a real email.
 
@@ -61,9 +61,9 @@ Verify a magic link token. On success, creates (or retrieves) the user account a
 
 **Query parameters**
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `token` | `string` | The token embedded in the magic link URL |
+| Parameter | Type     | Description                              |
+| --------- | -------- | ---------------------------------------- |
+| `token`   | `string` | The token embedded in the magic link URL |
 
 **Response `200`**
 
@@ -80,11 +80,11 @@ Verify a magic link token. On success, creates (or retrieves) the user account a
 }
 ```
 
-| Status | Meaning |
-|--------|---------|
-| `200` | Token valid — session created |
-| `400` | Token missing |
-| `401` | Token expired or already used |
+| Status | Meaning                       |
+| ------ | ----------------------------- |
+| `200`  | Token valid — session created |
+| `400`  | Token missing                 |
+| `401`  | Token expired or already used |
 
 ---
 
@@ -131,10 +131,10 @@ Returns the currently authenticated user.
 }
 ```
 
-| Status | Meaning |
-|--------|---------|
-| `200` | Session active |
-| `401` | No valid session |
+| Status | Meaning          |
+| ------ | ---------------- |
+| `200`  | Session active   |
+| `401`  | No valid session |
 
 ---
 
@@ -173,10 +173,10 @@ Exchange a valid refresh token for a new access token. Each device holds its own
 }
 ```
 
-| Status | Meaning |
-|--------|---------|
-| `200` | New tokens issued |
-| `401` | Refresh token invalid, expired, or revoked |
+| Status | Meaning                                    |
+| ------ | ------------------------------------------ |
+| `200`  | New tokens issued                          |
+| `401`  | Refresh token invalid, expired, or revoked |
 
 ---
 
@@ -261,7 +261,7 @@ Create a new invitation. Returns a unique token, a shareable URL, and a QR code 
 ```json
 {
   "token": "abc123",
-  "inviteUrl": "https://noslimites.app/invite/abc123",
+  "inviteUrl": "https://app.no-limites.com/invite/abc123",
   "qrCode": "data:image/png;base64,…"
 }
 ```
@@ -284,10 +284,10 @@ Look up a pending invitation by token. Used to display the invitation landing pa
 }
 ```
 
-| Status | Meaning |
-|--------|---------|
-| `200` | Invitation found and still pending |
-| `404` | Token not found or already used |
+| Status | Meaning                            |
+| ------ | ---------------------------------- |
+| `200`  | Invitation found and still pending |
+| `404`  | Token not found or already used    |
 
 ---
 
@@ -304,11 +304,11 @@ Accept a pending invitation. Creates an `accepted` relationship between the invi
 }
 ```
 
-| Status | Meaning |
-|--------|---------|
-| `200` | Accepted |
-| `400` | Already accepted / user is the inviter |
-| `404` | Token not found |
+| Status | Meaning                                |
+| ------ | -------------------------------------- |
+| `200`  | Accepted                               |
+| `400`  | Already accepted / user is the inviter |
+| `404`  | Token not found                        |
 
 ---
 
@@ -526,13 +526,13 @@ List all notifications for the authenticated user, newest first.
 
 **Notification types**
 
-| Type | Trigger |
-|------|---------|
-| `relation_request` | Someone accepted your invitation |
-| `relation_accepted` | Your invitation was accepted |
-| `new_common_limit` | A new mutual limit match was found |
-| `limit_removed` | A previously matched limit no longer matches |
-| `relation_deleted` | A relationship was deleted by the other party |
+| Type                | Trigger                                       |
+| ------------------- | --------------------------------------------- |
+| `relation_request`  | Someone accepted your invitation              |
+| `relation_accepted` | Your invitation was accepted                  |
+| `new_common_limit`  | A new mutual limit match was found            |
+| `limit_removed`     | A previously matched limit no longer matches  |
+| `relation_deleted`  | A relationship was deleted by the other party |
 
 ---
 
@@ -634,7 +634,7 @@ Health check endpoint. Returns server status and database connectivity.
 }
 ```
 
-| Status | Meaning |
-|--------|---------|
-| `200` | Server and database healthy |
-| `503` | Database unreachable |
+| Status | Meaning                     |
+| ------ | --------------------------- |
+| `200`  | Server and database healthy |
+| `503`  | Database unreachable        |

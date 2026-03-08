@@ -28,7 +28,10 @@ export interface EmailProvider {
 
 // ─── HTML Template ─────────────────────────────────────────────────
 
-function buildMagicLinkHtml(magicLinkUrl: string, expiresInMinutes: number): string {
+function buildMagicLinkHtml(
+  magicLinkUrl: string,
+  expiresInMinutes: number,
+): string {
   return `<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -115,7 +118,10 @@ function buildMagicLinkHtml(magicLinkUrl: string, expiresInMinutes: number): str
 </html>`;
 }
 
-function buildMagicLinkText(magicLinkUrl: string, expiresInMinutes: number): string {
+function buildMagicLinkText(
+  magicLinkUrl: string,
+  expiresInMinutes: number,
+): string {
   return [
     "Nos limites - Votre lien de connexion",
     "",
@@ -158,7 +164,8 @@ function buildNotificationDigestHtml(
     .join("");
 
   const count = notificationItems.length;
-  const countLabel = count === 1 ? "1 notification non lue" : `${count} notifications non lues`;
+  const countLabel =
+    count === 1 ? "1 notification non lue" : `${count} notifications non lues`;
 
   return `<!DOCTYPE html>
 <html lang="fr">
@@ -241,7 +248,8 @@ function buildNotificationDigestText(
   appUrl: string,
 ): string {
   const count = notificationItems.length;
-  const countLabel = count === 1 ? "1 notification non lue" : `${count} notifications non lues`;
+  const countLabel =
+    count === 1 ? "1 notification non lue" : `${count} notifications non lues`;
   const lines = [
     "Nos limites - Vos notifications",
     "",
@@ -267,14 +275,20 @@ function buildNotificationDigestText(
   }
   lines.push(`Voir vos notifications : ${appUrl}/notifications`);
   lines.push("");
-  lines.push("Vous pouvez modifier vos préférences de notification dans votre profil.");
+  lines.push(
+    "Vous pouvez modifier vos préférences de notification dans votre profil.",
+  );
   return lines.join("\n");
 }
 
 // ─── Console Provider (development fallback) ──────────────────────
 
 class ConsoleEmailProvider implements EmailProvider {
-  async sendMagicLink({ to, magicLinkUrl, expiresInMinutes = 15 }: SendMagicLinkOptions): Promise<void> {
+  async sendMagicLink({
+    to,
+    magicLinkUrl,
+    expiresInMinutes = 15,
+  }: SendMagicLinkOptions): Promise<void> {
     console.log("\n========================================");
     console.log("  MAGIC LINK (console mode)");
     console.log("========================================");
@@ -284,7 +298,11 @@ class ConsoleEmailProvider implements EmailProvider {
     console.log("========================================\n");
   }
 
-  async sendNotificationDigest({ to, displayName, notifications }: SendNotificationDigestOptions): Promise<void> {
+  async sendNotificationDigest({
+    to,
+    displayName,
+    notifications,
+  }: SendNotificationDigestOptions): Promise<void> {
     console.log("\n========================================");
     console.log("  NOTIFICATION DIGEST (console mode)");
     console.log("========================================");
@@ -309,15 +327,20 @@ class ResendEmailProvider implements EmailProvider {
     if (!apiKey) {
       throw new Error(
         "RESEND_API_KEY is required when EMAIL_PROVIDER=resend. " +
-        "Please set it in your .env file."
+          "Please set it in your .env file.",
       );
     }
 
-    this.from = process.env.EMAIL_FROM || "Nos limites <noreply@noslimites.app>";
+    this.from =
+      process.env.EMAIL_FROM || "Nos limites <noreply@app.no-limites.com>";
     this.resend = new Resend(apiKey);
   }
 
-  async sendMagicLink({ to, magicLinkUrl, expiresInMinutes = 15 }: SendMagicLinkOptions): Promise<void> {
+  async sendMagicLink({
+    to,
+    magicLinkUrl,
+    expiresInMinutes = 15,
+  }: SendMagicLinkOptions): Promise<void> {
     const { error } = await this.resend.emails.send({
       from: this.from,
       to,
@@ -334,8 +357,12 @@ class ResendEmailProvider implements EmailProvider {
     console.log(`Magic link email sent to ${to} via Resend`);
   }
 
-  async sendNotificationDigest({ to, displayName, notifications }: SendNotificationDigestOptions): Promise<void> {
-    const appUrl = process.env.FRONTEND_URL || "https://noslimites.app";
+  async sendNotificationDigest({
+    to,
+    displayName,
+    notifications,
+  }: SendNotificationDigestOptions): Promise<void> {
+    const appUrl = process.env.FRONTEND_URL || "https://app.no-limites.com";
     const { error } = await this.resend.emails.send({
       from: this.from,
       to,
@@ -346,7 +373,9 @@ class ResendEmailProvider implements EmailProvider {
 
     if (error) {
       console.error("Resend email error:", error);
-      throw new Error(`Failed to send notification digest email: ${error.message}`);
+      throw new Error(
+        `Failed to send notification digest email: ${error.message}`,
+      );
     }
 
     console.log(`Notification digest sent to ${to} via Resend`);
@@ -365,7 +394,7 @@ function createEmailProvider(): EmailProvider {
       return new ConsoleEmailProvider();
     default:
       console.warn(
-        `Unknown EMAIL_PROVIDER "${provider}", falling back to console.`
+        `Unknown EMAIL_PROVIDER "${provider}", falling back to console.`,
       );
       return new ConsoleEmailProvider();
   }

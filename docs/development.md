@@ -2,11 +2,11 @@
 
 ## Prerequisites
 
-| Requirement | Version | Notes |
-|-------------|---------|-------|
-| Node.js | **18 or later** | Check with `node --version` |
-| npm | **8 or later** | Bundled with Node.js |
-| Git | Any recent version | For cloning the repository |
+| Requirement | Version            | Notes                       |
+| ----------- | ------------------ | --------------------------- |
+| Node.js     | **18 or later**    | Check with `node --version` |
+| npm         | **8 or later**     | Bundled with Node.js        |
+| Git         | Any recent version | For cloning the repository  |
 
 No database server is needed for local development — the app uses a local SQLite file automatically.
 
@@ -21,6 +21,7 @@ The fastest way to get running is the `init.sh` script at the project root:
 ```
 
 This script:
+
 1. Installs dependencies for both `server/` and `client/`
 2. Copies `server/.env.example` to `server/.env` if no `.env` exists
 3. Runs database migrations (`db:migrate`)
@@ -91,39 +92,39 @@ All configuration lives in `server/.env`. Copy `server/.env.example` as a starti
 
 ### Core Server
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `PORT` | `3001` | Express server port |
+| Variable   | Default       | Description                   |
+| ---------- | ------------- | ----------------------------- |
+| `PORT`     | `3001`        | Express server port           |
 | `NODE_ENV` | `development` | `development` or `production` |
 
 ### Database
 
-| Variable | Default | Description |
-|----------|---------|-------------|
+| Variable       | Default                     | Description                                                              |
+| -------------- | --------------------------- | ------------------------------------------------------------------------ |
 | `DATABASE_URL` | `file:./data/noslimites.db` | Local SQLite file path. In production, use `TURSO_DATABASE_URL` instead. |
 
 ### JWT / Sessions
 
-| Variable | Example | Description |
-|----------|---------|-------------|
-| `JWT_SECRET` | `dev-secret-…` | Secret for signing access tokens. **Change in production.** |
+| Variable             | Example         | Description                                                  |
+| -------------------- | --------------- | ------------------------------------------------------------ |
+| `JWT_SECRET`         | `dev-secret-…`  | Secret for signing access tokens. **Change in production.**  |
 | `JWT_REFRESH_SECRET` | `dev-refresh-…` | Secret for signing refresh tokens. **Change in production.** |
-| `SESSION_DURATION` | `30d` | Access token lifetime (e.g. `15m`, `1h`, `7d`) |
+| `SESSION_DURATION`   | `30d`           | Access token lifetime (e.g. `15m`, `1h`, `7d`)               |
 
 ### Magic Links
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `MAGIC_LINK_EXPIRY` | `15m` | How long a magic link remains valid |
+| Variable              | Default                 | Description                                                   |
+| --------------------- | ----------------------- | ------------------------------------------------------------- |
+| `MAGIC_LINK_EXPIRY`   | `15m`                   | How long a magic link remains valid                           |
 | `MAGIC_LINK_BASE_URL` | `http://localhost:5173` | Base URL prepended to the verification path in the email link |
 
 ### Email
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `EMAIL_PROVIDER` | `console` | `console` (dev) or `resend` (production) |
-| `RESEND_API_KEY` | *(empty)* | Required when `EMAIL_PROVIDER=resend`. Get from [resend.com](https://resend.com). |
-| `EMAIL_FROM` | `Nos limites <noreply@noslimites.app>` | Sender address shown in the magic link email |
+| Variable         | Default                                    | Description                                                                       |
+| ---------------- | ------------------------------------------ | --------------------------------------------------------------------------------- |
+| `EMAIL_PROVIDER` | `console`                                  | `console` (dev) or `resend` (production)                                          |
+| `RESEND_API_KEY` | _(empty)_                                  | Required when `EMAIL_PROVIDER=resend`. Get from [resend.com](https://resend.com). |
+| `EMAIL_FROM`     | `Nos limites <noreply@app.no-limites.com>` | Sender address shown in the magic link email                                      |
 
 > **Development tip — no email server needed**: When `EMAIL_PROVIDER=console`, magic links are printed directly to the server console output instead of being emailed. Look for a line like:
 >
@@ -135,37 +136,37 @@ All configuration lives in `server/.env`. Copy `server/.env.example` as a starti
 
 ### Google OAuth (optional)
 
-| Variable | Example | Description |
-|----------|---------|-------------|
-| `GOOGLE_CLIENT_ID` | `123….apps.googleusercontent.com` | From [Google Cloud Console](https://console.cloud.google.com/apis/credentials) |
-| `GOOGLE_CLIENT_SECRET` | `GOCSPX-…` | From Google Cloud Console |
-| `GOOGLE_CALLBACK_URL` | `http://localhost:3001/api/auth/google/callback` | Must match the redirect URI registered in Google Cloud |
+| Variable               | Example                                          | Description                                                                    |
+| ---------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------ |
+| `GOOGLE_CLIENT_ID`     | `123….apps.googleusercontent.com`                | From [Google Cloud Console](https://console.cloud.google.com/apis/credentials) |
+| `GOOGLE_CLIENT_SECRET` | `GOCSPX-…`                                       | From Google Cloud Console                                                      |
+| `GOOGLE_CALLBACK_URL`  | `http://localhost:3001/api/auth/google/callback` | Must match the redirect URI registered in Google Cloud                         |
 
 Leave `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` empty to disable Google OAuth entirely.
 
 ### Facebook OAuth (stub — optional)
 
-| Variable | Description |
-|----------|-------------|
-| `FACEBOOK_APP_ID` | From [Meta for Developers](https://developers.facebook.com/apps) |
-| `FACEBOOK_APP_SECRET` | From Meta for Developers |
+| Variable              | Description                                                      |
+| --------------------- | ---------------------------------------------------------------- |
+| `FACEBOOK_APP_ID`     | From [Meta for Developers](https://developers.facebook.com/apps) |
+| `FACEBOOK_APP_SECRET` | From Meta for Developers                                         |
 
 > Facebook OAuth is implemented as a stub. Leaving these empty disables the Facebook option.
 
 ### CORS
 
-| Variable | Default | Description |
-|----------|---------|-------------|
+| Variable       | Default                 | Description                                                   |
+| -------------- | ----------------------- | ------------------------------------------------------------- |
 | `FRONTEND_URL` | `http://localhost:5173` | Allowed origin for CORS. Must exactly match the frontend URL. |
 
 ---
 
 ## Dev URLs
 
-| Service | URL |
-|---------|-----|
-| Frontend | http://localhost:5173 |
-| Backend API | http://localhost:3001 |
+| Service      | URL                              |
+| ------------ | -------------------------------- |
+| Frontend     | http://localhost:5173            |
+| Backend API  | http://localhost:3001            |
 | Health check | http://localhost:3001/api/health |
 
 ---
@@ -174,23 +175,23 @@ Leave `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` empty to disable Google OAut
 
 ### Server (`cd server`)
 
-| Script | Command | Description |
-|--------|---------|-------------|
-| `dev` | `tsx watch src/index.ts` | Start server with live reload |
-| `build` | `tsc` | Compile TypeScript to `dist/` |
-| `start` | `node dist/index.js` | Run compiled output (production) |
-| `test` | `tsx --test tests/…` | Run all server tests |
-| `db:migrate` | `tsx src/db/migrate.ts` | Apply schema migrations |
-| `db:seed` | `tsx src/db/seed.ts` | Seed limit categories |
+| Script       | Command                  | Description                      |
+| ------------ | ------------------------ | -------------------------------- |
+| `dev`        | `tsx watch src/index.ts` | Start server with live reload    |
+| `build`      | `tsc`                    | Compile TypeScript to `dist/`    |
+| `start`      | `node dist/index.js`     | Run compiled output (production) |
+| `test`       | `tsx --test tests/…`     | Run all server tests             |
+| `db:migrate` | `tsx src/db/migrate.ts`  | Apply schema migrations          |
+| `db:seed`    | `tsx src/db/seed.ts`     | Seed limit categories            |
 
 ### Client (`cd client`)
 
-| Script | Command | Description |
-|--------|---------|-------------|
-| `dev` | `vite` | Start Vite dev server |
-| `build` | `tsc -b && vite build` | Type-check and build to `dist/` |
-| `preview` | `vite preview` | Preview the production build locally |
-| `test:deployment` | `node --test tests/vercel-spa-rewrite.test.mjs` | Validate Vercel SPA routing config |
+| Script            | Command                                         | Description                          |
+| ----------------- | ----------------------------------------------- | ------------------------------------ |
+| `dev`             | `vite`                                          | Start Vite dev server                |
+| `build`           | `tsc -b && vite build`                          | Type-check and build to `dist/`      |
+| `preview`         | `vite preview`                                  | Preview the production build locally |
+| `test:deployment` | `node --test tests/vercel-spa-rewrite.test.mjs` | Validate Vercel SPA routing config   |
 
 ---
 
@@ -205,11 +206,11 @@ npm test
 
 Runs three test suites using Node.js's built-in test runner (`tsx --test`):
 
-| Suite | File | What it covers |
-|-------|------|----------------|
-| CORS config | `tests/cors-config.test.ts` | Validates allowed-origin logic |
-| Frontend base URL | `tests/frontend-base-url.test.ts` | Validates URL construction helpers |
-| Device service | `tests/device-service.test.ts` | Refresh token hashing and device management |
+| Suite             | File                              | What it covers                              |
+| ----------------- | --------------------------------- | ------------------------------------------- |
+| CORS config       | `tests/cors-config.test.ts`       | Validates allowed-origin logic              |
+| Frontend base URL | `tests/frontend-base-url.test.ts` | Validates URL construction helpers          |
+| Device service    | `tests/device-service.test.ts`    | Refresh token hashing and device management |
 
 Tests use an in-memory SQLite database (`better-sqlite3` in devDependencies) — no connection to Turso required.
 

@@ -2,11 +2,11 @@
 
 ## Production Stack
 
-| Component | Platform | Notes |
-|-----------|----------|-------|
-| Frontend SPA | **Vercel** (static hosting) | Built from `client/`, served from CDN |
-| Backend API | **Vercel** (serverless Node.js function) | `server/src/index.ts` via `@vercel/node` |
-| Database | **Turso** (hosted libSQL) | Free tier up to 9 GB; globally replicated |
+| Component    | Platform                                 | Notes                                     |
+| ------------ | ---------------------------------------- | ----------------------------------------- |
+| Frontend SPA | **Vercel** (static hosting)              | Built from `client/`, served from CDN     |
+| Backend API  | **Vercel** (serverless Node.js function) | `server/src/index.ts` via `@vercel/node`  |
+| Database     | **Turso** (hosted libSQL)                | Free tier up to 9 GB; globally replicated |
 
 The backend is **not** a long-running server in production — Express runs as a Vercel serverless function invoked on each request.
 
@@ -36,13 +36,13 @@ The frontend is a standard Vite SPA deployed as a static site.
 
 ### Vercel project settings
 
-| Setting | Value |
-|---------|-------|
-| **Root directory** | `client` |
-| **Framework preset** | `Vite` |
-| **Build command** | `npm run build` |
-| **Output directory** | `dist` |
-| **Install command** | `npm install` |
+| Setting              | Value           |
+| -------------------- | --------------- |
+| **Root directory**   | `client`        |
+| **Framework preset** | `Vite`          |
+| **Build command**    | `npm run build` |
+| **Output directory** | `dist`          |
+| **Install command**  | `npm install`   |
 
 ### SPA routing
 
@@ -58,8 +58,8 @@ The frontend is a standard Vite SPA deployed as a static site.
 
 The client reads the API base URL at build time. Set the following in the Vercel project for the `client` deployment:
 
-| Variable | Example |
-|----------|---------|
+| Variable       | Example                       |
+| -------------- | ----------------------------- |
 | `VITE_API_URL` | `https://api.nos-limites.com` |
 
 ---
@@ -92,11 +92,11 @@ All HTTP requests are routed to the single Express function. Express then dispat
 
 ### Vercel project settings
 
-| Setting | Value |
-|---------|-------|
-| **Root directory** | *(project root)* |
-| **Build command** | *(none — Vercel uses the `builds` array)* |
-| **Framework preset** | `Other` |
+| Setting              | Value                                     |
+| -------------------- | ----------------------------------------- |
+| **Root directory**   | _(project root)_                          |
+| **Build command**    | _(none — Vercel uses the `builds` array)_ |
+| **Framework preset** | `Other`                                   |
 
 ---
 
@@ -106,30 +106,30 @@ Set these in the **Vercel Dashboard** → Project → **Settings** → **Environ
 
 ### Required in production
 
-| Variable | Description |
-|----------|-------------|
-| `NODE_ENV` | Set to `production` |
-| `JWT_SECRET` | Strong random secret (e.g. `openssl rand -hex 64`) |
-| `JWT_REFRESH_SECRET` | Separate strong random secret |
-| `SESSION_DURATION` | e.g. `15m` for access tokens |
-| `MAGIC_LINK_EXPIRY` | e.g. `15m` |
+| Variable              | Description                                                         |
+| --------------------- | ------------------------------------------------------------------- |
+| `NODE_ENV`            | Set to `production`                                                 |
+| `JWT_SECRET`          | Strong random secret (e.g. `openssl rand -hex 64`)                  |
+| `JWT_REFRESH_SECRET`  | Separate strong random secret                                       |
+| `SESSION_DURATION`    | e.g. `15m` for access tokens                                        |
+| `MAGIC_LINK_EXPIRY`   | e.g. `15m`                                                          |
 | `MAGIC_LINK_BASE_URL` | Your production frontend URL (e.g. `https://noslimites.vercel.app`) |
-| `FRONTEND_URL` | Same as `MAGIC_LINK_BASE_URL` — used for CORS |
-| `EMAIL_PROVIDER` | `resend` |
-| `RESEND_API_KEY` | Your [Resend](https://resend.com) API key |
-| `EMAIL_FROM` | Verified sender (e.g. `Nos limites <noreply@noslimites.app>`) |
-| `TURSO_DATABASE_URL` | `libsql://nos-limites-<your-org>.turso.io` |
-| `TURSO_AUTH_TOKEN` | Auth token from `turso db tokens create nos-limites` |
+| `FRONTEND_URL`        | Same as `MAGIC_LINK_BASE_URL` — used for CORS                       |
+| `EMAIL_PROVIDER`      | `resend`                                                            |
+| `RESEND_API_KEY`      | Your [Resend](https://resend.com) API key                           |
+| `EMAIL_FROM`          | Verified sender (e.g. `Nos limites <noreply@app.no-limites.com>`)   |
+| `TURSO_DATABASE_URL`  | `libsql://nos-limites-<your-org>.turso.io`                          |
+| `TURSO_AUTH_TOKEN`    | Auth token from `turso db tokens create nos-limites`                |
 
 ### Optional (OAuth)
 
-| Variable | Description |
-|----------|-------------|
-| `GOOGLE_CLIENT_ID` | Google OAuth client ID |
-| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret |
-| `GOOGLE_CALLBACK_URL` | `https://api.nos-limites.com/api/auth/google/callback` |
-| `FACEBOOK_APP_ID` | Facebook App ID (stub — not fully implemented) |
-| `FACEBOOK_APP_SECRET` | Facebook App Secret |
+| Variable               | Description                                            |
+| ---------------------- | ------------------------------------------------------ |
+| `GOOGLE_CLIENT_ID`     | Google OAuth client ID                                 |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret                             |
+| `GOOGLE_CALLBACK_URL`  | `https://api.nos-limites.com/api/auth/google/callback` |
+| `FACEBOOK_APP_ID`      | Facebook App ID (stub — not fully implemented)         |
+| `FACEBOOK_APP_SECRET`  | Facebook App Secret                                    |
 
 > **CORS**: `FRONTEND_URL` must exactly match your deployed frontend URL, including protocol and without a trailing slash (e.g. `https://noslimites.vercel.app`). A mismatch will block all browser API requests.
 
