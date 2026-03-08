@@ -14,6 +14,7 @@ import ProfilePage from "./pages/ProfilePage";
 import InvitePage from "./pages/InvitePage";
 import RelationshipPage from "./pages/RelationshipPage";
 import AboutPage from "./pages/AboutPage";
+import NotificationSettingsPage from "./pages/NotificationSettingsPage";
 
 function App() {
   return (
@@ -79,6 +80,16 @@ function App() {
               />
               <Route path="/about" element={<AboutPage />} />
             </Route>
+
+            {/* Settings pages without bottom nav */}
+            <Route
+              path="/settings/notifications"
+              element={
+                <ProtectedRoute>
+                  <NotificationSettingsPage />
+                </ProtectedRoute>
+              }
+            />
 
             {/* Default redirect */}
             <Route path="/" element={<Navigate to="/home" replace />} />

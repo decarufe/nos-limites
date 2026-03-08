@@ -545,6 +545,8 @@ class ResendEmailProvider implements EmailProvider {
   private resend: Resend;
   private from: string;
 
+  private replyTo: string;
+
   constructor() {
     const apiKey = process.env.RESEND_API_KEY;
     if (!apiKey) {
@@ -555,7 +557,9 @@ class ResendEmailProvider implements EmailProvider {
     }
 
     this.from =
-      process.env.EMAIL_FROM || "Nos limites <noreply@app.no-limites.com>";
+      process.env.EMAIL_FROM || "Nos limites <notifications@no-limites.com>";
+    this.replyTo =
+      process.env.EMAIL_REPLY_TO || "support@no-limites.com";
     this.resend = new Resend(apiKey);
   }
 
@@ -567,6 +571,7 @@ class ResendEmailProvider implements EmailProvider {
     const { error } = await this.resend.emails.send({
       from: this.from,
       to,
+      replyTo: this.replyTo,
       subject: "Votre lien de connexion - Nos limites",
       html: buildMagicLinkHtml(magicLinkUrl, expiresInMinutes),
       text: buildMagicLinkText(magicLinkUrl, expiresInMinutes),
@@ -592,10 +597,16 @@ class ResendEmailProvider implements EmailProvider {
       count === 1
         ? "Votre résumé : 1 notification non lue - Nos limites"
         : `Votre résumé : ${count} notifications non lues - Nos limites`;
+    const appUnsubscribeUrl = `${appUrl}/settings/notifications`;
     const { error } = await this.resend.emails.send({
       from: this.from,
       to,
+      replyTo: this.replyTo,
       subject,
+      headers: {
+        "List-Unsubscribe": `<${appUnsubscribeUrl}>, <mailto:${this.replyTo}?subject=unsubscribe>`,
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+      },
       html: buildNotificationDigestHtml(
         displayName,
         notifications,
@@ -631,10 +642,16 @@ class ResendEmailProvider implements EmailProvider {
       count === 1
         ? `${notifications[0].title} - Nos limites`
         : `${count} nouvelles notifications - Nos limites`;
+    const appUnsubscribeUrl = `${appUrl}/settings/notifications`;
     const { error } = await this.resend.emails.send({
       from: this.from,
       to,
+      replyTo: this.replyTo,
       subject,
+      headers: {
+        "List-Unsubscribe": `<${appUnsubscribeUrl}>, <mailto:${this.replyTo}?subject=unsubscribe>`,
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+      },
       html: buildRealtimeNotificationHtml(displayName, notifications, appUrl),
       text: buildRealtimeNotificationText(displayName, notifications, appUrl),
     });
