@@ -3,18 +3,18 @@ import { AuthProvider } from "./context/AuthContext";
 import { NotificationsProvider } from "./context/NotificationsContext";
 import AppLayout from "./components/AppLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
-import LoginPage from "./pages/LoginPage";
-import AuthVerifyPage from "./pages/AuthVerifyPage";
-import OAuthCallbackPage from "./pages/OAuthCallbackPage";
-import ProfileSetupPage from "./pages/ProfileSetupPage";
-import HomePage from "./pages/HomePage";
-import ScanPage from "./pages/ScanPage";
-import NotificationsPage from "./pages/NotificationsPage";
-import ProfilePage from "./pages/ProfilePage";
-import InvitePage from "./pages/InvitePage";
-import RelationshipPage from "./pages/RelationshipPage";
-import AboutPage from "./pages/AboutPage";
-import NotificationSettingsPage from "./pages/NotificationSettingsPage";
+import LoginPage from "./pages/auth/LoginPage";
+import AuthVerifyPage from "./pages/auth/AuthVerifyPage";
+import OAuthCallbackPage from "./pages/auth/OAuthCallbackPage";
+import ProfileSetupPage from "./pages/auth/ProfileSetupPage";
+import HomePage from "./pages/relationships/HomePage";
+import ScanPage from "./pages/relationships/ScanPage";
+import NotificationsPage from "./pages/notifications/NotificationsPage";
+import ProfilePage from "./pages/profile/ProfilePage";
+import InvitePage from "./pages/relationships/InvitePage";
+import RelationshipPage from "./pages/relationships/RelationshipPage";
+import AboutPage from "./pages/profile/AboutPage";
+import NotificationSettingsPage from "./pages/notifications/NotificationSettingsPage";
 
 function App() {
   return (

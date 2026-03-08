@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import { useNotifications } from "../context/NotificationsContext";
-import { api } from "../services/api";
+import { useAuth } from "../../context/AuthContext";
+import { useNotifications } from "../../context/NotificationsContext";
+import { api } from "../../services/api";
 import styles from "./NotificationsPage.module.css";
 
 interface Notification {
