@@ -588,7 +588,7 @@ class ResendEmailProvider implements EmailProvider {
     magicLinkUrl,
     expiresInMinutes = 15,
   }: SendMagicLinkOptions): Promise<void> {
-    const appUrl = process.env.FRONTEND_URL || "https://app.no-limites.com";
+    const appUrl = process.env.FRONTEND_URL || "https://app.nos-limites.com";
     const { error } = await this.resend.emails.send({
       from: this.from,
       to,
@@ -612,7 +612,7 @@ class ResendEmailProvider implements EmailProvider {
     notifications,
     activitySummary,
   }: SendNotificationDigestOptions): Promise<void> {
-    const appUrl = process.env.FRONTEND_URL || "https://app.no-limites.com";
+    const appUrl = process.env.FRONTEND_URL || "https://app.nos-limites.com";
     const count = notifications.length;
     const subject =
       count === 1
@@ -657,7 +657,7 @@ class ResendEmailProvider implements EmailProvider {
     displayName,
     notifications,
   }: SendRealtimeNotificationOptions): Promise<void> {
-    const appUrl = process.env.FRONTEND_URL || "https://app.no-limites.com";
+    const appUrl = process.env.FRONTEND_URL || "https://app.nos-limites.com";
     const count = notifications.length;
     const subject =
       count === 1

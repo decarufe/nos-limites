@@ -120,11 +120,11 @@ All configuration lives in `server/.env`. Copy `server/.env.example` as a starti
 
 ### Email
 
-| Variable         | Default                                    | Description                                                                       |
-| ---------------- | ------------------------------------------ | --------------------------------------------------------------------------------- |
-| `EMAIL_PROVIDER` | `console`                                  | `console` (dev) or `resend` (production)                                          |
-| `RESEND_API_KEY` | _(empty)_                                  | Required when `EMAIL_PROVIDER=resend`. Get from [resend.com](https://resend.com). |
-| `EMAIL_FROM`     | `Nos limites <noreply@app.no-limites.com>` | Sender address shown in the magic link email                                      |
+| Variable         | Default                                     | Description                                                                       |
+| ---------------- | ------------------------------------------- | --------------------------------------------------------------------------------- |
+| `EMAIL_PROVIDER` | `console`                                   | `console` (dev) or `resend` (production)                                          |
+| `RESEND_API_KEY` | _(empty)_                                   | Required when `EMAIL_PROVIDER=resend`. Get from [resend.com](https://resend.com). |
+| `EMAIL_FROM`     | `Nos limites <noreply@app.nos-limites.com>` | Sender address shown in the magic link email                                      |
 
 > **Development tip — no email server needed**: When `EMAIL_PROVIDER=console`, magic links are printed directly to the server console output instead of being emailed. Look for a line like:
 >

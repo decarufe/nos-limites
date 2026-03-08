@@ -261,7 +261,7 @@ Create a new invitation. Returns a unique token, a shareable URL, and a QR code 
 ```json
 {
   "token": "abc123",
-  "inviteUrl": "https://app.no-limites.com/invite/abc123",
+  "inviteUrl": "https://app.nos-limites.com/invite/abc123",
   "qrCode": "data:image/png;base64,…"
 }
 ```

@@ -117,7 +117,7 @@ Set these in the **Vercel Dashboard** → Project → **Settings** → **Environ
 | `FRONTEND_URL`        | Same as `MAGIC_LINK_BASE_URL` — used for CORS                       |
 | `EMAIL_PROVIDER`      | `resend`                                                            |
 | `RESEND_API_KEY`      | Your [Resend](https://resend.com) API key                           |
-| `EMAIL_FROM`          | Verified sender (e.g. `Nos limites <noreply@app.no-limites.com>`)   |
+| `EMAIL_FROM`          | Verified sender (e.g. `Nos limites <noreply@app.nos-limites.com>`)  |
 | `TURSO_DATABASE_URL`  | `libsql://nos-limites-<your-org>.turso.io`                          |
 | `TURSO_AUTH_TOKEN`    | Auth token from `turso db tokens create nos-limites`                |
 
