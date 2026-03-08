@@ -184,6 +184,29 @@ export async function processNotificationEmails(): Promise<void> {
   }
 }
 
+// ─── Trigger (external caller) ───────────────────────────────────────
+
+let isProcessing = false;
+
+/**
+ * Triggers a notification email processing run.
+ * If a run is already in progress, returns immediately with `alreadyRunning: true`.
+ * Safe to call concurrently — only one run executes at a time.
+ */
+export async function triggerNotificationEmails(): Promise<{ alreadyRunning: boolean }> {
+  if (isProcessing) {
+    return { alreadyRunning: true };
+  }
+
+  isProcessing = true;
+  try {
+    await processNotificationEmails();
+    return { alreadyRunning: false };
+  } finally {
+    isProcessing = false;
+  }
+}
+
 // ─── Scheduler ───────────────────────────────────────────────────────
 
 let schedulerInterval: ReturnType<typeof setInterval> | null = null;
