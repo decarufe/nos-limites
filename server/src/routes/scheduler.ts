@@ -24,8 +24,12 @@ router.post(
   async (_req: Request, res: Response) => {
     const now = Date.now();
 
-    if (lastTriggerTime !== null && now - lastTriggerTime < SCHEDULER_TRIGGER_RATE_LIMIT_MS) {
-      const retryAfterMs = SCHEDULER_TRIGGER_RATE_LIMIT_MS - (now - lastTriggerTime);
+    if (
+      lastTriggerTime !== null &&
+      now - lastTriggerTime < SCHEDULER_TRIGGER_RATE_LIMIT_MS
+    ) {
+      const retryAfterMs =
+        SCHEDULER_TRIGGER_RATE_LIMIT_MS - (now - lastTriggerTime);
       res.setHeader("Retry-After", Math.ceil(retryAfterMs / 1000).toString());
       res.status(429).json({
         status: "rate_limited",
@@ -36,7 +40,7 @@ router.post(
 
     lastTriggerTime = now;
 
-    const { alreadyRunning } = await triggerNotificationEmails();
+    const { alreadyRunning, emailsSent } = await triggerNotificationEmails();
 
     if (alreadyRunning) {
       res.status(200).json({
@@ -49,6 +53,7 @@ router.post(
     res.status(200).json({
       status: "ok",
       message: "Email processing triggered.",
+      emailsSent,
     });
   },
 );

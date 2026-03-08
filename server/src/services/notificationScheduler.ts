@@ -6,9 +6,6 @@ import { v4 as uuidv4 } from "uuid";
 
 // ─── Constants ──────────────────────────────────────────────────────
 
-/** Scheduler polling interval in milliseconds */
-const SCHEDULER_INTERVAL_MS = 60 * 1000;
-
 /**
  * Minimum hours between emails for daily/weekly frequencies.
  * 20 hours prevents duplicate sends across timezone boundaries
@@ -37,27 +34,36 @@ interface UserSettings {
 
 // ─── Helpers ────────────────────────────────────────────────────────
 
-function parseSettings(row: typeof notificationEmailSettings.$inferSelect | undefined): UserSettings {
+function parseSettings(
+  row: typeof notificationEmailSettings.$inferSelect | undefined,
+): UserSettings {
   return {
     enabled: row?.enabled ?? true,
     frequency: (row?.frequency ?? "daily") as NotificationFrequency,
     delayHours: row?.delayHours ?? 1,
     dailyTime: row?.dailyTime ?? "08:00",
-    weeklyDays: row?.weeklyDays ? (JSON.parse(row.weeklyDays) as number[]) : [0, 1, 2, 3, 4, 5, 6],
-    lastEmailSentAt: row?.lastEmailSentAt ? new Date(row.lastEmailSentAt) : null,
+    weeklyDays: row?.weeklyDays
+      ? (JSON.parse(row.weeklyDays) as number[])
+      : [0, 1, 2, 3, 4, 5, 6],
+    lastEmailSentAt: row?.lastEmailSentAt
+      ? new Date(row.lastEmailSentAt)
+      : null,
   };
 }
 
 /**
- * Returns true if the current time falls within `windowMinutes` of `dailyTime`.
- * The tolerance window prevents missing scheduled emails due to scheduler
- * timing variations (e.g., if the scheduler fires at 08:01 for an 08:00 target).
+ * Returns true if the current time has reached or passed `dailyTime` today.
+ *
+ * Unlike the previous window-based check, this works regardless of how often
+ * the scheduler API is triggered externally. Deduplication (preventing multiple
+ * sends on the same day) is handled by the `lastEmailSentAt` /
+ * `MIN_EMAIL_INTERVAL_HOURS` guard in the caller.
  */
-function isTimeMatch(dailyTime: string, now: Date, windowMinutes = 5): boolean {
+function hasTimePassedToday(dailyTime: string, now: Date): boolean {
   const [hours, minutes] = dailyTime.split(":").map(Number);
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
   const targetMinutes = hours * 60 + minutes;
-  return currentMinutes >= targetMinutes && currentMinutes < targetMinutes + windowMinutes;
+  return currentMinutes >= targetMinutes;
 }
 
 async function upsertLastEmailSent(userId: string, now: Date): Promise<void> {
@@ -83,8 +89,18 @@ async function upsertLastEmailSent(userId: string, now: Date): Promise<void> {
 
 // ─── Core Processing ─────────────────────────────────────────────────
 
-export async function processNotificationEmails(): Promise<void> {
+/**
+ * Checks all users and sends notification digest emails according to each
+ * user's configured frequency preference. Designed to be called on every
+ * external API trigger — internal time/interval guards prevent duplicate sends.
+ *
+ * @returns The number of digest emails sent in this run.
+ */
+export async function processNotificationEmails(): Promise<{
+  emailsSent: number;
+}> {
   const now = new Date();
+  let emailsSent = 0;
 
   const allUsers = await db.query.users.findMany();
 
@@ -111,14 +127,21 @@ export async function processNotificationEmails(): Promise<void> {
       let shouldSend = false;
       let notificationsToSend = unreadNotifications;
 
-      const { frequency, delayHours, dailyTime, weeklyDays, lastEmailSentAt } = settings;
+      const { frequency, delayHours, dailyTime, weeklyDays, lastEmailSentAt } =
+        settings;
 
       // Prevent sending twice within MIN_EMAIL_INTERVAL_HOURS (for daily/weekly)
-      const minIntervalAgo = new Date(now.getTime() - MIN_EMAIL_INTERVAL_HOURS * 60 * 60 * 1000);
+      const minIntervalAgo = new Date(
+        now.getTime() - MIN_EMAIL_INTERVAL_HOURS * 60 * 60 * 1000,
+      );
 
       if (frequency === "immediately") {
         // Send for notifications created after last email (or within the last scheduling interval)
-        const since = lastEmailSentAt ?? new Date(now.getTime() - DEFAULT_IMMEDIATE_WINDOW_MINUTES * 60 * 1000);
+        const since =
+          lastEmailSentAt ??
+          new Date(
+            now.getTime() - DEFAULT_IMMEDIATE_WINDOW_MINUTES * 60 * 1000,
+          );
         const newNotifications = unreadNotifications.filter(
           (n) => new Date(n.createdAt) > since,
         );
@@ -132,7 +155,9 @@ export async function processNotificationEmails(): Promise<void> {
         const overdueNotifications = unreadNotifications.filter(
           (n) => new Date(n.createdAt) <= cutoff,
         );
-        const minInterval = new Date(now.getTime() - Math.max(delayHours, 1) * 60 * 60 * 1000);
+        const minInterval = new Date(
+          now.getTime() - Math.max(delayHours, 1) * 60 * 60 * 1000,
+        );
         if (
           overdueNotifications.length > 0 &&
           (!lastEmailSentAt || lastEmailSentAt < minInterval)
@@ -142,7 +167,7 @@ export async function processNotificationEmails(): Promise<void> {
         }
       } else if (frequency === "daily") {
         if (
-          isTimeMatch(dailyTime, now) &&
+          hasTimePassedToday(dailyTime, now) &&
           (!lastEmailSentAt || lastEmailSentAt < minIntervalAgo)
         ) {
           shouldSend = true;
@@ -151,7 +176,7 @@ export async function processNotificationEmails(): Promise<void> {
         const currentDay = now.getDay();
         if (
           weeklyDays.includes(currentDay) &&
-          isTimeMatch(dailyTime, now) &&
+          hasTimePassedToday(dailyTime, now) &&
           (!lastEmailSentAt || lastEmailSentAt < minIntervalAgo)
         ) {
           shouldSend = true;
@@ -171,6 +196,7 @@ export async function processNotificationEmails(): Promise<void> {
         });
 
         await upsertLastEmailSent(user.id, now);
+        emailsSent++;
         console.log(
           `[NotificationScheduler] Digest sent to ${user.email} (${notificationsToSend.length} notifications, frequency: ${frequency})`,
         );
@@ -182,6 +208,8 @@ export async function processNotificationEmails(): Promise<void> {
       );
     }
   }
+
+  return { emailsSent };
 }
 
 // ─── Trigger (external caller) ───────────────────────────────────────
@@ -189,45 +217,31 @@ export async function processNotificationEmails(): Promise<void> {
 let isProcessing = false;
 
 /**
- * Triggers a notification email processing run.
- * If a run is already in progress, returns immediately with `alreadyRunning: true`.
- * Safe to call concurrently — only one run executes at a time.
+ * Triggers a single notification email processing run.
+ *
+ * Called by `POST /api/scheduler/trigger-emails` on every external cron
+ * invocation. The function itself decides whether each user has pending
+ * emails to send based on their frequency settings and last-sent timestamp.
+ *
+ * If a run is already in progress, returns immediately with
+ * `alreadyRunning: true` without starting a second run.
+ *
+ * @returns `{ alreadyRunning, emailsSent }` — `emailsSent` is omitted when
+ *   the call was skipped due to a concurrent run.
  */
-export async function triggerNotificationEmails(): Promise<{ alreadyRunning: boolean }> {
+export async function triggerNotificationEmails(): Promise<{
+  alreadyRunning: boolean;
+  emailsSent?: number;
+}> {
   if (isProcessing) {
     return { alreadyRunning: true };
   }
 
   isProcessing = true;
   try {
-    await processNotificationEmails();
-    return { alreadyRunning: false };
+    const { emailsSent } = await processNotificationEmails();
+    return { alreadyRunning: false, emailsSent };
   } finally {
     isProcessing = false;
-  }
-}
-
-// ─── Scheduler ───────────────────────────────────────────────────────
-
-let schedulerInterval: ReturnType<typeof setInterval> | null = null;
-
-export function startNotificationScheduler(): void {
-  if (schedulerInterval) return;
-
-  // Check every minute
-  schedulerInterval = setInterval(() => {
-    processNotificationEmails().catch((err) => {
-      console.error("[NotificationScheduler] Scheduler error:", err);
-    });
-  }, SCHEDULER_INTERVAL_MS);
-
-  console.log("[NotificationScheduler] Notification scheduler started.");
-}
-
-export function stopNotificationScheduler(): void {
-  if (schedulerInterval) {
-    clearInterval(schedulerInterval);
-    schedulerInterval = null;
-    console.log("[NotificationScheduler] Notification scheduler stopped.");
   }
 }
