@@ -49,6 +49,7 @@ export interface EmailProvider {
 function buildMagicLinkHtml(
   magicLinkUrl: string,
   expiresInMinutes: number,
+  appUrl: string,
 ): string {
   return `<!DOCTYPE html>
 <html lang="fr">
@@ -122,8 +123,11 @@ function buildMagicLinkHtml(
               <p style="margin: 0 0 8px; color: #A8A29E; font-size: 12px; line-height: 1.5;">
                 Vous recevez cet email car une connexion a &eacute;t&eacute; demand&eacute;e avec votre adresse.
               </p>
-              <p style="margin: 0; color: #A8A29E; font-size: 12px; line-height: 1.5;">
+              <p style="margin: 0 0 8px; color: #A8A29E; font-size: 12px; line-height: 1.5;">
                 Si vous n'&ecirc;tes pas &agrave; l'origine de cette demande, vous pouvez ignorer cet email.
+              </p>
+              <p style="margin: 0; font-size: 12px; line-height: 1.5;">
+                <a href="${appUrl}/settings/notifications" style="color: #7C3AED; text-decoration: underline;">G&eacute;rer mes pr&eacute;f&eacute;rences de notification</a>
               </p>
             </td>
           </tr>
@@ -139,6 +143,7 @@ function buildMagicLinkHtml(
 function buildMagicLinkText(
   magicLinkUrl: string,
   expiresInMinutes: number,
+  appUrl: string,
 ): string {
   return [
     "Nos limites - Votre lien de connexion",
@@ -151,6 +156,8 @@ function buildMagicLinkText(
     `Ce lien est valable ${expiresInMinutes} minutes et ne peut être utilisé qu'une seule fois.`,
     "",
     "Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet email.",
+    "",
+    `Gérer mes préférences de notification : ${appUrl}/settings/notifications`,
   ].join("\n");
 }
 
@@ -281,8 +288,11 @@ function buildNotificationDigestHtml(
               <p style="margin: 0 0 8px; color: #A8A29E; font-size: 12px; line-height: 1.5;">
                 Vous recevez cet email car vous avez des notifications non lues sur Nos limites.
               </p>
-              <p style="margin: 0; color: #A8A29E; font-size: 12px; line-height: 1.5;">
+              <p style="margin: 0 0 8px; color: #A8A29E; font-size: 12px; line-height: 1.5;">
                 Vous pouvez modifier vos pr&eacute;f&eacute;rences de notification dans votre profil.
+              </p>
+              <p style="margin: 0; font-size: 12px; line-height: 1.5;">
+                <a href="${appUrl}/settings/notifications" style="color: #7C3AED; text-decoration: underline;">G&eacute;rer mes pr&eacute;f&eacute;rences &bull; Se d&eacute;sabonner</a>
               </p>
             </td>
           </tr>
@@ -350,6 +360,9 @@ function buildNotificationDigestText(
   lines.push("");
   lines.push(
     "Vous pouvez modifier vos préférences de notification dans votre profil.",
+  );
+  lines.push(
+    `Gérer mes préférences / Se désabonner : ${appUrl}/settings/notifications`,
   );
   return lines.join("\n");
 }
@@ -438,8 +451,11 @@ function buildRealtimeNotificationHtml(
           <!-- Footer -->
           <tr>
             <td style="background-color: #F5F5F4; padding: 20px 40px; text-align: center; border-top: 1px solid #E7E5E4;">
-              <p style="margin: 0; color: #A8A29E; font-size: 12px; line-height: 1.5;">
+              <p style="margin: 0 0 8px; color: #A8A29E; font-size: 12px; line-height: 1.5;">
                 Vous pouvez d&eacute;sactiver ces alertes dans vos param&egrave;tres de notification.
+              </p>
+              <p style="margin: 0; font-size: 12px; line-height: 1.5;">
+                <a href="${appUrl}/settings/notifications" style="color: #7C3AED; text-decoration: underline;">G&eacute;rer mes pr&eacute;f&eacute;rences &bull; Se d&eacute;sabonner</a>
               </p>
             </td>
           </tr>
@@ -479,6 +495,9 @@ function buildRealtimeNotificationText(
   lines.push("");
   lines.push(
     "Vous pouvez désactiver ces alertes dans vos paramètres de notification.",
+  );
+  lines.push(
+    `Gérer mes préférences / Se désabonner : ${appUrl}/settings/notifications`,
   );
   return lines.join("\n");
 }
@@ -569,13 +588,14 @@ class ResendEmailProvider implements EmailProvider {
     magicLinkUrl,
     expiresInMinutes = 15,
   }: SendMagicLinkOptions): Promise<void> {
+    const appUrl = process.env.FRONTEND_URL || "https://app.no-limites.com";
     const { error } = await this.resend.emails.send({
       from: this.from,
       to,
       replyTo: this.replyTo,
       subject: "Votre lien de connexion - Nos limites",
-      html: buildMagicLinkHtml(magicLinkUrl, expiresInMinutes),
-      text: buildMagicLinkText(magicLinkUrl, expiresInMinutes),
+      html: buildMagicLinkHtml(magicLinkUrl, expiresInMinutes, appUrl),
+      text: buildMagicLinkText(magicLinkUrl, expiresInMinutes, appUrl),
     });
 
     if (error) {
