@@ -320,10 +320,12 @@ function buildNotificationDigestText(
       newRelations + newCommonLimits + limitsRemoved + pendingRequests > 0;
     if (hasActivity) {
       lines.push("--- Activité récente ---", "");
-      if (newRelations > 0) lines.push(`  📇 ${newRelations} nouveau(x) contact(s)`);
+      if (newRelations > 0)
+        lines.push(`  📇 ${newRelations} nouveau(x) contact(s)`);
       if (newCommonLimits > 0)
         lines.push(`  ✅ ${newCommonLimits} nouvelle(s) limite(s) commune(s)`);
-      if (limitsRemoved > 0) lines.push(`  ❌ ${limitsRemoved} limite(s) retirée(s)`);
+      if (limitsRemoved > 0)
+        lines.push(`  ❌ ${limitsRemoved} limite(s) retirée(s)`);
       if (pendingRequests > 0)
         lines.push(`  ⏳ ${pendingRequests} demande(s) en attente`);
       lines.push("");
@@ -558,8 +560,7 @@ class ResendEmailProvider implements EmailProvider {
 
     this.from =
       process.env.EMAIL_FROM || "Nos limites <notifications@no-limites.com>";
-    this.replyTo =
-      process.env.EMAIL_REPLY_TO || "support@no-limites.com";
+    this.replyTo = process.env.EMAIL_REPLY_TO || "support@no-limites.com";
     this.resend = new Resend(apiKey);
   }
 

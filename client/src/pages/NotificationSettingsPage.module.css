@@ -55,11 +55,11 @@
   align-items: flex-start;
   gap: var(--spacing-sm);
   padding: var(--spacing-sm) var(--spacing-md);
-  background-color: #EFF6FF;
-  border: 1px solid #BFDBFE;
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
   border-radius: var(--radius-md);
   margin-bottom: var(--spacing-lg);
-  color: #1E40AF;
+  color: #1e40af;
   font-size: var(--font-size-sm);
   line-height: 1.5;
 }
@@ -210,7 +210,7 @@
 }
 
 .errorText {
-  color: #DC2626;
+  color: #dc2626;
   font-size: var(--font-size-sm);
   font-weight: 500;
   margin: 0 0 var(--spacing-sm);
@@ -259,8 +259,8 @@
 }
 
 .unsubscribeButton:hover:not(:disabled) {
-  border-color: #DC2626;
-  color: #DC2626;
+  border-color: #dc2626;
+  color: #dc2626;
 }
 
 .unsubscribeButton:disabled {

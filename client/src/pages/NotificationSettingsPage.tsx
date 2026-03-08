@@ -39,7 +39,9 @@ export default function NotificationSettingsPage() {
     }
     if (isAuthenticated) {
       api
-        .get<{ settings: NotificationSettings }>("/profile/notification-settings")
+        .get<{ settings: NotificationSettings }>(
+          "/profile/notification-settings",
+        )
         .then((data) => setSettings(data.settings))
         .catch(() => {
           setErrorMessage("Impossible de charger vos préférences.");
@@ -133,7 +135,8 @@ export default function NotificationSettingsPage() {
         </button>
         <h1 className={styles.title}>Notifications par email</h1>
         <p className={styles.subtitle}>
-          Gérez la fréquence et le type d&apos;emails que vous recevez de Nos limites.
+          Gérez la fréquence et le type d&apos;emails que vous recevez de Nos
+          limites.
         </p>
       </div>
 
@@ -155,7 +158,8 @@ export default function NotificationSettingsPage() {
           <line x1="12" y1="8" x2="12.01" y2="8" />
         </svg>
         <span>
-          Pour vous désabonner de tous les emails, désactivez les deux options ci-dessous et enregistrez.
+          Pour vous désabonner de tous les emails, désactivez les deux options
+          ci-dessous et enregistrez.
         </span>
       </div>
 
@@ -165,7 +169,8 @@ export default function NotificationSettingsPage() {
           <div className={styles.toggleInfo}>
             <span className={styles.toggleLabel}>Alertes en temps réel</span>
             <p className={styles.hint}>
-              Recevez un email lorsqu&apos;un contact fait un changement important (nouvelle demande, limite modifiée, etc.).
+              Recevez un email lorsqu&apos;un contact fait un changement
+              important (nouvelle demande, limite modifiée, etc.).
             </p>
           </div>
           <label className={styles.toggle} aria-label="Alertes en temps réel">
@@ -212,7 +217,9 @@ export default function NotificationSettingsPage() {
         {settings.digestEnabled && (
           <div className={styles.digestFields}>
             <div className={styles.field}>
-              <label htmlFor="digest-frequency" className={styles.fieldLabel}>Fréquence</label>
+              <label htmlFor="digest-frequency" className={styles.fieldLabel}>
+                Fréquence
+              </label>
               <select
                 id="digest-frequency"
                 className={styles.select}
@@ -230,7 +237,9 @@ export default function NotificationSettingsPage() {
             </div>
 
             <div className={styles.field}>
-              <label htmlFor="digest-time" className={styles.fieldLabel}>Heure d&apos;envoi</label>
+              <label htmlFor="digest-time" className={styles.fieldLabel}>
+                Heure d&apos;envoi
+              </label>
               <input
                 id="digest-time"
                 type="time"
@@ -247,7 +256,9 @@ export default function NotificationSettingsPage() {
 
             {settings.digestFrequency === "weekly" && (
               <div className={styles.field}>
-                <label htmlFor="digest-weekday" className={styles.fieldLabel}>Jour de la semaine</label>
+                <label htmlFor="digest-weekday" className={styles.fieldLabel}>
+                  Jour de la semaine
+                </label>
                 <select
                   id="digest-weekday"
                   className={styles.select}
@@ -272,12 +283,8 @@ export default function NotificationSettingsPage() {
       </div>
 
       {/* Feedback messages */}
-      {successMessage && (
-        <p className={styles.successText}>{successMessage}</p>
-      )}
-      {errorMessage && (
-        <p className={styles.errorText}>{errorMessage}</p>
-      )}
+      {successMessage && <p className={styles.successText}>{successMessage}</p>}
+      {errorMessage && <p className={styles.errorText}>{errorMessage}</p>}
 
       {/* Actions */}
       <div className={styles.actions}>
@@ -292,7 +299,9 @@ export default function NotificationSettingsPage() {
         <button
           className={styles.unsubscribeButton}
           onClick={handleDisableAll}
-          disabled={saving || (!settings.digestEnabled && !settings.realtimeEnabled)}
+          disabled={
+            saving || (!settings.digestEnabled && !settings.realtimeEnabled)
+          }
         >
           Me désabonner de tous les emails
         </button>
