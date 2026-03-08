@@ -368,13 +368,11 @@ router.get(
 
       return res.json({
         settings: {
-          enabled: settings?.enabled ?? true,
-          frequency: settings?.frequency ?? "daily",
-          delayHours: settings?.delayHours ?? 1,
-          dailyTime: settings?.dailyTime ?? "08:00",
-          weeklyDays: settings?.weeklyDays
-            ? JSON.parse(settings.weeklyDays)
-            : [0, 1, 2, 3, 4, 5, 6],
+          digestEnabled: settings?.digestEnabled ?? true,
+          digestFrequency: settings?.digestFrequency ?? "daily",
+          digestTime: settings?.digestTime ?? "08:00",
+          digestWeeklyDay: settings?.digestWeeklyDay ?? 1,
+          realtimeEnabled: settings?.realtimeEnabled ?? true,
         },
       });
     } catch (error) {
@@ -396,37 +394,43 @@ router.put(
   async (req: AuthRequest, res: Response) => {
     try {
       const userId = req.userId!;
-      const { enabled, frequency, delayHours, dailyTime, weeklyDays } = req.body;
+      const {
+        digestEnabled,
+        digestFrequency,
+        digestTime,
+        digestWeeklyDay,
+        realtimeEnabled,
+      } = req.body;
 
-      const validFrequencies = ["immediately", "delayed", "daily", "weekly"];
-      if (frequency !== undefined && !validFrequencies.includes(frequency)) {
-        return res.status(400).json({
-          message: "Fréquence invalide. Valeurs acceptées : immediately, delayed, daily, weekly.",
-        });
-      }
-
+      // Validate digestFrequency
+      const validFrequencies = ["daily", "weekly"];
       if (
-        delayHours !== undefined &&
-        (typeof delayHours !== "number" || delayHours < 1 || delayHours > 168)
+        digestFrequency !== undefined &&
+        !validFrequencies.includes(digestFrequency)
       ) {
         return res.status(400).json({
-          message: "Le délai doit être compris entre 1 et 168 heures.",
+          message:
+            "Fréquence du résumé invalide. Valeurs acceptées : daily, weekly.",
         });
       }
 
-      if (dailyTime !== undefined && !/^\d{2}:\d{2}$/.test(dailyTime)) {
+      // Validate digestTime
+      if (digestTime !== undefined && !/^\d{2}:\d{2}$/.test(digestTime)) {
         return res.status(400).json({
           message: "L'heure doit être au format HH:MM.",
         });
       }
 
+      // Validate digestWeeklyDay
       if (
-        weeklyDays !== undefined &&
-        (!Array.isArray(weeklyDays) ||
-          weeklyDays.some((d: unknown) => typeof d !== "number" || d < 0 || d > 6))
+        digestWeeklyDay !== undefined &&
+        (typeof digestWeeklyDay !== "number" ||
+          digestWeeklyDay < 0 ||
+          digestWeeklyDay > 6)
       ) {
         return res.status(400).json({
-          message: "Les jours de la semaine doivent être un tableau de nombres entre 0 et 6.",
+          message:
+            "Le jour du résumé hebdomadaire doit être un nombre entre 0 (dimanche) et 6 (samedi).",
         });
       }
 
@@ -439,13 +443,11 @@ router.put(
         await db
           .update(notificationEmailSettings)
           .set({
-            ...(enabled !== undefined && { enabled }),
-            ...(frequency !== undefined && { frequency }),
-            ...(delayHours !== undefined && { delayHours }),
-            ...(dailyTime !== undefined && { dailyTime }),
-            ...(weeklyDays !== undefined && {
-              weeklyDays: JSON.stringify(weeklyDays),
-            }),
+            ...(digestEnabled !== undefined && { digestEnabled }),
+            ...(digestFrequency !== undefined && { digestFrequency }),
+            ...(digestTime !== undefined && { digestTime }),
+            ...(digestWeeklyDay !== undefined && { digestWeeklyDay }),
+            ...(realtimeEnabled !== undefined && { realtimeEnabled }),
             updatedAt: nowStr,
           })
           .where(eq(notificationEmailSettings.userId, userId));
@@ -453,11 +455,11 @@ router.put(
         await db.insert(notificationEmailSettings).values({
           id: uuidv4(),
           userId,
-          enabled: enabled ?? true,
-          frequency: frequency ?? "daily",
-          delayHours: delayHours ?? 1,
-          dailyTime: dailyTime ?? "08:00",
-          weeklyDays: weeklyDays ? JSON.stringify(weeklyDays) : JSON.stringify([0, 1, 2, 3, 4, 5, 6]),
+          digestEnabled: digestEnabled ?? true,
+          digestFrequency: digestFrequency ?? "daily",
+          digestTime: digestTime ?? "08:00",
+          digestWeeklyDay: digestWeeklyDay ?? 1,
+          realtimeEnabled: realtimeEnabled ?? true,
           updatedAt: nowStr,
         });
       }
@@ -468,13 +470,11 @@ router.put(
 
       return res.json({
         settings: {
-          enabled: updated?.enabled ?? true,
-          frequency: updated?.frequency ?? "daily",
-          delayHours: updated?.delayHours ?? 1,
-          dailyTime: updated?.dailyTime ?? "08:00",
-          weeklyDays: updated?.weeklyDays
-            ? JSON.parse(updated.weeklyDays)
-            : [0, 1, 2, 3, 4, 5, 6],
+          digestEnabled: updated?.digestEnabled ?? true,
+          digestFrequency: updated?.digestFrequency ?? "daily",
+          digestTime: updated?.digestTime ?? "08:00",
+          digestWeeklyDay: updated?.digestWeeklyDay ?? 1,
+          realtimeEnabled: updated?.realtimeEnabled ?? true,
         },
       });
     } catch (error) {

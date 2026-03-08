@@ -24,14 +24,14 @@ interface DeviceInfo {
   revoked: boolean;
 }
 
-type NotificationFrequency = "immediately" | "delayed" | "daily" | "weekly";
+type DigestFrequency = "daily" | "weekly";
 
 interface NotificationSettings {
-  enabled: boolean;
-  frequency: NotificationFrequency;
-  delayHours: number;
-  dailyTime: string;
-  weeklyDays: number[];
+  digestEnabled: boolean;
+  digestFrequency: DigestFrequency;
+  digestTime: string;
+  digestWeeklyDay: number;
+  realtimeEnabled: boolean;
 }
 
 const DAY_LABELS = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
@@ -59,11 +59,11 @@ export default function ProfilePage() {
 
   // Notification settings state
   const [notifSettings, setNotifSettings] = useState<NotificationSettings>({
-    enabled: true,
-    frequency: "daily",
-    delayHours: 1,
-    dailyTime: "08:00",
-    weeklyDays: [0, 1, 2, 3, 4, 5, 6],
+    digestEnabled: true,
+    digestFrequency: "daily",
+    digestTime: "08:00",
+    digestWeeklyDay: 1,
+    realtimeEnabled: true,
   });
   const [notifLoading, setNotifLoading] = useState(false);
   const [notifSaving, setNotifSaving] = useState(false);
@@ -120,14 +120,7 @@ export default function ProfilePage() {
     }
   };
 
-  const toggleWeekDay = (day: number) => {
-    setNotifSettings((prev) => {
-      const days = prev.weeklyDays.includes(day)
-        ? prev.weeklyDays.filter((d) => d !== day)
-        : [...prev.weeklyDays, day].sort((a, b) => a - b);
-      return { ...prev, weeklyDays: days };
-    });
-  };
+  // (toggleWeekDay removed — single day selection now via dropdown)
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -418,26 +411,53 @@ export default function ProfilePage() {
               <p className={styles.text}>Chargement...</p>
             ) : (
               <>
+                {/* Realtime notifications toggle */}
                 <div className={styles.notifToggleRow}>
                   <span className={styles.notifToggleLabel}>
-                    Recevoir des emails de rappel
+                    Alertes en temps réel
                   </span>
                   <label className={styles.toggle}>
                     <input
                       type="checkbox"
-                      checked={notifSettings.enabled}
+                      checked={notifSettings.realtimeEnabled}
                       onChange={(e) =>
                         setNotifSettings((prev) => ({
                           ...prev,
-                          enabled: e.target.checked,
+                          realtimeEnabled: e.target.checked,
                         }))
                       }
                     />
                     <span className={styles.toggleSlider} />
                   </label>
                 </div>
+                <p className={styles.notifHint}>
+                  Recevez un email lorsqu&apos;un contact fait un changement important (nouvelle demande, limite modifiée, etc.)
+                </p>
 
-                {notifSettings.enabled && (
+                {/* Digest toggle + config */}
+                <div className={styles.notifToggleRow} style={{ marginTop: "1rem" }}>
+                  <span className={styles.notifToggleLabel}>
+                    Résumé périodique
+                  </span>
+                  <label className={styles.toggle}>
+                    <input
+                      type="checkbox"
+                      checked={notifSettings.digestEnabled}
+                      onChange={(e) =>
+                        setNotifSettings((prev) => ({
+                          ...prev,
+                          digestEnabled: e.target.checked,
+                        }))
+                      }
+                    />
+                    <span className={styles.toggleSlider} />
+                  </label>
+                </div>
+                <p className={styles.notifHint}>
+                  Recevez un résumé de votre activité et des notifications non lues.
+                </p>
+
+                {notifSettings.digestEnabled && (
                   <div className={styles.notifFields}>
                     <div className={styles.notifField}>
                       <label className={styles.notifFieldLabel}>
@@ -445,82 +465,57 @@ export default function ProfilePage() {
                       </label>
                       <select
                         className={styles.notifSelect}
-                        value={notifSettings.frequency}
+                        value={notifSettings.digestFrequency}
                         onChange={(e) =>
                           setNotifSettings((prev) => ({
                             ...prev,
-                            frequency: e.target.value as NotificationFrequency,
+                            digestFrequency: e.target.value as DigestFrequency,
                           }))
                         }
                       >
-                        <option value="immediately">Immédiatement</option>
-                        <option value="delayed">Après un délai</option>
-                        <option value="daily">À une heure fixe</option>
-                        <option value="weekly">Certains jours de la semaine</option>
+                        <option value="daily">Quotidien</option>
+                        <option value="weekly">Hebdomadaire</option>
                       </select>
                     </div>
 
-                    {notifSettings.frequency === "delayed" && (
+                    <div className={styles.notifField}>
+                      <label className={styles.notifFieldLabel}>
+                        Heure d&apos;envoi
+                      </label>
+                      <input
+                        type="time"
+                        className={styles.notifInput}
+                        value={notifSettings.digestTime}
+                        onChange={(e) =>
+                          setNotifSettings((prev) => ({
+                            ...prev,
+                            digestTime: e.target.value,
+                          }))
+                        }
+                      />
+                    </div>
+
+                    {notifSettings.digestFrequency === "weekly" && (
                       <div className={styles.notifField}>
                         <label className={styles.notifFieldLabel}>
-                          Délai (en heures)
+                          Jour de la semaine
                         </label>
-                        <input
-                          type="number"
-                          className={styles.notifInput}
-                          min={1}
-                          max={168}
-                          value={notifSettings.delayHours}
+                        <select
+                          className={styles.notifSelect}
+                          value={notifSettings.digestWeeklyDay}
                           onChange={(e) =>
                             setNotifSettings((prev) => ({
                               ...prev,
-                              delayHours: Math.max(
-                                1,
-                                Math.min(168, parseInt(e.target.value) || 1),
-                              ),
+                              digestWeeklyDay: parseInt(e.target.value),
                             }))
                           }
-                        />
-                      </div>
-                    )}
-
-                    {(notifSettings.frequency === "daily" ||
-                      notifSettings.frequency === "weekly") && (
-                      <div className={styles.notifField}>
-                        <label className={styles.notifFieldLabel}>
-                          Heure d&apos;envoi
-                        </label>
-                        <input
-                          type="time"
-                          className={styles.notifInput}
-                          value={notifSettings.dailyTime}
-                          onChange={(e) =>
-                            setNotifSettings((prev) => ({
-                              ...prev,
-                              dailyTime: e.target.value,
-                            }))
-                          }
-                        />
-                      </div>
-                    )}
-
-                    {notifSettings.frequency === "weekly" && (
-                      <div className={styles.notifField}>
-                        <label className={styles.notifFieldLabel}>
-                          Jours de la semaine
-                        </label>
-                        <div className={styles.notifWeekDays}>
+                        >
                           {DAY_LABELS.map((label, idx) => (
-                            <button
-                              key={idx}
-                              type="button"
-                              className={`${styles.dayButton}${notifSettings.weeklyDays.includes(idx) ? ` ${styles.active}` : ""}`}
-                              onClick={() => toggleWeekDay(idx)}
-                            >
+                            <option key={idx} value={idx}>
                               {label}
-                            </button>
+                            </option>
                           ))}
-                        </div>
+                        </select>
                       </div>
                     )}
                   </div>

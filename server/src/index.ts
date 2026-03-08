@@ -14,6 +14,7 @@ import relationshipsRouter from "./routes/relationships";
 import notificationsRouter from "./routes/notifications";
 import devicesRouter from "./routes/devices";
 import schedulerRouter from "./routes/scheduler";
+import feedbackRouter from "./routes/feedback";
 
 const initPromise = ensureDatabaseInitialized();
 
@@ -45,6 +46,7 @@ app.use("/api", relationshipsRouter);
 app.use("/api", notificationsRouter);
 app.use("/api", devicesRouter);
 app.use("/api", schedulerRouter);
+app.use("/api", feedbackRouter);
 
 if (!process.env.VERCEL) {
   app.listen(PORT, async () => {

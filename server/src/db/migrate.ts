@@ -130,14 +130,23 @@ export async function migrate() {
       `CREATE TABLE IF NOT EXISTS notification_email_settings (
       id TEXT PRIMARY KEY,
       user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      enabled INTEGER DEFAULT 1,
-      frequency TEXT NOT NULL DEFAULT 'daily',
-      delay_hours INTEGER DEFAULT 1,
-      daily_time TEXT DEFAULT '08:00',
-      weekly_days TEXT,
-      last_email_sent_at TEXT,
+      digest_enabled INTEGER DEFAULT 1,
+      digest_frequency TEXT NOT NULL DEFAULT 'daily',
+      digest_time TEXT DEFAULT '08:00',
+      digest_weekly_day INTEGER DEFAULT 1,
+      realtime_enabled INTEGER DEFAULT 1,
+      last_digest_sent_at TEXT,
+      last_realtime_sent_at TEXT,
       updated_at TEXT NOT NULL DEFAULT (datetime('now')),
       UNIQUE(user_id)
+    )`,
+
+      `CREATE TABLE IF NOT EXISTS email_notification_log (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      notification_id TEXT NOT NULL REFERENCES notifications(id) ON DELETE CASCADE,
+      email_type TEXT NOT NULL,
+      sent_at TEXT NOT NULL DEFAULT (datetime('now'))
     )`,
 
       // Indexes
@@ -162,6 +171,9 @@ export async function migrate() {
       `CREATE INDEX IF NOT EXISTS idx_category_requests_relationship ON relationship_category_requests(relationship_id)`,
       `CREATE INDEX IF NOT EXISTS idx_category_requests_requester ON relationship_category_requests(requester_id)`,
       `CREATE INDEX IF NOT EXISTS idx_notification_email_settings_user ON notification_email_settings(user_id)`,
+      `CREATE INDEX IF NOT EXISTS idx_email_notification_log_user ON email_notification_log(user_id)`,
+      `CREATE INDEX IF NOT EXISTS idx_email_notification_log_notification ON email_notification_log(notification_id)`,
+      `CREATE INDEX IF NOT EXISTS idx_email_notification_log_sent_at ON email_notification_log(sent_at)`,
     ],
     "write",
   );
@@ -186,6 +198,50 @@ export async function migrate() {
     console.log("Added name column to relationships table.");
   } catch {
     // Column already exists — safe to ignore
+  }
+
+  // ── Notification email settings migration (v2: digest + realtime) ──
+  // Add new columns to notification_email_settings for existing databases.
+  // Old columns (enabled, frequency, delay_hours, daily_time, weekly_days,
+  // last_email_sent_at) are kept in the DB for backward compatibility but
+  // are no longer referenced by the Drizzle schema or application code.
+  const newSettingsColumns = [
+    "ALTER TABLE notification_email_settings ADD COLUMN digest_enabled INTEGER DEFAULT 1",
+    "ALTER TABLE notification_email_settings ADD COLUMN digest_frequency TEXT NOT NULL DEFAULT 'daily'",
+    "ALTER TABLE notification_email_settings ADD COLUMN digest_time TEXT DEFAULT '08:00'",
+    "ALTER TABLE notification_email_settings ADD COLUMN digest_weekly_day INTEGER DEFAULT 1",
+    "ALTER TABLE notification_email_settings ADD COLUMN realtime_enabled INTEGER DEFAULT 1",
+    "ALTER TABLE notification_email_settings ADD COLUMN last_digest_sent_at TEXT",
+    "ALTER TABLE notification_email_settings ADD COLUMN last_realtime_sent_at TEXT",
+  ];
+  for (const stmt of newSettingsColumns) {
+    try {
+      await client.execute(stmt);
+    } catch {
+      // Column already exists — safe to ignore
+    }
+  }
+
+  // Migrate existing settings data: copy old values into new columns
+  try {
+    await client.execute(`
+      UPDATE notification_email_settings
+      SET
+        digest_frequency = CASE
+          WHEN frequency = 'weekly' THEN 'weekly'
+          ELSE 'daily'
+        END,
+        digest_time = COALESCE(daily_time, '08:00'),
+        digest_enabled = COALESCE(enabled, 1),
+        realtime_enabled = CASE
+          WHEN frequency IN ('immediately', 'delayed') THEN 1
+          ELSE 0
+        END,
+        last_digest_sent_at = last_email_sent_at
+      WHERE digest_frequency = 'daily' AND last_digest_sent_at IS NULL AND frequency IS NOT NULL
+    `);
+  } catch {
+    // Migration already applied or no rows to migrate
   }
 
   console.log("Database migrations completed successfully.");

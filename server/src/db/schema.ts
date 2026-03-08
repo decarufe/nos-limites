@@ -185,17 +185,37 @@ export const notificationEmailSettings = sqliteTable(
       .notNull()
       .references(() => users.id, { onDelete: "cascade" })
       .unique(),
-    enabled: integer("enabled", { mode: "boolean" }).default(true),
-    frequency: text("frequency").notNull().default("daily"), // 'immediately', 'delayed', 'daily', 'weekly'
-    delayHours: integer("delay_hours").default(1), // for 'delayed' frequency
-    dailyTime: text("daily_time").default("08:00"), // HH:MM for 'daily' and 'weekly'
-    weeklyDays: text("weekly_days"), // JSON array of day numbers 0-6 for 'weekly'
-    lastEmailSentAt: text("last_email_sent_at"),
+    // Digest settings (periodic summary)
+    digestEnabled: integer("digest_enabled", { mode: "boolean" }).default(true),
+    digestFrequency: text("digest_frequency").notNull().default("daily"), // 'daily', 'weekly'
+    digestTime: text("digest_time").default("08:00"), // HH:MM for digest send time
+    digestWeeklyDay: integer("digest_weekly_day").default(1), // 0-6, 0=Sunday (for weekly digest)
+    lastDigestSentAt: text("last_digest_sent_at"),
+    // Realtime notification settings
+    realtimeEnabled: integer("realtime_enabled", { mode: "boolean" }).default(
+      true,
+    ),
+    lastRealtimeSentAt: text("last_realtime_sent_at"),
     updatedAt: text("updated_at")
       .notNull()
       .$defaultFn(() => new Date().toISOString()),
   },
 );
+
+// Email notification log — tracks which notifications were included in which email
+export const emailNotificationLog = sqliteTable("email_notification_log", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  notificationId: text("notification_id")
+    .notNull()
+    .references(() => notifications.id, { onDelete: "cascade" }),
+  emailType: text("email_type").notNull(), // 'digest', 'realtime'
+  sentAt: text("sent_at")
+    .notNull()
+    .$defaultFn(() => new Date().toISOString()),
+});
 
 // Blocked users table
 export const blockedUsers = sqliteTable("blocked_users", {

@@ -1,5 +1,6 @@
 import { Outlet } from "react-router-dom";
 import BottomNav from "./BottomNav";
+import FeedbackButton from "./FeedbackButton";
 import styles from "./AppLayout.module.css";
 
 export default function AppLayout() {
@@ -8,6 +9,7 @@ export default function AppLayout() {
       <main className={styles.content}>
         <Outlet />
       </main>
+      <FeedbackButton />
       <BottomNav />
     </div>
   );

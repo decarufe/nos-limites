@@ -66,105 +66,161 @@ test("hasTimePassedToday: returns false when called an hour before schedule", ()
   assert.equal(hasTimePassedToday("08:00", now), false);
 });
 
-// ─── Daily deduplication guard ────────────────────────────────────────────────
-// Simulates the combined hasTimePassedToday + MIN_EMAIL_INTERVAL_HOURS check
+// ─── Digest daily guard ──────────────────────────────────────────────────────
+// Simulates the combined hasTimePassedToday + DIGEST_MIN_INTERVAL_HOURS check
 
-const MIN_EMAIL_INTERVAL_HOURS = 20;
+const DIGEST_MIN_INTERVAL_HOURS = 20;
 
-function shouldSendDaily(
-  dailyTime: string,
+function shouldSendDigestDaily(
+  digestTime: string,
   now: Date,
-  lastEmailSentAt: Date | null,
+  lastDigestSentAt: Date | null,
 ): boolean {
   const minIntervalAgo = new Date(
-    now.getTime() - MIN_EMAIL_INTERVAL_HOURS * 60 * 60 * 1000,
+    now.getTime() - DIGEST_MIN_INTERVAL_HOURS * 60 * 60 * 1000,
   );
   return (
-    hasTimePassedToday(dailyTime, now) &&
-    (!lastEmailSentAt || lastEmailSentAt < minIntervalAgo)
+    hasTimePassedToday(digestTime, now) &&
+    (!lastDigestSentAt || lastDigestSentAt < minIntervalAgo)
   );
 }
 
-test("daily: sends when past scheduled time and no previous email", () => {
+test("digest daily: sends when past scheduled time and no previous email", () => {
   const now = makeDate(9, 0);
-  assert.equal(shouldSendDaily("08:00", now, null), true);
+  assert.equal(shouldSendDigestDaily("08:00", now, null), true);
 });
 
-test("daily: does not send when before scheduled time", () => {
+test("digest daily: does not send when before scheduled time", () => {
   const now = makeDate(7, 0);
-  assert.equal(shouldSendDaily("08:00", now, null), false);
+  assert.equal(shouldSendDigestDaily("08:00", now, null), false);
 });
 
-test("daily: does not send within 20h of last email even if past scheduled time", () => {
-  const now = makeDate(8, 30); // 08:30 today
-  const lastSent = new Date(now.getTime() - 1 * 60 * 60 * 1000); // 1h ago = 07:30 today
-  assert.equal(shouldSendDaily("08:00", now, lastSent), false);
+test("digest daily: does not send within 20h of last email", () => {
+  const now = makeDate(8, 30);
+  const lastSent = new Date(now.getTime() - 1 * 60 * 60 * 1000); // 1h ago
+  assert.equal(shouldSendDigestDaily("08:00", now, lastSent), false);
 });
 
-test("daily: sends when last email was more than 20h ago and past scheduled time", () => {
+test("digest daily: sends when last email was more than 20h ago", () => {
   const now = makeDate(9, 0);
   const lastSent = new Date(now.getTime() - 25 * 60 * 60 * 1000); // 25h ago
-  assert.equal(shouldSendDaily("08:00", now, lastSent), true);
+  assert.equal(shouldSendDigestDaily("08:00", now, lastSent), true);
 });
 
-test("daily: does not double-send when called many hours after scheduled time but within 20h window", () => {
+test("digest daily: does not double-send within 20h window", () => {
   const now = makeDate(20, 0); // 20:00
   const lastSent = makeDate(8, 5); // email was sent at 08:05 today — only 12h ago
-  assert.equal(shouldSendDaily("08:00", now, lastSent), false);
+  assert.equal(shouldSendDigestDaily("08:00", now, lastSent), false);
 });
 
-// ─── Weekly deduplication guard ───────────────────────────────────────────────
+// ─── Digest weekly guard ─────────────────────────────────────────────────────
 
-function shouldSendWeekly(
-  dailyTime: string,
+function shouldSendDigestWeekly(
+  digestTime: string,
   now: Date,
-  weeklyDays: number[],
-  lastEmailSentAt: Date | null,
+  digestWeeklyDay: number,
+  lastDigestSentAt: Date | null,
 ): boolean {
   const minIntervalAgo = new Date(
-    now.getTime() - MIN_EMAIL_INTERVAL_HOURS * 60 * 60 * 1000,
+    now.getTime() - DIGEST_MIN_INTERVAL_HOURS * 60 * 60 * 1000,
   );
   const currentDay = now.getDay();
   return (
-    weeklyDays.includes(currentDay) &&
-    hasTimePassedToday(dailyTime, now) &&
-    (!lastEmailSentAt || lastEmailSentAt < minIntervalAgo)
+    currentDay === digestWeeklyDay &&
+    hasTimePassedToday(digestTime, now) &&
+    (!lastDigestSentAt || lastDigestSentAt < minIntervalAgo)
   );
 }
 
-test("weekly: sends on a matching day past the scheduled time", () => {
+test("digest weekly: sends on matching day past the scheduled time", () => {
   // 2026-03-08 is a Sunday (day 0)
   const now = makeDate(9, 0);
   assert.equal(now.getDay(), 0, "fixture should be a Sunday");
-  assert.equal(shouldSendWeekly("08:00", now, [0], null), true);
+  assert.equal(shouldSendDigestWeekly("08:00", now, 0, null), true);
 });
 
-test("weekly: does not send on a non-matching day", () => {
-  const now = makeDate(9, 0);
-  assert.equal(shouldSendWeekly("08:00", now, [1, 2, 3, 4, 5], null), false); // Mon-Fri only
+test("digest weekly: does not send on non-matching day", () => {
+  const now = makeDate(9, 0); // Sunday
+  assert.equal(shouldSendDigestWeekly("08:00", now, 1, null), false); // Monday only
 });
 
-test("weekly: does not send before scheduled time even on a matching day", () => {
-  const now = makeDate(7, 0);
-  assert.equal(
-    shouldSendWeekly("08:00", now, [0, 1, 2, 3, 4, 5, 6], null),
-    false,
+test("digest weekly: does not send before scheduled time on matching day", () => {
+  const now = makeDate(7, 0); // Sunday
+  assert.equal(shouldSendDigestWeekly("08:00", now, 0, null), false);
+});
+
+test("digest weekly: does not send within 20h interval on matching day", () => {
+  const now = makeDate(9, 0); // Sunday 09:00
+  const lastSent = new Date(now.getTime() - 5 * 60 * 60 * 1000); // 5h ago
+  assert.equal(shouldSendDigestWeekly("08:00", now, 0, lastSent), false);
+});
+
+// ─── Realtime email guard ────────────────────────────────────────────────────
+
+const REALTIME_MIN_INTERVAL_HOURS = 1;
+
+function shouldSendRealtime(
+  now: Date,
+  lastRealtimeSentAt: Date | null,
+): boolean {
+  const minIntervalAgo = new Date(
+    now.getTime() - REALTIME_MIN_INTERVAL_HOURS * 60 * 60 * 1000,
   );
+  return !lastRealtimeSentAt || lastRealtimeSentAt < minIntervalAgo;
+}
+
+test("realtime: sends when no previous realtime email", () => {
+  const now = makeDate(9, 0);
+  assert.equal(shouldSendRealtime(now, null), true);
 });
 
-// ─── Trigger return-shape tests ───────────────────────────────────────────────
+test("realtime: does not send within 1h of last realtime email", () => {
+  const now = makeDate(9, 0);
+  const lastSent = new Date(now.getTime() - 30 * 60 * 1000); // 30 min ago
+  assert.equal(shouldSendRealtime(now, lastSent), false);
+});
+
+test("realtime: sends when last realtime email was more than 1h ago", () => {
+  const now = makeDate(9, 0);
+  const lastSent = new Date(now.getTime() - 2 * 60 * 60 * 1000); // 2h ago
+  assert.equal(shouldSendRealtime(now, lastSent), true);
+});
+
+test("realtime: sends exactly at 1h boundary", () => {
+  const now = makeDate(9, 0);
+  const lastSent = new Date(now.getTime() - REALTIME_MIN_INTERVAL_HOURS * 60 * 60 * 1000);
+  // at exactly 1h, lastSent is NOT < minIntervalAgo, so it's not strictly less
+  assert.equal(shouldSendRealtime(now, lastSent), false);
+});
+
+test("realtime: sends 1 second after 1h boundary", () => {
+  const now = makeDate(9, 0);
+  const lastSent = new Date(now.getTime() - REALTIME_MIN_INTERVAL_HOURS * 60 * 60 * 1000 - 1000);
+  assert.equal(shouldSendRealtime(now, lastSent), true);
+});
+
+// ─── Trigger return-shape tests (new dual-processor format) ──────────────────
 
 function makeTriggerWithStats() {
   let isProcessing = false;
 
   async function trigger(
-    emailsSentResult: number,
-  ): Promise<{ alreadyRunning: boolean; emailsSent?: number }> {
+    realtimeResult: number,
+    digestResult: number,
+  ): Promise<{
+    alreadyRunning: boolean;
+    realtimeEmailsSent?: number;
+    digestEmailsSent?: number;
+  }> {
     if (isProcessing) return { alreadyRunning: true };
     isProcessing = true;
     try {
       await Promise.resolve();
-      return { alreadyRunning: false, emailsSent: emailsSentResult };
+      return {
+        alreadyRunning: false,
+        realtimeEmailsSent: realtimeResult,
+        digestEmailsSent: digestResult,
+      };
     } finally {
       isProcessing = false;
     }
@@ -173,41 +229,29 @@ function makeTriggerWithStats() {
   return { trigger, getIsProcessing: () => isProcessing };
 }
 
-test("trigger with stats: returns emailsSent=0 when no emails were sent", async () => {
+test("trigger with stats: returns both counts when emails sent", async () => {
   const { trigger } = makeTriggerWithStats();
-  const result = await trigger(0);
+  const result = await trigger(2, 3);
   assert.equal(result.alreadyRunning, false);
-  assert.equal(result.emailsSent, 0);
+  assert.equal(result.realtimeEmailsSent, 2);
+  assert.equal(result.digestEmailsSent, 3);
 });
 
-test("trigger with stats: returns emailsSent count from processNotificationEmails", async () => {
+test("trigger with stats: returns zero counts when no emails sent", async () => {
   const { trigger } = makeTriggerWithStats();
-  const result = await trigger(3);
+  const result = await trigger(0, 0);
   assert.equal(result.alreadyRunning, false);
-  assert.equal(result.emailsSent, 3);
+  assert.equal(result.realtimeEmailsSent, 0);
+  assert.equal(result.digestEmailsSent, 0);
 });
 
-test("trigger with stats: emailsSent is absent when alreadyRunning=true", async () => {
-  const { trigger } = makeTriggerWithStats();
-
-  // Launch a slow-ish run
-  let slowResolve!: () => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const slowRun = new Promise<{ alreadyRunning: boolean; emailsSent?: number }>(
-    (resolve) => {
-      slowResolve = () => resolve({ alreadyRunning: false, emailsSent: 1 });
-    },
-  );
-
-  // Simulate a second call while processing flag would be true if we'd set it
-  // Directly test the returned shape for the skipped path
+test("trigger with stats: counts are absent when alreadyRunning=true", async () => {
   const skippedResult = { alreadyRunning: true } as {
     alreadyRunning: boolean;
-    emailsSent?: number;
+    realtimeEmailsSent?: number;
+    digestEmailsSent?: number;
   };
   assert.equal(skippedResult.alreadyRunning, true);
-  assert.equal(skippedResult.emailsSent, undefined);
-
-  slowResolve();
-  await slowRun;
+  assert.equal(skippedResult.realtimeEmailsSent, undefined);
+  assert.equal(skippedResult.digestEmailsSent, undefined);
 });

@@ -494,6 +494,13 @@
   color: var(--color-text);
 }
 
+.notifHint {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  margin: 0.15rem 0 0.5rem 0;
+  line-height: 1.4;
+}
+
 .toggle {
   position: relative;
   display: inline-block;

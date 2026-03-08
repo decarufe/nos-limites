@@ -1,0 +1,43 @@
+/* Floating action button — sits above the bottom nav */
+.button {
+  position: fixed;
+  /* 64px nav height + 16px gap */
+  bottom: calc(64px + var(--safe-area-bottom) + var(--spacing-md));
+  right: var(--spacing-md);
+  z-index: 200;
+
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  border: none;
+  background: var(--color-primary);
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    opacity 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.button:hover {
+  transform: scale(1.08);
+  box-shadow: var(--shadow-lg);
+}
+
+.button:active {
+  transform: scale(0.95);
+}
+
+/* Move up a bit on tablet to avoid the centered nav */
+@media (min-width: 768px) {
+  .button {
+    bottom: calc(64px + var(--safe-area-bottom) + var(--spacing-lg));
+    right: var(--spacing-xl);
+  }
+}

@@ -40,7 +40,8 @@ router.post(
 
     lastTriggerTime = now;
 
-    const { alreadyRunning, emailsSent } = await triggerNotificationEmails();
+    const { alreadyRunning, realtimeEmailsSent, digestEmailsSent } =
+      await triggerNotificationEmails();
 
     if (alreadyRunning) {
       res.status(200).json({
@@ -53,7 +54,8 @@ router.post(
     res.status(200).json({
       status: "ok",
       message: "Email processing triggered.",
-      emailsSent,
+      realtimeEmailsSent,
+      digestEmailsSent,
     });
   },
 );

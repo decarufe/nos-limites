@@ -1,0 +1,306 @@
+/* ─── Overlay ─────────────────────────────────────────────────────────────── */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 300;
+  padding: var(--spacing-md);
+  /* slide-up on mobile, center on desktop */
+}
+
+@media (min-width: 600px) {
+  .overlay {
+    align-items: center;
+  }
+}
+
+/* ─── Modal panel ─────────────────────────────────────────────────────────── */
+
+.modal {
+  background: var(--color-background);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-lg);
+  animation: slideUp 0.22s ease-out;
+}
+
+@media (min-width: 600px) {
+  .modal {
+    border-radius: var(--radius-lg);
+    animation: fadeIn 0.18s ease-out;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(40px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ─── Header ──────────────────────────────────────────────────────────────── */
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-lg);
+}
+
+.title {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: var(--font-size-lg);
+  color: var(--color-text-secondary);
+  padding: var(--spacing-xs);
+  line-height: 1;
+  border-radius: var(--radius-sm);
+  transition: color 0.15s;
+}
+
+.closeButton:hover {
+  color: var(--color-text);
+}
+
+/* ─── Type selector ───────────────────────────────────────────────────────── */
+
+.fieldset {
+  border: none;
+  padding: 0;
+  margin: 0 0 var(--spacing-md);
+}
+
+.legend {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: var(--spacing-sm);
+}
+
+.typeOptions {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.typeOption {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: var(--spacing-sm) var(--spacing-xs);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  transition: all 0.15s;
+  user-select: none;
+}
+
+.typeOption:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.typeOptionActive {
+  border-color: var(--color-primary);
+  background: rgba(124, 58, 237, 0.08);
+  color: var(--color-primary);
+}
+
+.hiddenRadio {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* ─── Fields ──────────────────────────────────────────────────────────────── */
+
+.field {
+  margin-bottom: var(--spacing-md);
+}
+
+.label {
+  display: block;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: var(--spacing-xs);
+}
+
+.required {
+  color: var(--color-error);
+  margin-left: 2px;
+}
+
+.input,
+.textarea {
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  color: var(--color-text);
+  background: white;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+  resize: vertical;
+}
+
+.input:focus,
+.textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+}
+
+.input:disabled,
+.textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.textarea {
+  min-height: 100px;
+}
+
+/* ─── Error message ───────────────────────────────────────────────────────── */
+
+.errorMessage {
+  font-size: var(--font-size-sm);
+  color: var(--color-error);
+  margin-bottom: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: rgba(220, 38, 38, 0.08);
+  border-radius: var(--radius-sm);
+}
+
+/* ─── Actions ─────────────────────────────────────────────────────────────── */
+
+.actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  justify-content: flex-end;
+  margin-top: var(--spacing-lg);
+}
+
+.primaryButton {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-full);
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  min-width: 100px;
+}
+
+.primaryButton:hover:not(:disabled) {
+  opacity: 0.88;
+}
+
+.primaryButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.secondaryButton {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background: transparent;
+  color: var(--color-text-secondary);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-full);
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.secondaryButton:hover:not(:disabled) {
+  border-color: var(--color-text);
+  color: var(--color-text);
+}
+
+.secondaryButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ─── Success state ───────────────────────────────────────────────────────── */
+
+.successContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: var(--spacing-xl) var(--spacing-md);
+  gap: var(--spacing-md);
+}
+
+.successIcon {
+  font-size: 48px;
+}
+
+.successTitle {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.successText {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.issueLink {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-primary);
+  text-decoration: none;
+  padding: var(--spacing-xs) 0;
+}
+
+.issueLink:hover {
+  text-decoration: underline;
+}
