@@ -121,6 +121,11 @@ class ApiService {
       ...headers,
     };
 
+    if (import.meta.env.VERCEL_AUTOMATION_BYPASS_SECRET !== undefined) {
+      requestHeaders["x-vercel-protection-bypass"] =
+        import.meta.env.VERCEL_AUTOMATION_BYPASS_SECRET;
+    }
+
     if (this.token) {
       requestHeaders["Authorization"] = `Bearer ${this.token}`;
     }
