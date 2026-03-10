@@ -1,0 +1,144 @@
+.container {
+  padding: var(--spacing-md);
+  max-width: 540px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Header */
+.header {
+  margin-bottom: var(--spacing-lg);
+}
+
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: var(--spacing-md);
+  transition: opacity 0.2s ease;
+  min-height: unset;
+  min-width: unset;
+}
+
+.backButton:hover {
+  opacity: 0.75;
+}
+
+.title {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
+}
+
+/* Sections */
+.section {
+  margin-bottom: var(--spacing-lg);
+}
+
+.sectionTitle {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0 0 var(--spacing-sm) 0;
+}
+
+/* Option group */
+.optionGroup {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--color-border, #e5e5e5);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background-color: var(--color-surface, #fff);
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-md);
+  cursor: pointer;
+  border-bottom: 1px solid var(--color-border, #e5e5e5);
+  transition: background-color 0.15s ease;
+  min-height: unset;
+}
+
+.option:last-child {
+  border-bottom: none;
+}
+
+.option:hover {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+.optionSelected {
+  background-color: rgba(124, 58, 237, 0.05);
+}
+
+.radioInput {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  min-height: unset;
+  min-width: unset;
+}
+
+.optionLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.optionEmoji {
+  font-size: 1.25rem;
+  line-height: 1;
+  width: 28px;
+  text-align: center;
+}
+
+.checkIcon {
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+/* Feedback */
+.successText {
+  color: var(--color-success-dark, #047857);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  margin: 0 0 var(--spacing-md) 0;
+}
+
+/* Save button */
+.saveButton {
+  width: 100%;
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.saveButton:hover {
+  opacity: 0.9;
+}
+
+.saveButton:active {
+  transform: scale(0.98);
+}
