@@ -25,7 +25,7 @@ export class ApiError extends Error {
 }
 
 export const API_BASE_URL = (
-  (import.meta.env.VITE_API_BASE_URL ||
+  import.meta.env.VITE_API_BASE_URL ||
   (import.meta.env.PROD ? "https://api.nos-limites.com/api" : "/api")
 ).replace(/\/+$/, "");
 
