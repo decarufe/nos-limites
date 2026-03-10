@@ -1,5 +1,7 @@
 {
     "version": 2,
+    "cleanUrls": false,
+    "trailingSlash": false,
     "builds": [
         {
             "src": "src/index.ts",
@@ -8,10 +10,17 @@
     ],
     "routes": [
         {
-            "src": "/api/(.*)",
+            "src": "/(.*)",
             "methods": [
                 "OPTIONS"
             ],
+            "headers": {
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "GET,OPTIONS,PATCH,DELETE,POST,PUT",
+                "Access-Control-Allow-Headers": "Content-Type, Authorization",
+                "Access-Control-Allow-Credentials": "true",
+                "Access-Control-Max-Age": "86400"
+            },
             "dest": "src/index.ts"
         },
         {
@@ -21,7 +30,7 @@
     ],
     "headers": [
         {
-            "source": "/api/(.*)",
+            "source": "/(.*)",
             "headers": [
                 {
                     "key": "Access-Control-Allow-Methods",
@@ -38,4 +47,5 @@
             ]
         }
     ]
+}
 }

@@ -7,7 +7,7 @@ const DEFAULT_FRONTEND_ORIGINS = [
 
 // Regex patterns for Vercel preview deployment URLs
 const PREVIEW_ORIGIN_PATTERNS: RegExp[] = [
-  /^https:\/\/nos-limites-client-[a-z0-9]+-ericdecarufel-2862s-projects\.vercel\.app$/,
+  /^https:\/\/nos-limites-client-[a-z0-9-]+-ericdecarufel-2862s-projects\.vercel\.app$/,
   /^https:\/\/nos-limites-client-git-[a-z0-9-]+-ericdecarufel-2862s-projects\.vercel\.app$/,
 ];
 
