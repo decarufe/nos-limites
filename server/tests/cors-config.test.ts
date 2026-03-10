@@ -61,3 +61,53 @@ test("createCorsOptions accepts known origin and rejects unknown origin", async 
     });
   });
 });
+
+test("createCorsOptions accepts Vercel preview deployment origins", async () => {
+  const corsOptions = createCorsOptions(undefined);
+  const originHandler = corsOptions.origin;
+
+  assert.equal(typeof originHandler, "function");
+  if (typeof originHandler !== "function") {
+    throw new Error("Expected CORS origin handler to be a function");
+  }
+
+  const handleOrigin = originHandler as OriginHandler;
+
+  // Hash-based preview URL
+  await new Promise<void>((resolve, reject) => {
+    handleOrigin(
+      "https://nos-limites-client-69ctcnsdv-ericdecarufel-2862s-projects.vercel.app",
+      (err, allowed) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        try {
+          assert.equal(allowed, true);
+          resolve();
+        } catch (assertErr) {
+          reject(assertErr);
+        }
+      },
+    );
+  });
+
+  // Git branch preview URL
+  await new Promise<void>((resolve, reject) => {
+    handleOrigin(
+      "https://nos-limites-client-git-fix-auth-ericdecarufel-2862s-projects.vercel.app",
+      (err, allowed) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        try {
+          assert.equal(allowed, true);
+          resolve();
+        } catch (assertErr) {
+          reject(assertErr);
+        }
+      },
+    );
+  });
+});
