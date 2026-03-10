@@ -185,3 +185,35 @@ input[type="password"],
 textarea {
   min-height: 44px;
 }
+
+/* Dark mode via system preference */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-background: #0F0E0D;
+    --color-surface: #1C1A18;
+    --color-text: #F5F5F4;
+    --color-text-secondary: #A8A29E;
+    --color-bg-secondary: #292524;
+    --color-border: #44403C;
+  }
+}
+
+/* Explicit dark theme */
+[data-theme="dark"] {
+  --color-background: #0F0E0D;
+  --color-surface: #1C1A18;
+  --color-text: #F5F5F4;
+  --color-text-secondary: #A8A29E;
+  --color-bg-secondary: #292524;
+  --color-border: #44403C;
+}
+
+/* Explicit light theme (overrides system dark) */
+[data-theme="light"] {
+  --color-background: #FAFAF9;
+  --color-surface: #FFFFFF;
+  --color-text: #1C1917;
+  --color-text-secondary: #78716C;
+  --color-bg-secondary: #F5F5F4;
+  --color-border: #78716C;
+}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { api } from "../../services/api";
@@ -15,26 +15,6 @@ interface ProfileResponse {
     updatedAt: string;
   };
 }
-
-interface DeviceInfo {
-  id: string;
-  deviceName: string | null;
-  createdAt: string;
-  lastSeen: string;
-  revoked: boolean;
-}
-
-type DigestFrequency = "daily" | "weekly";
-
-interface NotificationSettings {
-  digestEnabled: boolean;
-  digestFrequency: DigestFrequency;
-  digestTime: string;
-  digestWeeklyDay: number;
-  realtimeEnabled: boolean;
-}
-
-const DAY_LABELS = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
 
 export default function ProfilePage() {
   const { user, isAuthenticated, isLoading, logout, updateUser } = useAuth();
@@ -53,83 +33,12 @@ export default function ProfilePage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  // Devices state
-  const [devicesList, setDevicesList] = useState<DeviceInfo[]>([]);
-  const [devicesLoading, setDevicesLoading] = useState(false);
-
-  // Notification settings state
-  const [notifSettings, setNotifSettings] = useState<NotificationSettings>({
-    digestEnabled: true,
-    digestFrequency: "daily",
-    digestTime: "08:00",
-    digestWeeklyDay: 1,
-    realtimeEnabled: true,
-  });
-  const [notifLoading, setNotifLoading] = useState(false);
-  const [notifSaving, setNotifSaving] = useState(false);
-  const [notifSuccess, setNotifSuccess] = useState<string | null>(null);
-  const [notifError, setNotifError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      setDevicesLoading(true);
-      api
-        .get<{ devices: DeviceInfo[] }>("/devices")
-        .then((data) => setDevicesList(data.devices.filter((d) => !d.revoked)))
-        .catch(() => { })
-        .finally(() => setDevicesLoading(false));
-
-      setNotifLoading(true);
-      api
-        .get<{ settings: NotificationSettings }>("/profile/notification-settings")
-        .then((data) => setNotifSettings(data.settings))
-        .catch(() => { })
-        .finally(() => setNotifLoading(false));
-    }
-  }, [isAuthenticated]);
-
-  const handleRevokeDevice = async (deviceId: string) => {
-    try {
-      await api.delete(`/devices/${deviceId}`);
-      setDevicesList((prev) => prev.filter((d) => d.id !== deviceId));
-    } catch {
-      // silently fail
-    }
-  };
-
-  const handleSaveNotifSettings = async () => {
-    setNotifSaving(true);
-    setNotifError(null);
-    setNotifSuccess(null);
-    try {
-      const response = await api.put<{ settings: NotificationSettings }>(
-        "/profile/notification-settings",
-        notifSettings,
-      );
-      setNotifSettings(response.settings);
-      setNotifSuccess("Paramètres de notification enregistrés.");
-      setTimeout(() => setNotifSuccess(null), 3000);
-    } catch (err) {
-      setNotifError(
-        err instanceof Error
-          ? err.message
-          : "Erreur lors de la sauvegarde des paramètres.",
-      );
-    } finally {
-      setNotifSaving(false);
-    }
-  };
-
-  // (toggleWeekDay removed — single day selection now via dropdown)
-
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
       await logout();
       navigate("/login", { replace: true });
     } catch {
-      // Even if the API call fails, logout() clears local state
-      // so we still navigate to login
       navigate("/login", { replace: true });
     }
   };
@@ -171,7 +80,6 @@ export default function ProfilePage() {
         displayName: trimmed,
       });
 
-      // Update user in auth context
       updateUser({
         id: response.user.id,
         email: response.user.email,
@@ -181,8 +89,6 @@ export default function ProfilePage() {
 
       setIsEditing(false);
       setEditSuccess("Nom d'affichage mis à jour avec succès !");
-
-      // Clear success message after 3 seconds
       setTimeout(() => setEditSuccess(null), 3000);
     } catch (err) {
       setEditError(
@@ -201,7 +107,6 @@ export default function ProfilePage() {
 
     try {
       await api.delete("/profile");
-      // Clear local auth state and redirect to login
       await logout();
       navigate("/login", { replace: true });
     } catch (err) {
@@ -210,6 +115,7 @@ export default function ProfilePage() {
           ? err.message
           : "Erreur lors de la suppression du compte.",
       );
+    } finally {
       setIsDeleting(false);
     }
   };
@@ -217,9 +123,6 @@ export default function ProfilePage() {
   if (isLoading) {
     return (
       <div className={styles.container}>
-        <header className={styles.header}>
-          <h1 className={styles.title}>Profil</h1>
-        </header>
         <div className={styles.content}>
           <p className={styles.text}>Chargement...</p>
         </div>
@@ -230,25 +133,7 @@ export default function ProfilePage() {
   if (!isAuthenticated || !user) {
     return (
       <div className={styles.container}>
-        <header className={styles.header}>
-          <h1 className={styles.title}>Profil</h1>
-        </header>
         <div className={styles.content}>
-          <div className={styles.avatar}>
-            <svg
-              width="48"
-              height="48"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="white"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-              <circle cx="12" cy="7" r="4" />
-            </svg>
-          </div>
           <p className={styles.text}>
             Connectez-vous pour accéder à votre profil.
           </p>
@@ -263,6 +148,7 @@ export default function ProfilePage() {
         <h1 className={styles.title}>Profil</h1>
       </header>
       <div className={styles.content}>
+        {/* Profile section */}
         <div className={styles.profileSection}>
           {user.avatarUrl ? (
             <img
@@ -356,208 +242,115 @@ export default function ProfilePage() {
           <p className={styles.email}>{user.email}</p>
         </div>
 
+        {/* Menu section */}
         <div className={styles.actions}>
-          {/* Devices section */}
-          <div className={styles.devicesSection}>
-            <h3 className={styles.devicesSectionTitle}>Appareils connectés</h3>
-            {devicesLoading ? (
-              <p className={styles.text}>Chargement...</p>
-            ) : devicesList.length === 0 ? (
-              <p className={styles.text}>Aucun appareil enregistré.</p>
-            ) : (
-              <ul className={styles.devicesList}>
-                {devicesList.map((device) => (
-                  <li key={device.id} className={styles.deviceItem}>
-                    <div className={styles.deviceInfo}>
-                      <span className={styles.deviceName}>
-                        {device.deviceName || "Navigateur"}
-                      </span>
-                      <span className={styles.deviceMeta}>
-                        Dernière activité :{" "}
-                        {new Date(device.lastSeen).toLocaleDateString("fr-FR")}
-                      </span>
-                    </div>
-                    <button
-                      className={styles.deviceRevokeButton}
-                      onClick={() => handleRevokeDevice(device.id)}
-                      aria-label={`Révoquer l'appareil ${device.deviceName}`}
-                      title="Révoquer"
-                    >
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        aria-hidden="true"
-                      >
-                        <line x1="18" y1="6" x2="6" y2="18" />
-                        <line x1="6" y1="6" x2="18" y2="18" />
-                      </svg>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+          <nav className={styles.menuSection} aria-label="Paramètres du profil">
+            <Link to="/settings/notifications" className={styles.menuItem}>
+              <span className={styles.menuItemLeft}>
+                <span className={styles.menuItemIcon} aria-hidden="true">
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                  </svg>
+                </span>
+                Notifications
+              </span>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+                className={styles.menuItemArrow}
+              >
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </Link>
 
-          {/* Notification settings section */}
-          <div className={styles.notifSection}>
-            <h3 className={styles.notifSectionTitle}>Notifications par email</h3>
-            {notifLoading ? (
-              <p className={styles.text}>Chargement...</p>
-            ) : (
-              <>
-                {/* Realtime notifications toggle */}
-                <div className={styles.notifToggleRow}>
-                  <span className={styles.notifToggleLabel}>
-                    Alertes en temps réel
-                  </span>
-                  <label className={styles.toggle}>
-                    <input
-                      type="checkbox"
-                      checked={notifSettings.realtimeEnabled}
-                      onChange={(e) =>
-                        setNotifSettings((prev) => ({
-                          ...prev,
-                          realtimeEnabled: e.target.checked,
-                        }))
-                      }
-                    />
-                    <span className={styles.toggleSlider} />
-                  </label>
-                </div>
-                <p className={styles.notifHint}>
-                  Recevez un email lorsqu&apos;un contact fait un changement important (nouvelle demande, limite modifiée, etc.)
-                </p>
+            <Link to="/settings/preferences" className={styles.menuItem}>
+              <span className={styles.menuItemLeft}>
+                <span className={styles.menuItemIcon} aria-hidden="true">
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <circle cx="12" cy="12" r="3" />
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14" />
+                  </svg>
+                </span>
+                Préférences
+              </span>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+                className={styles.menuItemArrow}
+              >
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </Link>
 
-                {/* Digest toggle + config */}
-                <div className={styles.notifToggleRow} style={{ marginTop: "1rem" }}>
-                  <span className={styles.notifToggleLabel}>
-                    Résumé périodique
-                  </span>
-                  <label className={styles.toggle}>
-                    <input
-                      type="checkbox"
-                      checked={notifSettings.digestEnabled}
-                      onChange={(e) =>
-                        setNotifSettings((prev) => ({
-                          ...prev,
-                          digestEnabled: e.target.checked,
-                        }))
-                      }
-                    />
-                    <span className={styles.toggleSlider} />
-                  </label>
-                </div>
-                <p className={styles.notifHint}>
-                  Recevez un résumé de votre activité et des notifications non lues.
-                </p>
-
-                {notifSettings.digestEnabled && (
-                  <div className={styles.notifFields}>
-                    <div className={styles.notifField}>
-                      <label className={styles.notifFieldLabel}>
-                        Fréquence
-                      </label>
-                      <select
-                        className={styles.notifSelect}
-                        value={notifSettings.digestFrequency}
-                        onChange={(e) =>
-                          setNotifSettings((prev) => ({
-                            ...prev,
-                            digestFrequency: e.target.value as DigestFrequency,
-                          }))
-                        }
-                      >
-                        <option value="daily">Quotidien</option>
-                        <option value="weekly">Hebdomadaire</option>
-                      </select>
-                    </div>
-
-                    <div className={styles.notifField}>
-                      <label className={styles.notifFieldLabel}>
-                        Heure d&apos;envoi
-                      </label>
-                      <input
-                        type="time"
-                        className={styles.notifInput}
-                        value={notifSettings.digestTime}
-                        onChange={(e) =>
-                          setNotifSettings((prev) => ({
-                            ...prev,
-                            digestTime: e.target.value,
-                          }))
-                        }
-                      />
-                    </div>
-
-                    {notifSettings.digestFrequency === "weekly" && (
-                      <div className={styles.notifField}>
-                        <label className={styles.notifFieldLabel}>
-                          Jour de la semaine
-                        </label>
-                        <select
-                          className={styles.notifSelect}
-                          value={notifSettings.digestWeeklyDay}
-                          onChange={(e) =>
-                            setNotifSettings((prev) => ({
-                              ...prev,
-                              digestWeeklyDay: parseInt(e.target.value),
-                            }))
-                          }
-                        >
-                          {DAY_LABELS.map((label, idx) => (
-                            <option key={idx} value={idx}>
-                              {label}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {notifSuccess && (
-                  <p className={styles.successText}>{notifSuccess}</p>
-                )}
-                {notifError && (
-                  <p className={styles.errorText}>{notifError}</p>
-                )}
-
-                <button
-                  className={styles.notifSaveButton}
-                  onClick={handleSaveNotifSettings}
-                  disabled={notifSaving}
-                >
-                  {notifSaving ? "Enregistrement..." : "Enregistrer les préférences"}
-                </button>
-              </>
-            )}
-          </div>
-
-          {/* About link */}
-          <Link to="/about" className={styles.aboutLink}>
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <line x1="12" y1="16" x2="12" y2="12" />
-              <line x1="12" y1="8" x2="12.01" y2="8" />
-            </svg>
-            À propos
-          </Link>
+            <Link to="/about" className={styles.menuItem}>
+              <span className={styles.menuItemLeft}>
+                <span className={styles.menuItemIcon} aria-hidden="true">
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="16" x2="12" y2="12" />
+                    <line x1="12" y1="8" x2="12.01" y2="8" />
+                  </svg>
+                </span>
+                À propos
+              </span>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+                className={styles.menuItemArrow}
+              >
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </Link>
+          </nav>
 
           {/* Logout button */}
           <button

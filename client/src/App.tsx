@@ -14,6 +14,7 @@ import ProfilePage from "./pages/profile/ProfilePage";
 import InvitePage from "./pages/relationships/InvitePage";
 import RelationshipPage from "./pages/relationships/RelationshipPage";
 import AboutPage from "./pages/profile/AboutPage";
+import PreferencesPage from "./pages/profile/PreferencesPage";
 import NotificationSettingsPage from "./pages/notifications/NotificationSettingsPage";
 
 function App() {
@@ -81,7 +82,6 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              <Route path="/about" element={<AboutPage />} />
             </Route>
 
             {/* Settings pages without bottom nav */}
@@ -93,6 +93,15 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/settings/preferences"
+              element={
+                <ProtectedRoute>
+                  <PreferencesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/about" element={<AboutPage />} />
 
             {/* Default redirect */}
             <Route path="/" element={<Navigate to="/home" replace />} />
