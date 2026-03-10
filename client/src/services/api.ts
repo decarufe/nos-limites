@@ -24,9 +24,10 @@ export class ApiError extends Error {
   }
 }
 
-export const API_BASE_URL =
+export const API_BASE_URL = (
   import.meta.env.VITE_API_BASE_URL ||
-  (import.meta.env.PROD ? "https://api.nos-limites.com/api" : "/api");
+  (import.meta.env.PROD ? "https://api.nos-limites.com/api" : "/api")
+).replace(/\/+$/, "");
 
 const TOKEN_KEY = "nos_limites_token";
 const DEVICE_ID_KEY = "nos_limites_device_id";
@@ -119,6 +120,11 @@ class ApiService {
       "Content-Type": "application/json",
       ...headers,
     };
+
+    if (import.meta.env.VERCEL_AUTOMATION_BYPASS_SECRET !== undefined) {
+      requestHeaders["x-vercel-protection-bypass"] =
+        import.meta.env.VERCEL_AUTOMATION_BYPASS_SECRET;
+    }
 
     if (this.token) {
       requestHeaders["Authorization"] = `Bearer ${this.token}`;
