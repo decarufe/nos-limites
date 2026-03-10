@@ -147,7 +147,7 @@
 
 .categoryRow {
   border-bottom: 1px solid var(--color-border, #e7e5e4);
-  background: white;
+  background: var(--color-surface);
 }
 
 .categoryRow:last-child {
