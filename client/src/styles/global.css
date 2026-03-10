@@ -7,6 +7,7 @@
   --color-secondary: #EC4899;     /* Rose chaleureux - bienveillance */
   --color-accent: #0891B2;        /* Turquoise (darker for accessibility) - ouverture et communication */
   --color-background: #FAFAF9;    /* Blanc cassé */
+  --color-surface: #FFFFFF;       /* Surface des composants (cartes, champs, modales) */
   --color-text: #1C1917;          /* Gris foncé */
   --color-text-secondary: #78716C; /* Gris moyen pour texte secondaire */
   --color-bg-secondary: #F5F5F4;  /* Fond secondaire */

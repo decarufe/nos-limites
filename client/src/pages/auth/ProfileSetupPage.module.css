@@ -64,10 +64,10 @@
 .input {
   width: 100%;
   padding: 14px var(--spacing-md);
-  border: 2px solid rgba(0, 0, 0, 0.1);
+  border: 2px solid var(--color-border);
   border-radius: var(--radius-md);
   font-size: var(--font-size-base);
-  background: white;
+  background: var(--color-surface);
   color: var(--color-text);
   transition: border-color 0.2s ease;
   outline: none;

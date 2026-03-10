@@ -175,7 +175,7 @@
   font-family: var(--font-family);
   font-size: var(--font-size-base);
   color: var(--color-text);
-  background: white;
+  background: var(--color-surface);
   transition:
     border-color 0.15s,
     box-shadow 0.15s;
