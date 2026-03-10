@@ -8,10 +8,11 @@ type OriginHandler = (
   callback: OriginCallback,
 ) => void;
 
-test("getAllowedOrigins includes production and localhost defaults", () => {
+test("getAllowedOrigins includes production, preview, and localhost defaults", () => {
   const origins = getAllowedOrigins(undefined);
 
   assert.equal(origins.includes("https://app.nos-limites.com"), true);
+  assert.equal(origins.includes("https://preview.app.nos-limites.com"), true);
   assert.equal(origins.includes("http://localhost:5173"), true);
 });
 

@@ -3,6 +3,7 @@ import type { CorsOptions } from "cors";
 const DEFAULT_FRONTEND_ORIGINS = [
   "http://localhost:5173",
   "https://app.nos-limites.com",
+  "https://preview.app.nos-limites.com",
 ];
 
 // Regex patterns for Vercel preview deployment URLs

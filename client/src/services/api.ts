@@ -29,6 +29,11 @@ export const API_BASE_URL = (
   (import.meta.env.PROD ? "https://api.nos-limites.com/api" : "/api")
 ).replace(/\/+$/, "");
 
+// Preview URLs (configured via VITE_API_BASE_URL env var on Vercel):
+// - Production: https://api.nos-limites.com/api
+// - Preview:    https://preview.api.nos-limites.com/api
+// - Local dev:  /api (proxied by Vite)
+
 const TOKEN_KEY = "nos_limites_token";
 const DEVICE_ID_KEY = "nos_limites_device_id";
 const DEVICE_TOKEN_KEY = "nos_limites_device_token";
